@@ -1,0 +1,235 @@
+Document Purpose
+This document defines the Data Flow Diagrams for AgriDirect at three levels. It specifies what information enters and leaves the system, how major processes transform that information, and which data stores are involved. The Level 0 diagram gives the system context, Level 1 decomposes the system into major processes, and Level 2 decomposes selected Level 1 processes into detailed sub-processes.
+DFD Notation
+Symbol / Term	Meaning
+External Entity	Actor or outside system that exchanges data with AgriDirect.
+Process	Function that transforms incoming data into outgoing data.
+Data Store	Persistent data maintained by the system.
+Data Flow	Movement of information between an entity, process or data store.
+1. DFD Level 0 — Context Diagram
+1.1 Objective
+At Level 0, AgriDirect is treated as a single process. Internal modules and databases are intentionally hidden. Only external actors and the major information exchanged with the complete system are shown.
+1.2 Context Diagram — Textual Specification
+External Entities → [AGRIDIRECT SYSTEM] → External Entities
+External Entity	Data sent to AgriDirect	Data received from AgriDirect
+Farmer	Registration data; login credentials; profile data; verification documents; produce listings; search/filter requests; chat messages/images/files; offers/counter-offers; order responses; inventory approvals; payment records/proof; delivery status; ratings/reviews; reports	Authentication result; profile/verification status; marketplace results; buyer requirements; messages; offer/counter-offer updates; order details; inventory decisions; payment notifications; delivery notifications; rating results; system notifications
+Commercial Buyer	Registration data; login credentials; profile/business data; verification documents; purchase requirements; search/filter requests; chat messages/images/files; offers/counter-offers; order requests/responses; payment records/proof; delivery status; ratings/reviews; reports	Authentication result; profile/verification status; farmer listings; marketplace results; messages; offer/counter-offer updates; order details; payment notifications; delivery notifications; rating results; system notifications
+Admin	Login credentials; verification decisions; rejection reasons; user restrictions; listing/requirement moderation actions; report/complaint actions	Verification queue; submitted documents; user information; marketplace moderation data; reports/complaints; administrative notifications; action results
+1.3 Level 0 Flow Summary
+•	Farmer ↔ AgriDirect: supply, communication, negotiation and transaction information.
+•	Commercial Buyer ↔ AgriDirect: demand, communication, negotiation and transaction information.
+•	Admin ↔ AgriDirect: verification, moderation, reporting and administrative information.
+•	No external payment processor or logistics provider is part of the current core Level 0 scope.
+1.4 Level 0 Diagram Layout for Drawing
+For a graphical DFD, place one central process labeled “0. AgriDirect — Agricultural B2B Marketplace & Market Intelligence Platform”. Place Farmer on the left, Commercial Buyer on the right and Admin at the top or bottom. Draw bidirectional arrows between each external entity and Process 0. Do not draw internal databases at Level 0.
+
+ 2. DFD Level 1 — Major System Processes
+2.1 Objective
+Level 1 decomposes Process 0 into the major functional processes and persistent data stores. The decomposition follows the approved SRS without introducing new business functionality.
+2.2 Major Processes
+ID	Process	Purpose
+1.0	Authentication & User Management	Registration, login, profiles, authentication, authorization and account status.
+2.0	Verification Management	Verification submission, document handling, Admin review, rejection/resubmission and history.
+3.0	Marketplace Management	Farmer listings, buyer requirements, search, filtering, sorting and marketplace status.
+4.0	Communication & Negotiation	Contextual chat, messages, attachments, offers and counter-offers.
+5.0	Order & Inventory Management	Accepted-offer order creation, order lifecycle, amendments, quantity approval and inventory history.
+6.0	Payment & Delivery Management	Payment tracking/acknowledgement and basic delivery arrangement/completion acknowledgement.
+7.0	Ratings & Notifications	Ratings/reviews and system notifications.
+8.0	Market Analytics	Descriptive historical price and demand analytics.
+9.0	Administration & Reporting	User moderation, marketplace moderation, reports/complaints and administrative actions.
+2.3 Data Stores
+ID	Data Store	Main contents
+D1	Users	User identity, credentials, roles, account status, timestamps.
+D2	Profiles	Farmer/buyer profile and role-specific information.
+D3	Verification	Verification submissions, categories, statuses, review history.
+D4	Verification Documents	Document metadata, file references, document status and remarks.
+D5	Listings	Farmer supply listings, quantity, price, quality, location, availability, expiry and status.
+D6	Requirements	Buyer requirements, quantity, remaining quantity, location, required-by date, price conditions and status.
+D7	Conversations	Context, participants and conversation metadata.
+D8	Messages	Chat messages, sender, attachments and timestamps.
+D9	Offers	Structured offers, counter-offers, terms, status and timestamps.
+D10	Orders	Accepted deal terms, parties, lifecycle state and timestamps.
+D11	Order Amendments	Proposed/accepted changes, previous/new values, proposer and confirmations.
+D12	Inventory Adjustments	Proposed/approved quantity changes and inventory history.
+D13	Payments	Amount, method, reference, proof, status and dates.
+D14	Delivery	Delivery arrangement and completion/acknowledgement records.
+D15	Ratings & Reviews	Transaction-linked ratings and reviews.
+D16	Notifications	Notification event, recipient, content, status and timestamp.
+D17	Reports & Admin Actions	Reports, complaints, actions and administrative history.
+2.4 Level 1 Process-to-Data-Store Mapping
+Process	Reads	Writes
+1.0 Authentication & User Management	D1, D2	D1, D2
+2.0 Verification Management	D1, D2, D3, D4	D3, D4, D16
+3.0 Marketplace Management	D1, D2, D5, D6	D5, D6, D16
+4.0 Communication & Negotiation	D1, D5, D6, D7, D8, D9, D10	D7, D8, D9, D16
+5.0 Order & Inventory Management	D5, D6, D9, D10, D11, D12	D5, D6, D10, D11, D12, D16
+6.0 Payment & Delivery Management	D10, D13, D14	D13, D14, D10, D16, D17 where complaint is raised
+7.0 Ratings & Notifications	D10, D13, D15, D16	D15, D16
+8.0 Market Analytics	D5, D6, D10, D13, D15	Analytical/derived output; no core transactional mutation
+9.0 Administration & Reporting	D1–D17 as authorized	D1, D3, D4, D5, D6, D17, D16
+2.5 Level 1 External Data Flows
+External Entity	Processes interacted with	Major flows
+Farmer	1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0	Account/profile, verification, listings, searches, chats, offers, orders, inventory decisions, payment/delivery information, reviews, reports.
+Commercial Buyer	1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0	Account/profile, verification, requirements, searches, chats, offers, orders, payment/delivery information, reviews, reports.
+Admin	1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0	Authentication, verification review, moderation, reports, user controls, administrative actions and analytics access.
+2.6 Level 1 Diagram Layout for Drawing
+Place Farmer, Commercial Buyer and Admin as external entities around the diagram. Place processes 1.0–9.0 in the center. Place D1–D17 data stores below/around the relevant processes. Connect external entities to only the processes they interact with. Connect processes to data stores through labeled data flows. Avoid direct External Entity → Data Store flows; all data should pass through a process.
+
+ 3. DFD Level 2 — Detailed Process Decomposition
+Level 2 is presented as separate subprocess specifications. Each subsection can be drawn as its own Level 2 DFD. This avoids creating one unreadable diagram containing every function in the system.
+3.1 Level 2 — 1.0 Authentication & User Management
+Subprocess	Input	Processing	Output	Data Store
+1.1 Register User	Registration form	Validate role and required fields; create account; hash password	Registration result	D1 Users
+1.2 Authenticate User	Login credentials	Verify credentials and account status	Authentication/token result	D1 Users
+1.3 Manage Profile	Profile data	Validate/update permitted fields	Updated profile	D2 Profiles
+1.4 Authorize Access	Token + requested action	Check identity, role and verification status	Allow/deny decision	D1 Users, D3 Verification
+1.5 Manage Account Status	Admin action	Change permitted account state	Status update	D1 Users
+Key Level 2 flow: Registration → Validation → Account Creation → Login → Authentication → Authorization → Protected Module Access.
+3.2 Level 2 — 2.0 Verification Management
+Subprocess	Input	Processing	Output	Data Store
+2.1 Create Verification Submission	User profile/category	Determine applicable verification requirements	Required document list	D3 Verification
+2.2 Upload Documents	Documents + metadata	Validate/store document references	Document submission status	D4 Verification Documents
+2.3 Review Verification	Submission + documents	Admin examines submitted information	Approve/reject decision	D3, D4
+2.4 Record Rejection	Admin decision + reason	Store rejection reason and attempt history	Rejection status/reason	D3, D4
+2.5 Resubmit	Corrected data/documents	Create/update new verification attempt	Resubmission status	D3, D4
+2.6 Notify User	Status change	Create verification notification	Notification	D16
+Key Level 2 flow: User → Verification Submission → Document Storage → Admin Review → Approved OR Rejected with Reason → Notification → Resubmission if required.
+3.3 Level 2 — 3.0 Marketplace Management
+3.3.1 Farmer Listing Subprocesses
+Subprocess	Input	Processing	Output	Store
+3.1 Create Listing	Farmer listing data	Validate farmer verification, fields, price, quantity, dates	Active/draft listing	D5
+3.2 Update Listing	Listing changes	Validate ownership, status and values	Updated listing	D5
+3.3 Manage Listing Status	Close/expiry/fulfillment event	Apply lifecycle rules	Active/closed/expired state	D5
+3.4 Calculate Inventory Impact	Order/amendment event	Calculate proposed quantity adjustment	Proposed adjustment	D12
+3.5 Search Listings	Search/filter/sort criteria	Query eligible listings	Listing results	D5, D2
+3.3.2 Buyer Requirement Subprocesses
+Subprocess	Input	Processing	Output	Store
+3.6 Create Requirement	Buyer requirement data	Validate buyer verification, fields, quantity and date	Active/draft requirement	D6
+3.7 Update Requirement	Requirement changes	Validate ownership/status	Updated requirement	D6
+3.8 Calculate Remaining Requirement	Fulfillment event	Calculate remaining quantity	Proposed remaining quantity	D6
+3.9 Buyer Approves Remaining Quantity	Buyer decision	Apply keep-open/close/modify decision	Updated requirement status/quantity	D6
+3.10 Search Requirements	Search/filter/sort criteria	Query eligible requirements	Requirement results	D6, D2
+Important: The system calculates quantity changes, but farmer inventory and buyer remaining requirements are not silently finalized. The respective user approval rules apply.
+3.4 Level 2 — 4.0 Communication & Negotiation
+Subprocess	Input	Processing	Output	Store
+4.1 Validate Chat Context	Listing/requirement/order context + user	Verify user and marketplace relationship	Allow/deny chat initiation	D1, D5, D6, D10
+4.2 Create Conversation	Verified user + valid context	Create conversation participants/context	Conversation created	D7
+4.3 Send Message	Text/image/file/contact data	Validate sender, conversation access and attachment rules	Stored message	D8
+4.4 Create Offer	Offer terms + context	Validate participants, context and terms	Offer created	D9
+4.5 Counter-offer	Existing offer + modified terms	Create next negotiation event	Counter-offer	D9
+4.6 Accept/Reject Offer	Offer decision	Validate current offer state	Offer status	D9
+4.7 Create Order Trigger	Accepted offer	Pass accepted terms to order process	Order creation request	D10
+4.8 Notify Participants	Negotiation event	Create notification	Offer/message notification	D16
+Key Level 2 flow: Marketplace Context → Authorization → Conversation → Message/Offer → Counter-offer loop → Accept/Reject → Accepted Offer passed to Order Management.
+3.5 Level 2 — 5.0 Order & Inventory Management
+Subprocess	Input	Processing	Output	Store
+5.1 Create Order	Accepted offer	Copy final agreed terms into new order	Pending order	D10
+5.2 Confirm Order	Order + required confirmation/state condition	Apply order state rule	Confirmed order	D10
+5.3 Propose Quantity Adjustment	Order + listing quantity	Calculate proposed inventory impact	Adjustment request	D12
+5.4 Farmer Approves Quantity	Farmer decision	Recheck available quantity; approve/reject	Approved/rejected adjustment	D12
+5.5 Apply Inventory Update	Approved adjustment	Update listing quantity transaction-safely	Updated inventory	D5, D12
+5.6 Propose Lower Fulfillment Quantity	Farmer limitation	Create proposed lower quantity	Buyer decision required	D10
+5.7 Accept/Reject Modified Quantity	Buyer decision	Update agreed fulfillment terms if accepted	Accepted/rejected modification	D10
+5.8 Propose Amendment	Private negotiation result	Create amendment with old/new values	Pending amendment	D11
+5.9 Confirm Amendment	Both parties' confirmations	Make amendment effective	Effective amendment	D11, D10
+5.10 Apply Amendment Inventory Impact	Effective amendment + farmer approval	Update inventory if required	Inventory history/update	D5, D12
+5.11 Cancel Order	Cancellation request	Check eligible state; record reason	Cancelled order	D10
+5.12 Progress Order State	Payment/delivery/completion events	Validate transition	Updated order state	D10
+Important Level 2 rule: An accepted offer creates an order, but inventory is not silently deducted. The farmer must approve the inventory impact. If quantity becomes unavailable, the workflow must prevent invalid allocation.
+3.6 Level 2 — 6.0 Payment & Delivery Management
+3.6.1 Payment Tracking
+Subprocess	Input	Processing	Output	Store
+6.1 Create Payment Record	Order/payment details	Validate order and amount	Payment record	D13
+6.2 Buyer Records Payment	Payment reference/proof	Record payment as made/recorded	Payment acknowledgement request	D13, D16
+6.3 Farmer Acknowledges	Acknowledgement	Record receipt confirmation	Acknowledged/completed payment	D13, D16
+6.4 Raise Payment Complaint	Complaint + evidence	Create complaint for review	Complaint status	D17, D16
+6.5 Admin Review Payment Complaint	Complaint/evidence	Review and facilitate platform-side record handling	Administrative action	D17, D13, D16
+3.6.2 Delivery
+Subprocess	Input	Processing	Output	Store
+6.6 Record Delivery Arrangement	Agreed delivery details	Store basic arrangement	Delivery arranged	D14
+6.7 Mark Delivery Complete	Farmer/buyer action	Record completion claim	Awaiting acknowledgement	D14, D16
+6.8 Acknowledge Delivery	Other party action	Validate participant and completion	Delivery acknowledged	D14, D16
+6.9 Complete Order Trigger	Payment + delivery conditions	Check completion requirements	Order completion request	D10
+Current scope excludes GPS tracking, route optimization and logistics-provider operations.
+3.7 Level 2 — 7.0 Ratings & Notifications
+Subprocess	Input	Processing	Output	Store
+7.1 Check Rating Eligibility	Order/payment/completion state	Verify transaction eligibility	Allow/deny rating	D10, D13
+7.2 Submit Rating	Rating/review	Validate reviewer, reviewed user and order	Stored review	D15
+7.3 Generate Notification	System event	Map event to recipient and notification type	Notification record	D16
+7.4 Deliver/In-App Display	Notification record	Present unread/read notification	User notification	D16
+7.5 Mark Read	User action	Update notification status	Read status	D16
+3.8 Level 2 — 8.0 Market Analytics
+Subprocess	Input	Processing	Output	Source
+8.1 Collect Price Data	Historical listing/order data	Select valid platform records	Price dataset	D5, D10, D13
+8.2 Calculate Price Statistics	Price dataset	Calculate average/min/max/range/time summaries	Price analytics	Derived output
+8.3 Collect Demand Data	Buyer requirements	Group/count by product/location/time/quantity	Demand dataset	D6
+8.4 Calculate Demand Statistics	Demand dataset	Calculate counts, quantities and distributions	Demand analytics	Derived output
+8.5 Label Data Source	Platform/external/sample data	Identify source type	Source label	Analytics output
+8.6 Present Analytics	Calculated results	Render charts/tables	Analytics view	Frontend
+Analytics are descriptive. No price prediction, demand forecasting or ML recommendation is represented in the current Level 2 DFD.
+3.9 Level 2 — 9.0 Administration & Reporting
+Subprocess	Input	Processing	Output	Store
+9.1 Manage Users	Admin action	View/restrict/suspend/block within authorization	User status change	D1, D17
+9.2 Moderate Listings	Admin action	Review/remove inappropriate or inactive listings	Listing moderation result	D5, D17
+9.3 Moderate Requirements	Admin action	Review/remove inappropriate/inactive requirements	Requirement moderation result	D6, D17
+9.4 Manage Reports	Report data	Classify, review and update status	Report action	D17
+9.5 Review Verification	Verification queue	Approve/reject with reason	Verification result	D3, D4, D16
+9.6 Record Admin Action	Administrative event	Store action for accountability	Audit/admin record	D17
+4. DFD Balancing Rules
+The Level 0, Level 1 and Level 2 diagrams must be balanced. A data flow entering or leaving the AgriDirect system at Level 0 must be represented through the Level 1 processes. When a Level 1 process is decomposed into Level 2, the external inputs/outputs of that process must remain consistent with the parent process.
+Parent process	Level 2 decomposition	Main incoming flows preserved	Main outgoing flows preserved
+1.0	1.1–1.5	Registration, login, profile/admin account actions	Auth result, profile result, authorization/status
+2.0	2.1–2.6	Documents, review decisions	Verification status, rejection reason, notifications
+3.0	3.1–3.10	Listings, requirements, search criteria	Marketplace records/results/status
+4.0	4.1–4.8	Messages, context, offers	Messages, negotiation states, accepted-offer trigger
+5.0	5.1–5.12	Accepted offer, quantity decisions, amendments	Order/inventory state and notifications
+6.0	6.1–6.9	Payment/delivery information	Payment/delivery states and order completion trigger
+7.0	7.1–7.5	Completion events, ratings, system events	Reviews and notifications
+8.0	8.1–8.6	Historical marketplace/transaction data	Descriptive analytics
+9.0	9.1–9.6	Admin actions, reports, verification review	Moderation/verification/admin results
+5. How to Draw the Final Graphical DFDs
+5.1 Level 0
+•	One process only: 0. AgriDirect.
+•	Three external entities: Farmer, Commercial Buyer, Admin.
+•	Use bidirectional labeled arrows.
+•	Do not show databases.
+5.2 Level 1
+•	Use processes 1.0 through 9.0.
+•	Use data stores D1 through D17 only where necessary.
+•	Connect actors to processes, not directly to stores.
+•	Keep arrow labels as nouns/data descriptions rather than actions.
+•	Avoid crossing lines where possible.
+5.3 Level 2
+•	Create one separate Level 2 diagram per major process.
+•	Use subprocess numbers such as 4.1, 4.2, 4.3 under Process 4.0.
+•	Show only data stores actually used by that process.
+•	Preserve parent-process input/output balance.
+•	Do not place UI screens, programming classes or API endpoints as DFD processes unless the diagram is explicitly intended to show implementation detail.
+5.4 Recommended Final Diagram Set
+Diagram	Recommended graphical diagram
+DFD 0	AgriDirect Context Diagram
+DFD 1	AgriDirect Major Processes + Data Stores
+DFD 2.1	Authentication & User Management
+DFD 2.2	Verification Management
+DFD 2.3	Marketplace Management
+DFD 2.4	Communication & Negotiation
+DFD 2.5	Order & Inventory Management
+DFD 2.6	Payment & Delivery Management
+DFD 2.7	Ratings & Notifications
+DFD 2.8	Market Analytics
+DFD 2.9	Administration & Reporting
+6. DFD Validation Checklist
+•	Level 0 contains exactly one system process.
+•	Farmer, Commercial Buyer and Admin are represented as external entities.
+•	Level 1 processes collectively cover the complete Level 0 system.
+•	Every persistent data item has an appropriate data store at Level 1.
+•	Level 2 diagrams decompose Level 1 processes without introducing unrelated scope.
+•	Inputs and outputs remain balanced between levels.
+•	No direct external-entity-to-data-store flow is used.
+•	Data flows are labeled with meaningful information names.
+•	Order, inventory, payment and delivery flows respect the locked business rules.
+•	Analytics remain descriptive rather than predictive.
+•	Private chat and verification data are shown as controlled flows.
+•	The DFDs match the SRS and should be updated together if a requirement changes.
+7. DFD Baseline Summary
+The AgriDirect DFD hierarchy is: Level 0 = complete system context; Level 1 = nine major system processes and their data stores; Level 2 = detailed decomposition of authentication, verification, marketplace, communication/negotiation, orders/inventory, payment/delivery, ratings/notifications, analytics and administration/reporting. This hierarchy can now be used directly to create graphical DFDs in draw.io, Lucidchart, Visio or another diagramming tool.

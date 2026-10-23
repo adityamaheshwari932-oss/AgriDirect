@@ -1,0 +1,232 @@
+# =============================================================================
+# AgriDirect — .gitignore
+# Covers: Python, FastAPI, Node.js, React/TypeScript, Docker, IDE files,
+#         environment variables, virtual environments, logs, and local databases.
+# Source files and project documentation are NEVER ignored.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Python
+# -----------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+*.manifest
+
+# Python packaging
+*.whl
+MANIFEST
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+pytestmark
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Pyright
+pyrightconfig.json
+
+# Ruff
+.ruff_cache/
+
+# -----------------------------------------------------------------------------
+# Virtual Environments
+# -----------------------------------------------------------------------------
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+virtualenv/
+.virtualenv/
+pipenv/
+
+# -----------------------------------------------------------------------------
+# Environment & Secrets
+# -----------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.secret
+secrets/
+local_settings.py
+config/local.py
+
+# -----------------------------------------------------------------------------
+# Node.js / npm / yarn / pnpm
+# -----------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.npm
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+package-lock.json.bak
+
+# -----------------------------------------------------------------------------
+# React / Vite / TypeScript build output
+# -----------------------------------------------------------------------------
+dist/
+dist-ssr/
+build/
+out/
+.next/
+.nuxt/
+.output/
+*.local
+
+# TypeScript incremental compilation info
+*.tsbuildinfo
+
+# Storybook
+storybook-static/
+
+# -----------------------------------------------------------------------------
+# Logs
+# -----------------------------------------------------------------------------
+logs/
+*.log
+log/
+*.log.*
+npm-debug.log
+yarn-debug.log
+
+# -----------------------------------------------------------------------------
+# Local / SQLite Databases
+# -----------------------------------------------------------------------------
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# Alembic (only ignore local dev migration temp files, not migrations themselves)
+# Do NOT ignore: alembic/versions/  alembic/env.py  alembic.ini
+*.pyc
+
+# -----------------------------------------------------------------------------
+# Docker
+# -----------------------------------------------------------------------------
+docker-compose.override.yml
+.docker/
+
+# -----------------------------------------------------------------------------
+# IDE and Editor Files
+# -----------------------------------------------------------------------------
+# VSCode
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json.example
+
+# JetBrains (PyCharm, WebStorm, IntelliJ)
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Vim / Neovim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Emacs
+*#
+.#*
+
+# Sublime Text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+.Trash-*
+.nfs*
+
+# -----------------------------------------------------------------------------
+# Jupyter Notebooks (if used for analytics exploration only)
+# -----------------------------------------------------------------------------
+.ipynb_checkpoints/
+
+# -----------------------------------------------------------------------------
+# Test artifacts
+# -----------------------------------------------------------------------------
+.pytest_cache/
+test-results/
+test_reports/
+*.junit.xml
+
+# -----------------------------------------------------------------------------
+# Uploads and media (local dev only — use object storage in production)
+# -----------------------------------------------------------------------------
+uploads/
+media/
+static_collected/
+
+# -----------------------------------------------------------------------------
+# Miscellaneous
+# -----------------------------------------------------------------------------
+*.bak
+*.tmp
+*.temp
+*.orig
+.terraform/
+*.tfstate
+*.tfstate.*

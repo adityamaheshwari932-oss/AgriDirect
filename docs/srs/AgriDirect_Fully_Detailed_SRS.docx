@@ -1,0 +1,841 @@
+SOFTWARE REQUIREMENTS SPECIFICATION
+AgriDirect
+Fully Detailed SRS + Complete Project Planning
+Project: Web-based B2B Agricultural Marketplace and Market-Intelligence Platform
+Document status: Detailed planning baseline for design, implementation and testing
+Architecture: Modular Monolith / 3-Tier
+Technology baseline: React + FastAPI + PostgreSQL + SQLAlchemy + JWT + Docker
+
+ Document Control
+Field	Value
+Document	Software Requirements Specification — AgriDirect
+Version	1.0 — Detailed Planning Baseline
+Project Type	B.Tech Software Engineering Team Project
+Primary Actors	Farmer, Commercial Buyer, Admin
+Primary System Goal	Direct agricultural B2B marketplace with transaction coordination and descriptive market intelligence
+Current Analytics Scope	Descriptive historical analytics only
+Payment Scope	Payment tracking only; no fund processing/holding
+Delivery Scope	Basic arrangement and completion acknowledgement; no logistics tracking
+Revision / Decision Policy
+This SRS consolidates the project decisions already established during planning. Where a low-level implementation detail has intentionally not been fixed, the SRS states the requirement without inventing a premature technical choice. Detailed UI field names, exact database indexes, infrastructure sizing and third-party integrations may be finalized during design and implementation.
+1. Introduction
+1.1 Purpose
+This Software Requirements Specification defines the functional, non-functional, data, interface, security, workflow, business-rule and operational requirements of AgriDirect. It is intended to act as the main engineering reference from which the team can design the database, DFDs, ER diagram, use cases, UI, REST APIs, implementation modules and test cases.
+1.2 Intended Audience
+•	Project team members and developers.
+•	Software Engineering faculty/evaluators.
+•	UI/UX and frontend developers.
+•	Backend/API and database developers.
+•	Testers and reviewers.
+•	Future team members extending the project.
+1.3 Product Definition
+AgriDirect is a centralized web platform connecting farmers and commercial agricultural buyers. It allows both sides to discover structured supply or demand, communicate within marketplace contexts, negotiate through structured offers, create orders, record payment information, coordinate delivery arrangements, review completed transactions and use historical platform data for descriptive market analysis.
+1.4 Product Positioning
+•	AgriDirect is a marketplace/facilitator, not a produce owner or reseller.
+•	The platform does not promise to eliminate intermediaries completely.
+•	The platform aims to reduce dependence on intermediaries by improving direct discovery and communication.
+•	The platform does not guarantee a fair price or guarantee a participant's trustworthiness.
+•	Verification means that submitted information/documents have gone through the defined review process; it is not a guarantee of future behavior.
+1.5 Definitions
+Term	Definition
+Farmer	A producer/supplier who publishes agricultural produce listings.
+Commercial Buyer	A restaurant, hotel, retailer, grocery business, food processor, caterer or other bulk purchaser.
+Listing	A farmer's structured supply entry describing produce available for sale.
+Requirement	A buyer's structured demand entry describing produce required.
+Offer	A structured proposed transaction containing agreed/proposed terms.
+Counter-offer	A modified structured offer made in response to another offer.
+Order	A transaction record automatically created after an offer is accepted.
+Amendment	A separate record describing a mutually confirmed change to a finalized order.
+Verification	Review of role/category-specific submitted documents/information by the Admin.
+Payment Tracking	Recording payment details/status without processing, holding or transferring money.
+Descriptive Analytics	Historical summaries such as averages, counts, ranges, distributions and trends.
+2. Overall Description
+2.1 Product Perspective
+AgriDirect is a web application consisting of a React frontend, FastAPI REST backend, PostgreSQL database and supporting services for authentication, validation, file references, notifications and administration. The initial architecture is a modular monolith so that the team can implement and test the complete workflow without the complexity of microservices.
+2.2 High-Level Architecture
+Client/UI → REST API → FastAPI Router → Pydantic Validation → Service Layer → Repository/SQLAlchemy → PostgreSQL. Cross-cutting components provide authentication/authorization, notifications, file handling, audit/history and error handling.
+2.3 Product Functions
+•	Role-specific registration and authentication.
+•	Profile management and progressive verification.
+•	Farmer supply listing management.
+•	Buyer demand/requirement management.
+•	Separate Find Produce and Find Buyers discovery.
+•	Search, filtering and sorting.
+•	Contextual chat and file/image sharing.
+•	Structured offer and counter-offer negotiation.
+•	Automatic order creation after accepted offers.
+•	Farmer-controlled inventory approval.
+•	Order amendment workflow.
+•	Payment tracking and acknowledgement.
+•	Basic delivery arrangement and mutual completion acknowledgement.
+•	Mutual ratings and reviews.
+•	Marketplace and transaction notifications.
+•	Descriptive price and demand analytics.
+•	Admin verification, moderation and reporting.
+2.4 User Classes
+User class	Description	Primary capabilities
+Unverified registered user	Registered but not verified	Login, profile, browse/search/view marketplace information; no listing/requirement creation, chat initiation, offers or transactions.
+Verified farmer	Farmer whose required verification has been approved	Listings, buyer discovery, contextual chat, offers, orders, inventory approval, payment/delivery workflow and reviews.
+Verified buyer	Buyer whose required verification has been approved	Produce discovery, requirements, contextual chat, offers, orders, payment/delivery workflow and reviews.
+Admin	Platform administrator	Verification review, moderation, user controls, reports/complaints and administrative monitoring.
+2.5 Operating Environment
+•	Modern web browser on desktop or mobile-responsive browser.
+•	React-based frontend served through a web server.
+•	Python/FastAPI backend service.
+•	PostgreSQL relational database.
+•	Docker-based development/deployment environment.
+•	HTTPS in production deployment.
+2.6 Constraints
+•	Student project time and team capacity.
+•	Payment gateway is outside current scope.
+•	Physical delivery remains outside the current platform.
+•	No ML prediction/forecasting in the current release.
+•	No guarantee of government/business verification through external APIs.
+•	Current delivery module is intentionally lightweight.
+2.7 Assumptions
+•	Users submit truthful and current information.
+•	Admins are authorized to review verification and moderation records.
+•	Users have internet access and supported browsers.
+•	Payment may occur through UPI, bank transfer, cash or another mutually agreed method outside AgriDirect.
+•	Historical transaction data becomes available as platform usage grows.
+3. Project Goals, Scope and Planning Baseline
+3.1 Primary Goals
+•	Improve direct farmer-to-buyer discovery.
+•	Make supply and demand information structured and searchable.
+•	Provide contextual, auditable negotiation.
+•	Convert accepted agreements into traceable orders.
+•	Prevent silent inventory/requirement changes.
+•	Maintain useful transaction history.
+•	Provide basic historical market intelligence.
+3.2 In-Scope Features
+•	Authentication and authorization
+•	Profiles
+•	Progressive verification
+•	Verification document management
+•	Listings
+•	Buyer requirements
+•	Marketplace search/filter/sort
+•	Contextual chat
+•	Structured negotiation
+•	Orders and amendments
+•	Inventory approval
+•	Payment tracking
+•	Delivery coordination
+•	Ratings/reviews
+•	Notifications
+•	Descriptive analytics
+•	Admin and reports
+3.3 Explicitly Out of Scope
+•	Owning, warehousing or selling produce on behalf of users.
+•	Actual payment processing or escrow.
+•	Automatic bank/UPI reconciliation.
+•	GPS delivery tracking.
+•	Route optimization.
+•	Full delivery-partner management in the current release.
+•	Price prediction.
+•	Demand forecasting.
+•	ML-based matching in the current release.
+•	Guaranteed price fairness or user trust.
+•	Full legal/financial dispute adjudication.
+3.4 Future Scope
+•	Delivery Partner interface.
+•	Real payment gateway.
+•	External market-price feeds.
+•	ML price prediction and demand forecasting.
+•	Advanced recommendation/matching.
+•	AI market assistant.
+•	Mobile application.
+•	Advanced fraud/risk scoring.
+•	External identity/business verification integrations.
+•	Logistics and route-management integrations.
+4. Detailed Functional Requirements
+4.1 Authentication and Account Management
+ID	Area	Requirement
+FR-AUTH-01	Registration	The system shall provide separate 'Register as Farmer' and 'Register as Buyer' flows.
+FR-AUTH-02	Farmer registration	Farmer registration shall collect name, phone/email, password, farmer/farm name and basic location.
+FR-AUTH-03	Buyer registration	Buyer registration shall collect name/contact person, phone/email, password, business name, business type and basic location.
+FR-AUTH-04	Validation	Required registration data shall be validated before account creation.
+FR-AUTH-05	Password storage	Passwords shall never be stored in plaintext and shall be stored using a secure password-hashing mechanism.
+FR-AUTH-06	Login	Registered users shall authenticate using their configured credentials.
+FR-AUTH-07	Token/session	Successful authentication shall establish a protected authenticated session/token.
+FR-AUTH-08	Logout	Users shall have a logout mechanism that ends the applicable authenticated session.
+FR-AUTH-09	Authorization	Protected resources shall verify authentication, role and required verification status.
+FR-AUTH-10	Account status	The system shall support active, restricted/suspended/blocked and other administratively required account states.
+4.2 Profile Management
+ID	Requirement
+FR-PRO-01	Users shall be able to view and update permitted profile information.
+FR-PRO-02	The system shall distinguish ordinary profile data from verification-specific data.
+FR-PRO-03	Farmer profiles shall support relevant farm/production information beyond registration data.
+FR-PRO-04	Buyer profiles shall support business information and relevant purchasing information.
+FR-PRO-05	The system shall permit progressive profile completion rather than forcing all data during initial registration.
+FR-PRO-06	Profile visibility shall respect authentication, role and marketplace context.
+4.3 Progressive Verification
+ID	Requirement
+FR-VER-01	Users shall be allowed to register and browse before completing verification.
+FR-VER-02	Users shall not create listings/requirements, initiate contextual chats, make offers or initiate transactions until the required verification state is approved.
+FR-VER-03	Verification shall be role/category-specific.
+FR-VER-04	Farmer verification shall support agricultural/farmer identity and applicable government/agricultural documents.
+FR-VER-05	Buyer verification shall support business registration/license and applicable business-related documents.
+FR-VER-06	The system shall support multiple documents per verification submission where required.
+FR-VER-07	Admin shall be able to define/recognize required document types for applicable categories.
+FR-VER-08	Each document shall have metadata including type, file reference, submission date, status and review remarks where applicable.
+FR-VER-09	Admin shall approve or reject a verification submission.
+FR-VER-10	Rejection shall require a reason.
+FR-VER-11	Rejected users shall be able to correct/update information and resubmit.
+FR-VER-12	Verification attempts/history shall be retained.
+FR-VER-13	Users shall receive notification of verification status changes.
+4.4 Farmer Listings
+ID	Requirement
+FR-LST-01	Only verified farmers shall create listings.
+FR-LST-02	A listing shall contain at minimum product, available quantity, price, location, quality/grade, availability date and valid-until/expiry date.
+FR-LST-03	A listing may include description, harvest/production information, delivery terms and other relevant details.
+FR-LST-04	The system shall validate price and quantity values.
+FR-LST-05	Listings shall have controlled lifecycle states such as draft, active, partially fulfilled, closed and expired.
+FR-LST-06	Expired or inactive listings shall not accept new transactions/offers.
+FR-LST-07	Farmers shall be able to manually close a listing.
+FR-LST-08	The system shall notify users before relevant expiry events.
+FR-LST-09	A listing may serve multiple buyers until the approved available quantity reaches zero.
+FR-LST-10	Inventory changes shall not be silently applied solely because an order/amendment exists; the defined farmer approval workflow shall apply.
+FR-LST-11	System-calculated quantity changes shall be presented to the farmer for approval.
+FR-LST-12	Farmers shall be able to make permitted manual inventory corrections, which shall be recorded in history.
+4.5 Buyer Requirements
+ID	Requirement
+FR-REQ-01	Only verified buyers shall create requirements.
+FR-REQ-02	Mandatory core fields shall include product, required quantity, required location and required-by date.
+FR-REQ-03	Quality/grade and price conditions may be included as optional/additional requirement information.
+FR-REQ-04	Price conditions may be exact price, price range or open to negotiation where applicable.
+FR-REQ-05	Requirements shall have controlled states including active, partially fulfilled, closed and expired.
+FR-REQ-06	The system shall calculate remaining quantity after fulfillment.
+FR-REQ-07	The buyer shall approve the calculated remaining quantity/status change.
+FR-REQ-08	The buyer shall be able to keep the requirement open, close it, manually modify remaining quantity or create a new requirement according to the workflow.
+FR-REQ-09	Expired requirements shall remain historical but shall not receive new transactions/offers.
+4.6 Marketplace Search and Discovery
+ID	Requirement
+FR-SRCH-01	The system shall provide a separate Find Produce area for farmer listings.
+FR-SRCH-02	The system shall provide a separate Find Buyers area for buyer requirements.
+FR-SRCH-03	All registered users shall be able to search/view both marketplace areas subject to access rules.
+FR-SRCH-04	Search/filtering shall support product.
+FR-SRCH-05	Search/filtering shall support location.
+FR-SRCH-06	Search/filtering shall support quantity.
+FR-SRCH-07	Search/filtering shall support price where applicable.
+FR-SRCH-08	Search/filtering shall support quality/grade where available.
+FR-SRCH-09	Search/filtering shall support availability/required-by date and status.
+FR-SRCH-10	Search/filtering shall support verified-user filtering.
+FR-SRCH-11	Where supported by location data, users shall be able to apply distance/location-based filtering.
+FR-SRCH-12	Sorting shall support price ascending/descending, quantity, newest, nearest and relevance where applicable.
+FR-SRCH-13	Result cards shall expose essential decision information before opening details.
+4.7 Listing / Requirement Result Information
+A typical farmer listing card shall show product, quantity, price, location and quality/grade, with a View Details action. Detailed views may include farmer profile, verification status, ratings, availability and other permitted information. Buyer requirement results shall expose equivalent relevant demand information.
+4.8 Chat and Communication
+ID	Requirement
+FR-CHAT-01	Only verified users shall initiate contextual marketplace chats.
+FR-CHAT-02	A chat shall be tied to a legitimate marketplace context such as a listing, requirement, offer or order.
+FR-CHAT-03	Chat shall support text messages.
+FR-CHAT-04	Chat shall support images.
+FR-CHAT-05	Users may choose to share contact details.
+FR-CHAT-06	Users may choose to share documents/files where relevant.
+FR-CHAT-07	Contact details and documents shall not be automatically exposed merely because a chat exists.
+FR-CHAT-08	The system shall restrict private conversation visibility to authorized participants and authorized administrative access.
+FR-CHAT-09	Messages shall preserve sender and timestamp information.
+FR-CHAT-10	The system should support reporting/moderation of inappropriate content.
+4.9 Structured Offers and Negotiation
+ID	Requirement
+FR-OFF-01	A verified user shall be able to create a structured offer from a relevant listing/requirement page or inside a relevant chat.
+FR-OFF-02	An offer shall support relevant deal terms including quantity, price, quality/grade, delivery terms/date and other agreed conditions.
+FR-OFF-03	Both sides shall be able to counter-offer.
+FR-OFF-04	The system shall preserve the complete offer/counter-offer history.
+FR-OFF-05	Each negotiation event shall identify sender, terms, timestamp and status.
+FR-OFF-06	Acceptance shall preserve the final accepted terms.
+FR-OFF-07	Rejection shall preserve the rejected offer history.
+FR-OFF-08	An accepted offer shall automatically create an order; no second deal-confirmation step shall be required.
+4.10 Orders
+ID	Requirement
+FR-ORD-01	The system shall automatically create an order from an accepted offer.
+FR-ORD-02	The order shall contain buyer, farmer, accepted quantity, price, quality, delivery terms and source offer reference.
+FR-ORD-03	The order shall begin in Pending state unless the defined implementation maps acceptance to a different first state.
+FR-ORD-04	The order lifecycle shall support Pending → Confirmed → Payment Pending → Payment Recorded → Delivery Arranged → Completed.
+FR-ORD-05	Cancellation shall be allowed only from defined eligible states.
+FR-ORD-06	Completed orders shall not be cancellable.
+FR-ORD-07	Cancellation records shall contain who cancelled, reason, date/time, order state and relevant payment status.
+FR-ORD-08	Finalized orders shall not be directly editable.
+FR-ORD-09	Order changes shall use the amendment workflow.
+4.11 Inventory and Quantity Control
+ID	Requirement
+FR-INV-01	The backend shall enforce that committed quantity does not exceed available quantity.
+FR-INV-02	When an order is created, the system shall calculate the proposed inventory impact.
+FR-INV-03	The farmer shall review and approve/reject the proposed inventory change.
+FR-INV-04	Inventory shall not be deducted merely because an order was created.
+FR-INV-05	If available quantity is insufficient at approval time, the system shall prevent invalid deduction and notify the relevant party.
+FR-INV-06	A farmer may reject fulfillment or propose a lower quantity where the agreed quantity cannot be supplied.
+FR-INV-07	A lower quantity proposed by the farmer shall require buyer acceptance before becoming the actual agreed fulfillment quantity.
+FR-INV-08	Inventory changes shall be recorded in an adjustment/history record.
+FR-INV-09	Concurrent transactions shall be handled so that total committed quantity cannot exceed available inventory.
+4.12 Order Amendments
+ID	Requirement
+FR-AMD-01	A finalized order shall remain unchanged as the original agreement.
+FR-AMD-02	Users shall negotiate changes through private contextual chat.
+FR-AMD-03	A proposed amendment shall record the previous value and proposed new value.
+FR-AMD-04	The amendment shall identify proposer and timestamp.
+FR-AMD-05	Both parties shall confirm the amendment before it becomes effective.
+FR-AMD-06	If the amendment changes inventory impact, separate farmer inventory approval shall be required.
+FR-AMD-07	The original order quantity/terms shall remain preserved for history/audit.
+4.13 Payment Tracking
+ID	Requirement
+FR-PAY-01	AgriDirect shall track payment information but shall not process, hold, transfer or refund funds.
+FR-PAY-02	Payment records shall contain amount, method, status, transaction/reference ID, payment date and related order.
+FR-PAY-03	Supported payment method values may include UPI, bank transfer, cash and other agreed methods.
+FR-PAY-04	The buyer shall be able to record a payment as made.
+FR-PAY-05	The buyer may provide a reference/proof and send an acknowledgement request to the farmer.
+FR-PAY-06	The farmer may acknowledge receipt.
+FR-PAY-07	If payment is not received, the parties shall have an initial communication/resolution period before complaint escalation.
+FR-PAY-08	If a farmer does not acknowledge a payment, the buyer may submit payment proof after the defined acknowledgement period; the system shall notify the farmer.
+FR-PAY-09	Payment complaints shall be reviewable by Admin, who facilitates platform-side record handling but does not act as a payment authority.
+FR-PAY-10	Payment status shall be modeled separately from order status.
+4.14 Delivery Coordination
+ID	Requirement
+FR-DEL-01	The current release shall record basic delivery requirements/arrangements.
+FR-DEL-02	Actual transportation shall remain outside AgriDirect.
+FR-DEL-03	The current release shall not require GPS tracking, route optimization or a logistics dashboard.
+FR-DEL-04	Either farmer or buyer may mark delivery as completed.
+FR-DEL-05	The other party shall acknowledge delivery before the order reaches Completed.
+FR-DEL-06	The architecture shall allow future delivery-partner integration.
+4.15 Ratings and Reviews
+ID	Requirement
+FR-RAT-01	Ratings shall be available only after an eligible completed transaction.
+FR-RAT-02	Farmer shall be able to rate buyer with an overall 1–5 rating and optional written review.
+FR-RAT-03	Buyer shall be able to rate farmer with an overall 1–5 rating.
+FR-RAT-04	Buyer rating may include product quality, quantity accuracy, reliability and communication criteria.
+FR-RAT-05	Reviews shall be linked to the specific transaction.
+FR-RAT-06	The system shall prevent unauthorized rating of unrelated/incomplete transactions.
+4.16 Notifications
+ID	Requirement
+FR-NOT-01	Notify users of new messages.
+FR-NOT-02	Notify users of offers and counter-offers.
+FR-NOT-03	Notify users of offer acceptance/rejection.
+FR-NOT-04	Notify users of order creation and updates.
+FR-NOT-05	Notify users of payment status events.
+FR-NOT-06	Notify users of listing/requirement status changes.
+FR-NOT-07	Notify users of relevant marketplace matches.
+FR-NOT-08	Notify users of approaching listing/requirement expiry.
+FR-NOT-09	Notify users of verification decisions.
+FR-NOT-10	Advanced SMS/push/email automation is not mandatory for the current core release.
+4.17 Market Analytics
+ID	Requirement
+FR-ANA-01	The system shall provide descriptive price trend analysis using available historical platform data.
+FR-ANA-02	Price analysis may include average, minimum, maximum, range and time-based charts.
+FR-ANA-03	The system shall provide descriptive demand analysis using buyer requirements.
+FR-ANA-04	Demand analysis may group/count requirements by product, quantity, location and time.
+FR-ANA-05	The current release shall not claim ML-based price prediction.
+FR-ANA-06	The current release shall not claim demand forecasting.
+FR-ANA-07	Analytics shall distinguish platform transaction data, external/reference data and sample/demo data where applicable.
+FR-ANA-08	Analytics shall be presented as informational historical summaries rather than guaranteed market outcomes.
+4.18 Administration
+ID	Requirement
+FR-ADM-01	Admin shall view and manage user accounts subject to authorization.
+FR-ADM-02	Admin shall restrict, suspend or block users where required.
+FR-ADM-03	Admin shall review verification submissions.
+FR-ADM-04	Admin shall approve/reject verification and provide rejection reasons.
+FR-ADM-05	Admin shall monitor/remove inappropriate listings or requirements.
+FR-ADM-06	Admin shall review reports and complaints.
+FR-ADM-07	Users shall be able to report users, listings, requirements, inappropriate chat/content and transaction issues.
+FR-ADM-08	Transaction complaint categories shall include payment, quantity mismatch, quality issue, fraud/misrepresentation, order/delivery issue and other.
+FR-ADM-09	Admin actions shall be recorded for accountability.
+5. Business Rules
+Rule ID	Business Rule
+BR-01	A user must select a role during registration through the corresponding registration flow.
+BR-02	Unverified users may browse/search but cannot create listings/requirements, initiate chats, make offers or initiate transactions.
+BR-03	Only verified farmers can publish farmer listings.
+BR-04	Only verified buyers can publish buyer requirements.
+BR-05	Only verified users can initiate contextual marketplace communication.
+BR-06	A listing cannot commit more quantity than its approved available quantity.
+BR-07	A requirement's final remaining quantity/status is controlled by the buyer after system calculation.
+BR-08	An expired/inactive listing or requirement cannot receive new offers/transactions.
+BR-09	An accepted offer creates an order automatically.
+BR-10	Finalized orders are immutable; changes require amendments.
+BR-11	Amendments require both parties' confirmation.
+BR-12	Inventory effects of orders/amendments require farmer approval.
+BR-13	A farmer may reject an order or propose a lower quantity when unable to fulfill the agreed quantity.
+BR-14	A buyer must accept a proposed lower quantity before it becomes the revised agreement.
+BR-15	Payment tracking does not make AgriDirect a payment intermediary.
+BR-16	Delivery completion requires acknowledgement from the other party.
+BR-17	Ratings are allowed only after eligible completion and payment-record conditions.
+BR-18	Completed orders cannot be cancelled.
+BR-19	Private negotiation history is visible to the participants and authorized Admins when necessary.
+BR-20	Verification approval does not guarantee a user's future behavior or transaction performance.
+6. State Models and Lifecycle Requirements
+6.1 User / Verification
+User Account: Registered → Active/Restricted/Suspended/Blocked as administratively applicable. Verification: Not Submitted → Submitted → Under Review → Approved OR Rejected → Corrected/Resubmitted → Under Review.
+6.2 Listing
+Draft → Active → Partially Fulfilled → Closed OR Expired. A fully sold listing becomes unavailable for new transactions.
+6.3 Buyer Requirement
+Draft → Active → Partially Fulfilled → Closed OR Expired. The buyer controls whether a partially fulfilled requirement remains open.
+6.4 Offer
+Created → Countered (zero or more times) → Accepted OR Rejected/Expired/Withdrawn according to implementation rules.
+6.5 Order
+Pending → Confirmed → Payment Pending → Payment Recorded → Delivery Arranged → Completed. Cancellation is an allowed side transition from defined eligible states; Completed is terminal.
+6.6 Payment
+Payment Pending → Payment Made/Recorded → Awaiting Acknowledgement → Acknowledged/Completed OR Complaint/Evidence Review.
+6.7 Delivery
+Not Arranged → Arranged → Completion Marked by Party A/Party B → Acknowledged → Completed.
+6.8 Amendment
+Proposed → Awaiting Party Confirmation → Accepted/Effective OR Rejected → Inventory Approval if required → Inventory Change Recorded.
+7. Data Requirements and ER Planning
+7.1 Core Entities
+Entity	Key data	Purpose
+User	ID, role, credentials, contact, account status, timestamps	Identity/authentication.
+Profile	User ID, role-specific details, location, profile information	Detailed user profile.
+Verification	ID, user, category, status, dates, remarks	Verification lifecycle.
+VerificationDocument	ID, verification ID, type, file reference, status	Document evidence.
+Listing	ID, farmer, product, quantity, price, quality, location, dates, status	Supply marketplace data.
+Requirement	ID, buyer, product, quantity, remaining, location, date, price condition, status	Demand marketplace data.
+Conversation	ID, context, participants, timestamps	Private contextual communication.
+Message	ID, conversation, sender, content/file ref, timestamp	Chat history.
+Offer	ID, context, sender/receiver, terms, status, timestamps	Negotiation history.
+Order	ID, parties, source offer, agreed terms, state, timestamps	Transaction record.
+OrderAmendment	ID, order, field, old/new values, proposer, confirmations	Controlled changes.
+InventoryAdjustment	ID, listing, order/amendment, proposed/approved quantity, approver	Inventory audit.
+Payment	ID, order, amount, method, reference, proof, status, dates	Payment tracking.
+Delivery	ID, order, arrangement, completion/acknowledgement	Delivery coordination.
+RatingReview	ID, order, reviewer, reviewed user, rating, criteria, comment	Trust/reputation.
+Notification	ID, user, event type, content, read status, timestamp	User alerts.
+Report	ID, reporter, target, category, description, status, admin action	Moderation/complaints.
+7.2 Data Integrity
+•	Use foreign-key relationships between dependent records.
+•	Apply validation and database constraints to quantities, prices, statuses and required fields.
+•	Use transaction-safe updates for inventory and order changes.
+•	Preserve historical records for offers, amendments, payments and inventory adjustments.
+•	Do not overwrite important negotiation history.
+•	Use secure file references rather than exposing arbitrary filesystem paths.
+8. External and Internal Interface Requirements
+8.1 User Interface
+•	Role-specific registration screens.
+•	Dashboard/profile area.
+•	Verification submission and status screen.
+•	Find Produce screen.
+•	Find Buyers screen.
+•	Listing and requirement detail screens.
+•	Contextual chat screen.
+•	Structured offer/counter-offer UI.
+•	Order details and amendment UI.
+•	Payment tracking UI.
+•	Delivery arrangement UI.
+•	Ratings/reviews UI.
+•	Notifications UI.
+•	Analytics dashboard.
+•	Admin dashboard.
+8.2 REST API
+The backend shall expose REST-style HTTP endpoints with JSON request/response bodies where appropriate. OpenAPI/Swagger documentation shall describe available endpoints, request schemas, response schemas, authentication requirements and error responses.
+8.3 Authentication Interface
+Protected APIs shall require valid authentication credentials/token. Authorization shall be enforced on the server and shall not rely solely on frontend visibility controls.
+8.4 File/Image Interface
+The system shall support controlled upload/reference of verification documents, chat images and relevant files. File type, size, access permissions and storage strategy shall be finalized during implementation. Private documents shall not become publicly accessible by default.
+9. Security Requirements
+ID	Security requirement
+SEC-01	Passwords shall be securely hashed; plaintext passwords shall never be stored.
+SEC-02	Protected endpoints shall require authenticated access.
+SEC-03	Server-side authorization shall enforce role and verification restrictions.
+SEC-04	Input shall be validated at API boundaries and in business logic.
+SEC-05	SQL injection shall be mitigated through parameterized ORM/database operations.
+SEC-06	Private chat and files shall be accessible only to authorized participants/administrators.
+SEC-07	Verification documents shall receive controlled access.
+SEC-08	Sensitive secrets and configuration shall not be hard-coded in source control.
+SEC-09	Production deployment shall use HTTPS.
+SEC-10	Administrative actions should be auditable.
+SEC-11	The application shall return safe errors without exposing internal secrets or sensitive database details.
+SEC-12	Authentication and high-value operations should be protected against brute-force/abuse through appropriate controls.
+10. Non-Functional Requirements
+Category	Requirement
+Performance	Normal browsing, API requests and database operations should be responsive; indexes and efficient queries shall be used for high-frequency search/filter operations.
+Scalability	The schema and modular architecture shall support growth in users, listings, requirements, messages, orders and transaction history.
+Reliability	Critical multi-step changes shall use appropriate database transactions and controlled state transitions.
+Availability	The system shall be usable whenever the deployed application and required infrastructure are operational; no unrealistic uptime SLA is assumed.
+Usability	Important quantities, prices, dates, verification states and order statuses shall be clear to nontechnical users.
+Accessibility	The frontend should follow basic accessible UI practices such as readable text, meaningful labels, keyboard-friendly controls and clear error messages.
+Maintainability	Backend modules should separate routers, schemas, services, repositories and models where appropriate.
+Testability	Business rules should be independently testable and critical workflows should have integration/system tests.
+Portability	Dockerized services should allow consistent development/deployment environments.
+Observability	Application errors and important administrative/business events should be logged without exposing sensitive information.
+Data Integrity	Database constraints and application validation shall prevent invalid relationships, negative quantities and illegal state transitions.
+Privacy	The system shall limit access to personal, business, verification and private communication data.
+Extensibility	Future payment, logistics, external data and ML services should be integrable without rewriting the complete system.
+11. End-to-End Workflow Specifications
+11.1 Farmer Onboarding
+1.	Farmer selects Register as Farmer.
+2.	Farmer enters essential registration data.
+3.	System validates data and creates account.
+4.	Farmer logs in and completes profile information progressively.
+5.	Farmer selects relevant verification category.
+6.	Farmer uploads required documents.
+7.	System stores submission and changes status to Under Review.
+8.	Admin reviews documents.
+9.	Admin approves or rejects with reason.
+10.	Farmer receives notification.
+11.	If rejected, farmer corrects information/documents and resubmits.
+11.2 Buyer Onboarding
+12.	Buyer selects Register as Buyer.
+13.	Buyer enters essential personal and business data.
+14.	System validates and creates account.
+15.	Buyer completes additional business profile information.
+16.	Buyer submits applicable business verification documents.
+17.	Admin reviews and approves/rejects.
+18.	Buyer receives the result and may resubmit after rejection.
+11.3 Farmer Supply Workflow
+19.	Verified farmer creates listing.
+20.	Farmer enters product, quantity, price, quality, location, availability and expiry.
+21.	System validates listing.
+22.	Listing becomes Active.
+23.	Users search/view listing.
+24.	Verified buyer initiates contextual communication or direct purchase.
+25.	If negotiation is required, structured offer/counter-offer cycle occurs.
+26.	Accepted offer creates order.
+27.	Farmer reviews proposed quantity impact.
+28.	Farmer approves/rejects inventory change.
+29.	If approved and quantity remains valid, inventory history is updated.
+11.4 Buyer Demand Workflow
+30.	Verified buyer creates requirement.
+31.	Buyer enters product, quantity, location and required-by date plus optional conditions.
+32.	Requirement becomes Active.
+33.	Verified farmers discover the requirement.
+34.	Farmer initiates contextual chat and/or offer.
+35.	Negotiation proceeds through structured offers.
+36.	Accepted offer creates order.
+37.	System calculates remaining requirement.
+38.	Buyer decides whether to keep it open, close it, modify it or create a new requirement.
+11.5 Order Change Workflow
+39.	Original finalized order remains unchanged.
+40.	Party discusses change in private chat.
+41.	One party proposes an amendment.
+42.	System stores previous and proposed values.
+43.	Other party accepts/rejects.
+44.	If both confirm, amendment becomes effective.
+45.	If inventory is affected, farmer separately approves the inventory impact.
+46.	All events remain historically traceable.
+11.6 Payment Workflow
+47.	Order enters Payment Pending.
+48.	Buyer makes payment outside the platform.
+49.	Buyer records payment and reference/proof.
+50.	System sends acknowledgement request to farmer.
+51.	Farmer acknowledges if payment is received.
+52.	If not received, parties communicate and resolve.
+53.	If unresolved, eligible party raises complaint.
+54.	Admin may review evidence and facilitate platform-side record correction.
+11.7 Delivery Workflow
+55.	Parties agree delivery arrangement outside/through basic platform notes.
+56.	Delivery is arranged.
+57.	Either party may mark delivery completed.
+58.	Other party acknowledges.
+59.	Once delivery and payment conditions are satisfied, order becomes Completed.
+60.	Eligible ratings/reviews become available.
+12. DFD Planning Specification
+12.1 Context-Level External Entities
+•	Farmer
+•	Commercial Buyer
+•	Admin
+•	External file/storage service if introduced during implementation
+•	External notification service if introduced later
+12.2 Level 1 Processes
+Process	Purpose	Primary data stores
+P1 Authentication & User Management	Registration, login, profiles, access control	D1 Users, D2 Profiles
+P2 Verification	Documents, review, status, history	D3 Verification, D4 Documents
+P3 Marketplace	Listings, requirements, search and filters	D5 Listings, D6 Requirements
+P4 Communication & Negotiation	Chats, messages, offers/counters	D7 Conversations, D8 Messages, D9 Offers
+P5 Order & Inventory	Order creation, amendments, inventory approval	D10 Orders, D11 Amendments, D12 Inventory
+P6 Payment & Delivery	Payment tracking and delivery acknowledgement	D13 Payments, D14 Delivery
+P7 Ratings & Notifications	Reviews and alerts	D15 Reviews, D16 Notifications
+P8 Analytics	Historical descriptive calculations	Derived/analytical views
+P9 Administration	Verification, moderation, reports	D17 Reports, audit/admin records
+12.3 Level 2 Diagram Priorities
+•	Authentication/Registration Level 2.
+•	Verification Level 2.
+•	Listing Management Level 2.
+•	Requirement Management Level 2.
+•	Search/Discovery Level 2.
+•	Chat and Negotiation Level 2.
+•	Order and Inventory Level 2.
+•	Payment Tracking Level 2.
+•	Delivery Completion Level 2.
+•	Ratings/Notifications Level 2.
+•	Admin/Reporting Level 2.
+•	Analytics Level 2.
+13. Use Case Catalogue
+ID	Use Case	Primary actor	Precondition	Result
+UC-01	Register Farmer	Farmer	No existing account	Farmer account created.
+UC-02	Register Buyer	Buyer	No existing account	Buyer account created.
+UC-03	Login	Farmer/Buyer/Admin	Registered account	Authenticated session established.
+UC-04	Manage Profile	User	Authenticated	Profile updated.
+UC-05	Submit Verification	Farmer/Buyer	Authenticated	Verification submission created.
+UC-06	Review Verification	Admin	Admin authenticated	Approved/rejected with record.
+UC-07	Create Listing	Verified Farmer	Verified	Active listing created.
+UC-08	Create Requirement	Verified Buyer	Verified	Active requirement created.
+UC-09	Find Produce	Registered User	Authenticated	Matching listings shown.
+UC-10	Find Buyers	Registered User	Authenticated	Matching requirements shown.
+UC-11	Chat	Verified User	Relevant marketplace context	Private contextual conversation.
+UC-12	Negotiate	Verified User	Relevant chat/marketplace context	Accepted/rejected offer history.
+UC-13	Create Order	System	Offer accepted	Order created from accepted terms.
+UC-14	Approve Inventory	Farmer	Order/amendment requires adjustment	Approved quantity recorded.
+UC-15	Amend Order	Farmer/Buyer	Finalized order exists	Mutually accepted amendment.
+UC-16	Track Payment	Buyer/Farmer	Order eligible	Payment status/reference recorded.
+UC-17	Complete Delivery	Farmer/Buyer	Delivery arranged	Mutual completion acknowledgement.
+UC-18	Rate Transaction	Farmer/Buyer	Order completed	Review stored.
+UC-19	View Analytics	Authorized User/Admin	Relevant historical data	Descriptive report displayed.
+UC-20	Manage Report	Admin	Report exists	Report action/status recorded.
+14. REST API Planning
+14.1 Authentication
+Method	Endpoint	Purpose
+POST	/api/auth/register/farmer	Create farmer account
+POST	/api/auth/register/buyer	Create buyer account
+POST	/api/auth/login	Authenticate
+GET	/api/auth/me	Get authenticated user
+POST	/api/auth/logout	End session where applicable
+14.2 Profile / Verification
+Method	Endpoint	Purpose
+GET	/api/profile	Get own profile
+PATCH	/api/profile	Update profile
+POST	/api/verification	Submit verification
+GET	/api/verification	View verification status/history
+GET	/api/admin/verifications	Admin verification queue
+POST	/api/admin/verifications/{id}/approve	Approve
+POST	/api/admin/verifications/{id}/reject	Reject with reason
+14.3 Marketplace
+Method	Endpoint	Purpose
+POST	/api/listings	Create listing
+GET	/api/listings	Search/find produce
+GET	/api/listings/{id}	View listing
+PATCH	/api/listings/{id}	Update listing
+POST	/api/requirements	Create requirement
+GET	/api/requirements	Search/find buyers
+GET	/api/requirements/{id}	View requirement
+PATCH	/api/requirements/{id}	Update requirement
+14.4 Chat / Offers / Orders
+Method	Endpoint	Purpose
+POST	/api/conversations	Create contextual conversation
+GET	/api/conversations	List conversations
+GET	/api/conversations/{id}/messages	Get messages
+POST	/api/conversations/{id}/messages	Send message
+POST	/api/offers	Create offer
+POST	/api/offers/{id}/counter	Counter-offer
+POST	/api/offers/{id}/accept	Accept
+POST	/api/offers/{id}/reject	Reject
+GET	/api/orders	List orders
+GET	/api/orders/{id}	Order details
+POST	/api/orders/{id}/amendments	Propose amendment
+POST	/api/orders/{id}/amendments/{id}/confirm	Confirm amendment
+14.5 Payment / Delivery / Reviews / Admin
+Area	Representative endpoints
+Payment	/api/orders/{id}/payments; /api/payments/{id}/acknowledge; /api/payments/{id}/complaint
+Delivery	/api/orders/{id}/delivery; /api/orders/{id}/delivery/complete; /api/orders/{id}/delivery/acknowledge
+Reviews	/api/orders/{id}/reviews
+Notifications	/api/notifications
+Analytics	/api/analytics/price-trends; /api/analytics/demand
+Reports	/api/reports
+Admin	/api/admin/users; /api/admin/listings; /api/admin/requirements; /api/admin/reports
+15. Complete Project Planning
+15.1 Planning Principle
+The team should use this SRS as the requirements baseline and derive downstream engineering artifacts from it. The recommended sequence is requirements → PRD/SRS baseline → DFD → use cases → ERD/database → architecture → UI wireframes → API contracts → implementation → testing → deployment → demonstration.
+15.2 Phase Plan
+Phase	Work	Main output	Dependency
+Phase 1	Requirements freeze	PRD + SRS + business rules	Project concept
+Phase 2	Process modelling	Context DFD, Level 1, Level 2 DFDs	SRS
+Phase 3	Use-case modelling	Use case diagram + detailed use cases	SRS
+Phase 4	Data modelling	ER diagram + normalized relational schema	SRS + use cases
+Phase 5	Architecture	System architecture + module boundaries	SRS + ERD
+Phase 6	UI planning	Wireframes/screens + navigation flow	Use cases
+Phase 7	API design	Endpoint list + schemas + error model	SRS + ERD
+Phase 8	Backend implementation	FastAPI modules + DB + auth	Architecture + API
+Phase 9	Frontend implementation	React pages/components	UI + API
+Phase 10	Integration	End-to-end workflows	Frontend + backend
+Phase 11	Testing	Test cases, bug log, regression	Integrated system
+Phase 12	Deployment	Dockerized deployment	Stable build
+Phase 13	Documentation/demo	Final report, PPT, demo script	Completed system
+15.3 Recommended Backend Module Plan
+•	auth — registration, login, authentication and authorization.
+•	users/profile — profiles and account status.
+•	verification — documents, review, history.
+•	listings — farmer supply.
+•	requirements — buyer demand.
+•	search/marketplace — discovery, filtering and sorting.
+•	chat — conversations/messages/attachments.
+•	offers — structured negotiation.
+•	orders — order lifecycle and cancellation.
+•	inventory — quantity validation and approval.
+•	amendments — finalized-order change process.
+•	payments — tracking and acknowledgement.
+•	delivery — arrangement and acknowledgement.
+•	reviews — ratings/reviews.
+•	notifications — event notifications.
+•	analytics — descriptive calculations.
+•	admin — moderation, reports and verification.
+15.4 Recommended Database Build Order
+61.	users/accounts
+62.	profiles
+63.	verification and verification documents
+64.	products/reference data if used
+65.	listings
+66.	requirements
+67.	conversations/messages
+68.	offers
+69.	orders
+70.	order amendments
+71.	inventory adjustments
+72.	payments
+73.	delivery
+74.	reviews
+75.	notifications
+76.	reports/audit records
+15.5 Recommended Frontend Page Plan
+•	Landing / home.
+•	Farmer registration.
+•	Buyer registration.
+•	Login.
+•	Dashboard.
+•	Profile.
+•	Verification.
+•	Find Produce.
+•	Find Buyers.
+•	Listing details.
+•	Requirement details.
+•	Create/edit listing.
+•	Create/edit requirement.
+•	Chat.
+•	Offer/negotiation.
+•	Orders.
+•	Order details/amendment.
+•	Payment tracking.
+•	Delivery.
+•	Ratings/reviews.
+•	Analytics.
+•	Admin dashboard.
+15.6 Team Work Allocation
+Workstream	Primary responsibilities	Key handoffs
+Requirements/Documentation	PRD, SRS, business rules, diagrams, report	All teams
+Backend/Auth	FastAPI structure, auth, profiles, verification	DB + frontend
+Marketplace	Listings, requirements, search/filter	DB + frontend
+Negotiation/Orders	Chat, offers, orders, amendments, inventory	Marketplace + payment
+Payment/Delivery/Reviews	Tracking, acknowledgement, ratings	Orders + frontend
+Analytics/Admin	Analytics, notifications, reports, admin	All relevant modules
+Frontend	Pages, forms, marketplace UI, chat, orders, admin	Backend API
+Testing/Integration	Unit/integration/system/security testing	All teams
+15.7 Milestone Gates
+•	Gate 1: PRD/SRS approved — no major contradictory requirements remain.
+•	Gate 2: DFD + use cases approved — process flows are consistent.
+•	Gate 3: ERD approved — relationships and ownership are clear.
+•	Gate 4: API contract approved — frontend/backend interfaces are agreed.
+•	Gate 5: Core backend working — authentication, verification and marketplace work.
+•	Gate 6: Transaction workflow working — offer → order → inventory → payment/delivery.
+•	Gate 7: Frontend integrated.
+•	Gate 8: Test suite and critical bug closure.
+•	Gate 9: Deployment/demo ready.
+16. Verification and Validation Plan
+16.1 Test Levels
+•	Unit tests for validation, services and business rules.
+•	Integration tests for API/database interactions.
+•	System tests for complete marketplace workflows.
+•	Security tests for authentication and authorization.
+•	Usability checks for critical user journeys.
+•	Regression testing after changes.
+16.2 Critical Test Matrix
+Test ID	Scenario	Expected result
+T-01	Valid farmer registration	Account created with Farmer role.
+T-02	Valid buyer registration	Account created with Buyer role.
+T-03	Invalid registration	Validation error; no invalid account.
+T-04	Unverified listing creation	Denied.
+T-05	Unverified chat initiation	Denied.
+T-06	Verification rejection without reason	Rejected action requires reason.
+T-07	Verification resubmission	New/updated attempt recorded.
+T-08	Valid listing creation	Active listing stored.
+T-09	Valid requirement creation	Active requirement stored.
+T-10	Search/filter	Only matching permitted records returned.
+T-11	Offer acceptance	Order automatically created from final terms.
+T-12	Inventory over-allocation	Backend prevents invalid allocation.
+T-13	Farmer rejects inventory update	Inventory remains unchanged.
+T-14	Lower quantity proposal	Buyer acceptance required.
+T-15	Direct finalized-order edit	Blocked; amendment required.
+T-16	Amendment accepted by both	Amendment effective; original preserved.
+T-17	Payment record	Reference/status stored.
+T-18	Delivery only one-party completion	Order remains incomplete.
+T-19	Completed order rating	Eligible rating allowed.
+T-20	Incomplete order rating	Rating blocked.
+T-21	Expired listing purchase	Blocked.
+T-22	Completed cancellation	Blocked.
+T-23	Private chat access by unrelated user	Denied.
+T-24	Admin verification/report action	Action and status recorded.
+T-25	Analytics calculation	Historical descriptive values are correctly aggregated.
+17. Requirements Traceability Planning
+Every major requirement should be traceable to at least one use case, process/DFD component, database entity and test case. This prevents the implementation from drifting away from the SRS.
+Requirement group	Use cases	Design artifacts	Testing
+Authentication	UC-01 to UC-04	Auth DFD, User/Profile ERD, Auth API	T-01 to T-03
+Verification	UC-05 to UC-06	Verification DFD, Verification ERD	T-06 to T-07
+Marketplace	UC-07 to UC-10	Marketplace DFD, Listing/Requirement ERD	T-08 to T-10
+Communication/Negotiation	UC-11 to UC-12	Chat/Offer DFD, Message/Offer ERD	T-11, T-23
+Orders/Inventory	UC-13 to UC-15	Order/Inventory DFD + ERD	T-12 to T-16
+Payment/Delivery	UC-16 to UC-17	Payment/Delivery DFD + ERD	T-17 to T-18
+Ratings	UC-18	Review ERD + API	T-19 to T-20
+Admin/Reports	UC-20	Admin DFD + Report ERD	T-24
+Analytics	Analytics use case	Analytics data flow	T-25
+18. Project Risks and Mitigation
+Risk	Impact	Mitigation
+Scope becomes too large	High	Freeze current core scope; defer delivery partner, real payments and ML.
+Complex negotiation/order logic	High	Implement explicit state machines and immutable history.
+Inventory race conditions	High	Use transactional/concurrency-safe DB updates and farmer approval.
+Unclear verification rules	Medium	Keep category-specific document requirements and Admin review.
+Frontend/backend mismatch	Medium	Define API schemas before integration.
+File/document security	High	Use controlled storage, access checks and safe file validation.
+Analytics data too small	Medium	Clearly label sample/demo data and avoid predictive claims.
+Team coordination issues	Medium	Use Git branches, issue tracking, module ownership and milestone gates.
+Overengineering	High	Prefer modular monolith and implement only current requirements.
+19. Future Architecture Readiness
+The system should be designed so that future functionality can be added without changing the core marketplace model. Candidate extensions include a delivery-partner module, real payment provider integration, external market-price APIs, machine-learning prediction services, recommendation engines, AI assistants and mobile clients.
+•	Expose service boundaries through clear interfaces.
+•	Keep analytics calculations separate from transaction logic.
+•	Keep payment tracking separate from future payment processing.
+•	Keep delivery records separate from future logistics tracking.
+•	Keep verification workflow extensible for external verification providers.
+•	Avoid embedding business logic directly inside UI components or route handlers.
+20. Overall System Acceptance Criteria
+•	A Farmer can register, authenticate, complete a profile, submit verification and, after approval, create/manage listings.
+•	A Buyer can register, authenticate, complete a business profile, submit verification and, after approval, create/manage requirements.
+•	Unverified users can browse/search but cannot initiate marketplace transactions or chats.
+•	Verified users can discover the opposite side and communicate in legitimate marketplace contexts.
+•	Users can negotiate using structured offers and counter-offers.
+•	Accepted offers automatically produce orders.
+•	Inventory cannot be over-allocated and changes follow the farmer approval workflow.
+•	Finalized orders cannot be silently edited; amendments require mutual confirmation.
+•	Payment information can be recorded without AgriDirect processing money.
+•	Delivery can be arranged and completion mutually acknowledged.
+•	Eligible completed transactions support mutual ratings/reviews.
+•	Admins can manage verification, users, marketplace content and reports.
+•	Descriptive analytics can summarize available historical price and demand data.
+•	Critical security and authorization requirements are enforced server-side.
+•	The project can be tested through defined unit, integration and end-to-end cases.
+Appendix A — Recommended Artifact Set
+Artifact	Purpose	Status in planning
+PRD	Product vision, scope, users, goals and features	Defined
+SRS	Detailed system requirements and rules	This document
+DFD Level 0	System context and external entities	Planned from SRS
+DFD Level 1	Major system processes and data stores	Planned from SRS
+DFD Level 2	Detailed decomposition of major processes	Planned from SRS
+Use Case Diagram	Actor-system interaction overview	Defined catalogue
+Detailed Use Cases	Step-by-step functional behavior	Defined catalogue
+ER Diagram	Data entities and relationships	Entity baseline defined
+System Architecture	Frontend/backend/database structure	Defined
+API Specification	Endpoint contracts and schemas	Outline defined
+Test Plan	Validation strategy and test cases	Defined baseline
+Final Report/PPT	Academic/project presentation	To be prepared after implementation evidence
+Appendix B — Important Locked Decisions
+•	Separate Farmer and Buyer registration flows.
+•	Hybrid registration with progressive profile completion.
+•	Progressive, role/category-specific, document-based verification.
+•	Admin rejection requires a reason and supports resubmission.
+•	Multiple verification documents are supported.
+•	Unverified users can browse/search but cannot create marketplace content, initiate chat, make offers or transact.
+•	Only verified users can initiate contextual chat.
+•	Chat supports text, images and user-controlled contact/document sharing.
+•	Structured offers can originate from listing/requirement pages or chat.
+•	Separate Find Produce and Find Buyers search experiences.
+•	Accepted offers automatically create orders.
+•	Inventory changes require farmer approval.
+•	Finalized orders are immutable and changed through amendments.
+•	Payment is tracked, not processed.
+•	Delivery is basic coordination, not logistics tracking.
+•	Ratings are tied to completed transactions.
+•	Analytics are descriptive, not predictive.
