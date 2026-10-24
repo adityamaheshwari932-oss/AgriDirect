@@ -1,0 +1,1 @@
+"""AgriDirect backend application package."""

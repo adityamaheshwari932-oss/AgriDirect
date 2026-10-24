@@ -1,0 +1,20 @@
+# pytest configuration for the AgriDirect backend test suite.
+#
+# Run all tests from the backend/ directory:
+#   python -m pytest
+#
+# Run with verbose output and short traceback:
+#   python -m pytest -v --tb=short
+#
+# Run a specific test file:
+#   python -m pytest tests/test_health.py -v
+
+[tool.pytest.ini_options]
+# Discover tests in the tests/ directory.
+testpaths = ["tests"]
+
+# Show short tracebacks by default; use --tb=long to override.
+addopts = "--tb=short -q"
+
+# Minimum pytest version required.
+minversion = "7.0"
