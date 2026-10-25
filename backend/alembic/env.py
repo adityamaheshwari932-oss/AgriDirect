@@ -11,6 +11,15 @@ from app.db.base import Base
 # ensure they are imported in app/models/__init__.py or here.
 import app.models  # noqa: F401
 
+# this is the Alembic Config object, which provides
+# access to the values within the .ini file in use.
+config = context.config
+
+# Interpret the config file for Python logging.
+# This line sets up loggers basically.
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+
 # Target metadata for autogenerate support
 target_metadata = Base.metadata
 
@@ -20,28 +29,11 @@ def get_url() -> str:
     return get_settings().database_url
 
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
-try:
-    config = context.config
-except AttributeError:
-    config = None
-
-# Interpret the config file for Python logging.
-if config is not None:
-    if config.config_file_name is not None:
-        fileConfig(config.config_file_name)
-
-    # Configure Alembic with the runtime database URL from application settings.
-    # Credentials are never stored in alembic.ini.
-    # Percent signs (%) in URL-encoded passwords must be escaped as '%%' for
-    # configparser compatibility to prevent interpolation syntax errors.
-    try:
-        _runtime_url = get_url()
-        config.set_main_option("sqlalchemy.url", _runtime_url.replace("%", "%%"))
-    except Exception:
-        # Fall back safely if settings are unconfigured (e.g. during test imports)
-        _runtime_url = None
+# Configure Alembic with the runtime database URL from application settings.
+# Credentials are never stored in alembic.ini.
+# Percent signs (%) in URL-encoded passwords must be escaped as '%%' for
+# configparser compatibility to prevent interpolation syntax errors.
+config.set_main_option("sqlalchemy.url", get_url().replace("%", "%%"))
 
 
 def run_migrations_offline() -> None:
@@ -50,7 +42,7 @@ def run_migrations_offline() -> None:
     This configures the context with just a URL and not an Engine.
     Calls to context.execute() emit the SQL statements to stdout/script output.
     """
-    url = get_url()
+    url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -69,17 +61,17 @@ def run_migrations_online() -> None:
     with the Alembic migration context.
     """
     # Reuse an existing connection if provided via config attributes (e.g. in tests)
-    connectable = config.attributes.get("connection", None) if config is not None else None
+    connectable = config.attributes.get("connection", None)
 
     if connectable is not None:
         context.configure(
             connection=connectable,
             target_metadata=target_metadata,
         )
-        with context.begin_transaction():
-            context.run_migrations()
+        # When an external connection is provided, the caller owns the transaction.
+        context.run_migrations()
     else:
-        url = get_url()
+        url = config.get_main_option("sqlalchemy.url")
         engine = create_engine(
             url,
             poolclass=pool.NullPool,
@@ -97,12 +89,7 @@ def run_migrations_online() -> None:
             engine.dispose()
 
 
-try:
-    if context.is_offline_mode():
-        run_migrations_offline()
-    else:
-        run_migrations_online()
-except (AttributeError, NameError):
-    # When env.py is imported outside an active Alembic command (e.g. in tests or
-    # documentation tooling), the Alembic context proxy is not yet bound.
-    pass
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()

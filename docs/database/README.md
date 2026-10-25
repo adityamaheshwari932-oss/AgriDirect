@@ -1,7 +1,7 @@
 # Database Documentation
 
 **Project:** AgriDirect  
-**Status:** 🔴 Draft — to be populated during Phase 2+
+**Status:** 🟢 Baseline Schema Design Complete (`schema-design.md`)
 
 ---
 
@@ -9,21 +9,12 @@
 
 This folder contains the database schema documentation, Entity-Relationship Diagrams (ERDs), and the data dictionary for AgriDirect's PostgreSQL database.
 
-## Conventions
-
-- All tables use **UUID primary keys**.
-- All tables include `created_at` and `updated_at` timestamp columns (UTC, non-nullable).
-- User-facing entities use **soft deletes** via `is_deleted` (boolean) and `deleted_at` (timestamp, nullable).
-- All schema changes are managed through **Alembic** migrations — never manual `CREATE TABLE`.
-- Foreign keys are explicitly defined and indexed.
-
-## Planned Documents
+## Documents
 
 | File | Description | Status |
 |---|---|---|
-| `ERD-overview.md` | Full entity-relationship diagram (Mermaid) | Pending |
-| `data-dictionary.md` | Table-by-table column definitions, types, and constraints | Pending |
-| `migration-log.md` | Human-readable log of all Alembic migrations | Pending |
+| [`schema-design.md`](./schema-design.md) | Authoritative database design specification, 25-table data dictionary, Mermaid ERD, state machines, normalization & concurrency analysis | Complete (Phase 1 Baseline) |
+| `migration-log.md` | Human-readable log of all Alembic migrations | Pending (Phase 2+) |
 
 ## Entity Summary (Planned)
 

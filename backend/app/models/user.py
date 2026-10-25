@@ -1,0 +1,318 @@
+"""SQLAlchemy models for User identity and role-specialized profiles.
+
+Implements Module 1 of AgriDirect:
+- ``User``: Central authentication credentials, role, and verification lifecycle.
+- ``FarmerProfile``: Farm location, acreage, farming practices, and produce capacity.
+- ``BuyerProfile``: Commercial entity, trade type, and delivery receiving facilities.
+"""
+
+import uuid
+from decimal import Decimal
+from typing import Optional
+
+from sqlalchemy import (
+    CheckConstraint,
+    ForeignKey,
+    Index,
+    Numeric,
+    String,
+    Text,
+)
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
+
+from app.db.base import Base
+from app.models.base import TimestampMixin, UUIDPrimaryKeyMixin
+
+VALID_USER_ROLES = ("farmer", "buyer", "admin")
+VALID_VERIFICATION_STATUSES = ("unverified", "pending", "verified", "rejected")
+VALID_ACCOUNT_STATUSES = ("active", "restricted", "suspended", "blocked")
+VALID_BUYER_TYPES = (
+    "restaurant",
+    "hotel",
+    "retailer",
+    "wholesaler",
+    "food_processor",
+    "caterer",
+    "other",
+)
+
+
+class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """Represents a registered platform user across all roles (Farmer, Buyer, Admin).
+
+    Authentication credentials, authorization role, and current verification status
+    are managed here. Role-specific profile details are delegated to specialized
+    1:1 child models (``FarmerProfile`` or ``BuyerProfile``).
+    """
+
+    __tablename__ = "users"
+
+    email: Mapped[str] = mapped_column(
+        String(255),
+        unique=True,
+        nullable=False,
+    )
+    phone_number: Mapped[Optional[str]] = mapped_column(
+        String(32),
+        unique=True,
+        nullable=True,
+    )
+    password_hash: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+    role: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+    )
+    verification_status: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+        default="unverified",
+        server_default="unverified",
+    )
+    account_status: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+        default="active",
+        server_default="active",
+    )
+
+    # 1:1 Bidirectional Relationships with specialized profile tables
+    farmer_profile: Mapped[Optional["FarmerProfile"]] = relationship(
+        "FarmerProfile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    buyer_profile: Mapped[Optional["BuyerProfile"]] = relationship(
+        "BuyerProfile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "role IN ('farmer', 'buyer', 'admin')",
+            name="chk_users_role",
+        ),
+        CheckConstraint(
+            "verification_status IN ('unverified', 'pending', 'verified', 'rejected')",
+            name="chk_users_verification_status",
+        ),
+        CheckConstraint(
+            "account_status IN ('active', 'restricted', 'suspended', 'blocked')",
+            name="chk_users_account_status",
+        ),
+        Index(
+            "idx_users_role_status",
+            "role",
+            "verification_status",
+            "account_status",
+        ),
+    )
+
+    @validates("role")
+    def validate_role(self, key: str, value: str) -> str:
+        """Validate that role matches permitted values and is consistent with attached profiles."""
+        if value not in VALID_USER_ROLES:
+            raise ValueError(
+                f"Invalid role '{value}'. Must be one of: {', '.join(VALID_USER_ROLES)}"
+            )
+        if value != "farmer" and getattr(self, "farmer_profile", None) is not None:
+            raise ValueError(
+                f"Cannot change role to '{value}' while FarmerProfile is attached."
+            )
+        if value != "buyer" and getattr(self, "buyer_profile", None) is not None:
+            raise ValueError(
+                f"Cannot change role to '{value}' while BuyerProfile is attached."
+            )
+        return value
+
+    @validates("verification_status")
+    def validate_verification_status(self, key: str, value: str) -> str:
+        """Validate that verification_status matches permitted states."""
+        if value not in VALID_VERIFICATION_STATUSES:
+            raise ValueError(
+                f"Invalid verification_status '{value}'. Must be one of: "
+                f"{', '.join(VALID_VERIFICATION_STATUSES)}"
+            )
+        return value
+
+    @validates("account_status")
+    def validate_account_status(self, key: str, value: str) -> str:
+        """Validate that account_status matches permitted states."""
+        if value not in VALID_ACCOUNT_STATUSES:
+            raise ValueError(
+                f"Invalid account_status '{value}'. Must be one of: "
+                f"{', '.join(VALID_ACCOUNT_STATUSES)}"
+            )
+        return value
+
+    @validates("farmer_profile")
+    def validate_farmer_profile(
+        self, key: str, profile: Optional["FarmerProfile"]
+    ) -> Optional["FarmerProfile"]:
+        """Enforce role/profile consistency: only farmers may have a FarmerProfile."""
+        if profile is not None and self.role != "farmer":
+            raise ValueError(
+                f"Cannot attach FarmerProfile to user with role '{self.role}'. "
+                "FarmerProfile requires role='farmer'."
+            )
+        return profile
+
+    @validates("buyer_profile")
+    def validate_buyer_profile(
+        self, key: str, profile: Optional["BuyerProfile"]
+    ) -> Optional["BuyerProfile"]:
+        """Enforce role/profile consistency: only buyers may have a BuyerProfile."""
+        if profile is not None and self.role != "buyer":
+            raise ValueError(
+                f"Cannot attach BuyerProfile to user with role '{self.role}'. "
+                "BuyerProfile requires role='buyer'."
+            )
+        return profile
+
+    def __repr__(self) -> str:
+        """Safe representation excluding password hash to protect credentials from logs."""
+        return (
+            f"<User id={self.id} email={self.email!r} role={self.role!r} "
+            f"verification_status={self.verification_status!r} "
+            f"account_status={self.account_status!r}>"
+        )
+
+
+class FarmerProfile(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """Maintains farm location, acreage, farming practices, and agricultural details.
+
+    Associated 1:1 with a User whose role is 'farmer'.
+    """
+
+    __tablename__ = "farmer_profiles"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        unique=True,
+        nullable=False,
+    )
+    full_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    farm_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    farm_location_address: Mapped[str] = mapped_column(String(255), nullable=False)
+    city: Mapped[str] = mapped_column(String(64), nullable=False)
+    state: Mapped[str] = mapped_column(String(64), nullable=False)
+    postal_code: Mapped[str] = mapped_column(String(16), nullable=False)
+
+    latitude: Mapped[Optional[Decimal]] = mapped_column(Numeric(9, 6), nullable=True)
+    longitude: Mapped[Optional[Decimal]] = mapped_column(Numeric(9, 6), nullable=True)
+    farm_size_acres: Mapped[Optional[Decimal]] = mapped_column(Numeric(8, 2), nullable=True)
+    farming_practices: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    primary_crops: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # 1:1 Back-reference to User (deleting profile does not delete user)
+    user: Mapped["User"] = relationship("User", back_populates="farmer_profile")
+
+    __table_args__ = (
+        CheckConstraint(
+            "farm_size_acres IS NULL OR farm_size_acres > 0",
+            name="chk_farmer_size_positive",
+        ),
+        Index("idx_farmer_profiles_location", "state", "city"),
+    )
+
+    @validates("user")
+    def validate_user_role(self, key: str, user: Optional["User"]) -> Optional["User"]:
+        """Enforce role/profile consistency when user is assigned to FarmerProfile."""
+        if user is not None and user.role != "farmer":
+            raise ValueError(
+                f"FarmerProfile can only be associated with a user having role='farmer', "
+                f"got role='{user.role}'."
+            )
+        return user
+
+    @validates("farm_size_acres")
+    def validate_farm_size(
+        self, key: str, value: Optional[Decimal]
+    ) -> Optional[Decimal]:
+        """Ensure farm size is strictly positive if specified."""
+        if value is not None and value <= 0:
+            raise ValueError("farm_size_acres must be strictly positive.")
+        return value
+
+    def __repr__(self) -> str:
+        return (
+            f"<FarmerProfile id={self.id} user_id={self.user_id} "
+            f"farm_name={self.farm_name!r} city={self.city!r} state={self.state!r}>"
+        )
+
+
+class BuyerProfile(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """Maintains commercial enterprise identity, buyer category, and delivery receiving facilities.
+
+    Associated 1:1 with a User whose role is 'buyer'.
+    """
+
+    __tablename__ = "buyer_profiles"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        unique=True,
+        nullable=False,
+    )
+    contact_person_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    business_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    business_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    business_registration_number: Mapped[Optional[str]] = mapped_column(
+        String(64), nullable=True
+    )
+    delivery_receiving_address: Mapped[str] = mapped_column(String(255), nullable=False)
+    city: Mapped[str] = mapped_column(String(64), nullable=False)
+    state: Mapped[str] = mapped_column(String(64), nullable=False)
+    postal_code: Mapped[str] = mapped_column(String(16), nullable=False)
+
+    latitude: Mapped[Optional[Decimal]] = mapped_column(Numeric(9, 6), nullable=True)
+    longitude: Mapped[Optional[Decimal]] = mapped_column(Numeric(9, 6), nullable=True)
+    procurement_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # 1:1 Back-reference to User (deleting profile does not delete user)
+    user: Mapped["User"] = relationship("User", back_populates="buyer_profile")
+
+    __table_args__ = (
+        CheckConstraint(
+            "business_type IN ('restaurant', 'hotel', 'retailer', 'wholesaler', 'food_processor', 'caterer', 'other')",
+            name="chk_buyer_business_type",
+        ),
+        Index("idx_buyer_profiles_business_type", "business_type"),
+        Index("idx_buyer_profiles_location", "state", "city"),
+    )
+
+    @validates("user")
+    def validate_user_role(self, key: str, user: Optional["User"]) -> Optional["User"]:
+        """Enforce role/profile consistency when user is assigned to BuyerProfile."""
+        if user is not None and user.role != "buyer":
+            raise ValueError(
+                f"BuyerProfile can only be associated with a user having role='buyer', "
+                f"got role='{user.role}'."
+            )
+        return user
+
+    @validates("business_type")
+    def validate_business_type(self, key: str, value: str) -> str:
+        """Ensure business_type matches permitted commercial categories."""
+        if value not in VALID_BUYER_TYPES:
+            raise ValueError(
+                f"Invalid business_type '{value}'. Must be one of: {', '.join(VALID_BUYER_TYPES)}"
+            )
+        return value
+
+    def __repr__(self) -> str:
+        return (
+            f"<BuyerProfile id={self.id} user_id={self.user_id} "
+            f"business_name={self.business_name!r} business_type={self.business_type!r} "
+            f"city={self.city!r} state={self.state!r}>"
+        )

@@ -634,7 +634,7 @@ class TestApplicationLifespanDatabaseManagement:
 
 
 class TestDeclarativeBase:
-    """The shared Base is a valid SQLAlchemy DeclarativeBase."""
+    """The shared Base is a valid SQLAlchemy DeclarativeBase with clean decoupling from models."""
 
     def test_base_has_metadata(self) -> None:
         """Base.metadata exists and is a SQLAlchemy MetaData object."""
@@ -644,11 +644,48 @@ class TestDeclarativeBase:
 
         assert isinstance(Base.metadata, MetaData)
 
-    def test_base_has_no_tables_before_models_defined(self) -> None:
-        """Before any model is defined, Base.metadata has no tables."""
+    def test_base_alone_does_not_implicitly_import_models(self) -> None:
+        """Importing app.db.base.Base alone does not implicitly import application models.
+
+        Uses an isolated Python subprocess to guarantee that earlier tests in the
+        session that imported app.models do not leak imported module state into this verification.
+        """
+        import subprocess
+        import sys
+
+        verify_script = (
+            "import sys\n"
+            "from app.db.base import Base\n"
+            "assert 'app.models' not in sys.modules, (\n"
+            "    f'Importing app.db.base implicitly imported app.models'\n"
+            ")\n"
+            "assert len(Base.metadata.tables) == 0, (\n"
+            "    f'Base.metadata must have 0 tables before models are imported, '\n"
+            "    f'found: {list(Base.metadata.tables.keys())}'\n"
+            ")\n"
+        )
+        proc = subprocess.run(
+            [sys.executable, "-c", verify_script],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert proc.returncode == 0, (
+            f"Importing Base alone implicitly imported models or registered tables:\n"
+            f"STDOUT: {proc.stdout}\nSTDERR: {proc.stderr}"
+        )
+
+    def test_importing_models_registers_exact_implemented_tables(self) -> None:
+        """Importing app.models registers exactly the implemented Phase 2, Group 1 tables."""
+        import app.models  # noqa: F401
         from app.db.base import Base
 
-        assert len(Base.metadata.tables) == 0, (
-            "Expected no tables in metadata at this phase of the project. "
-            f"Found: {list(Base.metadata.tables.keys())}"
+        expected_tables = {"users", "farmer_profiles", "buyer_profiles"}
+        actual_tables = set(Base.metadata.tables.keys())
+        assert actual_tables == expected_tables, (
+            f"Base.metadata must register exactly the Phase 2 Group 1 tables.\n"
+            f"Expected: {expected_tables}\n"
+            f"Actual:   {actual_tables}\n"
+            f"Missing:  {expected_tables - actual_tables}\n"
+            f"Extra:    {actual_tables - expected_tables}"
         )
