@@ -18,10 +18,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.db.session import close_db, init_db
+
 # ---------------------------------------------------------------------------
 # Lifespan context manager
 # Startup and shutdown logic goes here as the application grows.
-# Phase 1 will add: database engine initialisation, connection pool warm-up.
 # ---------------------------------------------------------------------------
 
 @asynccontextmanager
@@ -34,11 +35,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     Yields:
         None — control passes to the running application.
     """
-    # --- Startup ---
-    # Future phases will initialise the async database engine here.
-    yield
-    # --- Shutdown ---
-    # Future phases will dispose the database engine here.
+    try:
+        # --- Startup ---
+        init_db()
+        yield
+    finally:
+        # --- Shutdown ---
+        close_db()
 
 
 # ---------------------------------------------------------------------------

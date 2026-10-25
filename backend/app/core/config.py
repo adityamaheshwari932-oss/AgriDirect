@@ -9,8 +9,8 @@ Usage (anywhere in the application)
     from app.core.config import get_settings
 
     settings = get_settings()
-    print(settings.database_url)   # safe; not a secret
-    # Never print settings.secret_key in real code.
+    # Never print settings.database_url — it contains the database password.
+    # Never print settings.secret_key — it is the JWT signing key.
 
 How environment variables map to fields
 -----------------------------------------
@@ -26,6 +26,7 @@ For an example of all required variables, see ``backend/.env.example``.
 """
 
 from functools import lru_cache
+from typing import ClassVar
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -73,9 +74,12 @@ class Settings(BaseSettings):
         # and reads from the real environment instead.
         env_file=".env",
         env_file_encoding="utf-8",
-        # Raise an error for unknown fields in the .env file so typos are
-        # caught early rather than silently ignored.
-        extra="ignore",
+        # Reject unrecognised keys found in the .env file so that spelling
+        # mistakes (e.g. DATABSE_URL) are detected early rather than silently
+        # dropped.  This applies only to .env file entries; unrelated variables
+        # that already exist in the process environment (PATH, TEMP, etc.) are
+        # NOT subject to this check, so it is safe to use on Windows.
+        extra="forbid",
         # Field names are case-insensitive when matched against env vars.
         case_sensitive=False,
     )
@@ -128,14 +132,26 @@ class Settings(BaseSettings):
             )
         return normalised
 
+    # The placeholder written in .env.example.  We reject it explicitly so
+    # that copying the template without editing fails at startup rather than
+    # silently running with a publicly known value.
+    _SECRET_KEY_PLACEHOLDER: ClassVar[str] = "REPLACE_ME"
+
     @field_validator("secret_key")
     @classmethod
-    def secret_key_must_not_be_empty(cls, value: str) -> str:
-        """Reject a blank or placeholder secret key.
+    def secret_key_must_be_valid(cls, value: str) -> str:
+        """Reject a blank, too-short, or known-placeholder secret key.
 
-        A secret key shorter than 32 characters is almost certainly a
-        placeholder or an accident.  Refuse to start rather than run with
-        a weak secret.
+        Rules (applied in order):
+        1. The value must not be blank.
+        2. The value must be at least 32 characters long.
+        3. The value must not equal the well-known placeholder from
+           ``.env.example`` (``REPLACE_ME``).
+
+        Rule 3 catches the case where a developer copies ``.env.example``
+        to ``.env`` and forgets to replace the placeholder.  A placeholder
+        long enough to satisfy rule 2 would otherwise pass silently and the
+        application would sign JWTs with a publicly known secret.
 
         Args:
             value: The raw SECRET_KEY string from the environment.
@@ -144,13 +160,31 @@ class Settings(BaseSettings):
             The validated secret key (unchanged).
 
         Raises:
-            ValueError: If the key is blank or fewer than 32 characters.
+            ValueError: If the key is blank, too short, or a known placeholder.
         """
-        if not value or len(value.strip()) < 32:
+        stripped = value.strip() if value else ""
+
+        if not stripped:
+            raise ValueError(
+                "SECRET_KEY must not be empty.  "
+                "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+            )
+
+        # Placeholder check comes before length so the error message is
+        # actionable: "you left the example value" is clearer than "too short".
+        if stripped.upper() == cls._SECRET_KEY_PLACEHOLDER:
+            raise ValueError(
+                "SECRET_KEY is set to the example placeholder value.  "
+                "Replace it with a real secret before starting the application.  "
+                "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+            )
+
+        if len(stripped) < 32:
             raise ValueError(
                 "SECRET_KEY must be at least 32 characters long.  "
                 "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
             )
+
         return value
 
     @field_validator("database_url")

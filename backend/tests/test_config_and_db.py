@@ -10,6 +10,9 @@ Strategy
 * Settings are tested by constructing ``Settings(...)`` with explicit
   keyword arguments, completely bypassing .env file loading and the
   ``get_settings()`` cache.
+* The ``extra="forbid"`` test writes a temporary .env file in a temp
+  directory and points ``env_file`` at it, so the developer's real .env
+  is never read.
 * The session-lifecycle test creates a *temporary in-memory SQLite*
   database via ``create_engine("sqlite:///:memory:")`` so no PostgreSQL
   connection is needed.
@@ -20,16 +23,31 @@ Run from the project root:
     backend\\.venv\\Scripts\\python.exe -m pytest backend/tests -v
 """
 
+import importlib
 import os
+import sys
+import tempfile
 from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from fastapi.testclient import TestClient
 from pydantic import ValidationError
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import Settings, get_settings
+from app.db.session import close_db, get_db, get_engine, get_session_factory, init_db
+from app.main import app
+
+
+@pytest.fixture(autouse=True)
+def clean_db_state() -> Generator[None, None, None]:
+    """Ensure database global state is reset before and after each test."""
+    close_db()
+    yield
+    close_db()
 
 
 # ===========================================================================
@@ -142,7 +160,7 @@ class TestSettingsValidation:
         clean_env = {k: v for k, v in os.environ.items() if k != "DATABASE_URL"}
         with patch.dict(os.environ, clean_env, clear=True):
             with pytest.raises(ValidationError):
-                Settings(app_env="testing", secret_key=_VALID_SECRET)
+                Settings(_env_file=None, app_env="testing", secret_key=_VALID_SECRET)
 
     def test_rejects_short_secret_key(self) -> None:
         """A secret key shorter than 32 characters is rejected."""
@@ -158,7 +176,7 @@ class TestSettingsValidation:
         clean_env = {k: v for k, v in os.environ.items() if k != "SECRET_KEY"}
         with patch.dict(os.environ, clean_env, clear=True):
             with pytest.raises(ValidationError):
-                Settings(app_env="testing", database_url=_VALID_DB_URL)
+                Settings(_env_file=None, app_env="testing", database_url=_VALID_DB_URL)
 
     def test_short_secret_key_error_mentions_length(self) -> None:
         """The ValidationError for a short key describes the length requirement.
@@ -175,6 +193,155 @@ class TestSettingsValidation:
         assert "32" in str(exc_info.value), (
             "Expected the ValidationError to mention the minimum key length (32)."
         )
+
+    # ------------------------------------------------------------------
+    # Placeholder rejection
+    # ------------------------------------------------------------------
+
+    def test_rejects_replace_me_placeholder(self) -> None:
+        """The literal value REPLACE_ME (from .env.example) is rejected.
+
+        This prevents accidentally running with the publicly known placeholder
+        value from the committed template file.
+        """
+        with pytest.raises(ValidationError):
+            _valid_settings(secret_key="REPLACE_ME")
+
+    def test_rejects_replace_me_lowercase(self) -> None:
+        """The placeholder check is case-insensitive."""
+        with pytest.raises(ValidationError):
+            _valid_settings(secret_key="replace_me")
+
+    def test_rejects_replace_me_mixed_case(self) -> None:
+        with pytest.raises(ValidationError):
+            _valid_settings(secret_key="Replace_Me")
+
+    def test_placeholder_error_mentions_placeholder(self) -> None:
+        """The placeholder ValidationError explains what went wrong.
+
+        The message must mention the placeholder so a developer reading the
+        error immediately knows to replace it.
+        """
+        with pytest.raises(ValidationError) as exc_info:
+            _valid_settings(secret_key="REPLACE_ME")
+        assert "placeholder" in str(exc_info.value).lower(), (
+            "Expected the error to mention 'placeholder' so the developer "
+            "understands the problem."
+        )
+
+    def test_long_genuine_secret_is_accepted(self) -> None:
+        """A long, randomly-generated secret that is not a placeholder is accepted."""
+        genuine_secret = "a1b2c3d4e5f6" * 6  # 72 hex chars, clearly not REPLACE_ME
+        s = _valid_settings(secret_key=genuine_secret)
+        assert len(s.secret_key) >= 32
+
+
+# ===========================================================================
+# extra="forbid" — unknown .env key detection
+# ===========================================================================
+
+
+class TestExtraForbidBehaviour:
+    """Settings rejects unrecognised keys found in a .env file.
+
+    pydantic-settings with ``extra="forbid"`` raises a ValidationError when
+    the .env file contains a key that does not match any declared field.  This
+    catches spelling mistakes such as ``DATABSE_URL`` early.
+
+    Importantly, the check applies only to .env file entries.  Variables that
+    already exist in the process environment (PATH, TEMP, USERNAME, etc.) are
+    NOT subject to this check, so it is safe to use on Windows.
+    """
+
+    def _make_env_file(self, tmp_path: Path, content: str) -> Path:
+        """Write content to a .env file in tmp_path and return its path.
+
+        Args:
+            tmp_path: pytest's temporary directory fixture.
+            content: Lines to write (one VAR=VALUE per line).
+
+        Returns:
+            Absolute Path to the written file.
+        """
+        env_file = tmp_path / ".env"
+        env_file.write_text(content, encoding="utf-8")
+        return env_file
+
+    def test_unknown_dotenv_key_raises_validation_error(
+        self, tmp_path: Path
+    ) -> None:
+        """A .env file with an unknown key causes a ValidationError.
+
+        This simulates a developer who mistyped a variable name in their
+        local .env file, e.g. DATABSE_URL instead of DATABASE_URL.
+        """
+        env_file = self._make_env_file(
+            tmp_path,
+            f"DATABASE_URL={_VALID_DB_URL}\n"
+            f"SECRET_KEY={'a' * 32}\n"
+            "APP_ENV=development\n"
+            "TYPO_VARIABLE=should_cause_error\n",  # unknown key
+        )
+        # Patch model_config to point at our temp file instead of the real .env.
+        patched_config = {**Settings.model_config, "env_file": str(env_file)}
+        with patch.object(Settings, "model_config", patched_config):
+            with pytest.raises(ValidationError) as exc_info:
+                Settings()
+        errors = exc_info.value.errors()
+        error_types = [e["type"] for e in errors]
+        assert "extra_forbidden" in error_types, (
+            f"Expected 'extra_forbidden' error for unknown .env key. Got: {error_types}"
+        )
+
+    def test_valid_dotenv_file_with_no_unknown_keys_succeeds(
+        self, tmp_path: Path
+    ) -> None:
+        """A .env file with only known, valid keys does not raise an error."""
+        env_file = self._make_env_file(
+            tmp_path,
+            f"DATABASE_URL={_VALID_DB_URL}\n"
+            f"SECRET_KEY={'b' * 32}\n"
+            "APP_ENV=development\n",
+        )
+        patched_config = {**Settings.model_config, "env_file": str(env_file)}
+        # Remove DATABASE_URL and SECRET_KEY from the process environment so
+        # pydantic-settings must read them exclusively from the temp .env file.
+        clean_env = {
+            k: v
+            for k, v in os.environ.items()
+            if k not in ("DATABASE_URL", "SECRET_KEY", "APP_ENV")
+        }
+        with patch.object(Settings, "model_config", patched_config):
+            with patch.dict(os.environ, clean_env, clear=True):
+                s = Settings()
+        assert s.app_env == "development"
+
+    def test_os_env_vars_are_not_rejected_by_extra_forbid(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Unrelated OS environment variables (PATH, TEMP, etc.) are not rejected.
+
+        This verifies that extra="forbid" does not break the application on
+        Windows, where the process environment contains many variables that
+        are not declared as Settings fields.
+        """
+        # Point env_file at a nonexistent path so no .env is loaded.
+        # All required values come from explicit env vars patched below.
+        monkeypatch.setattr(
+            "app.core.config.Settings.model_config",
+            {**Settings.model_config, "env_file": ".env.nonexistent"},
+        )
+        monkeypatch.setenv("DATABASE_URL", _VALID_DB_URL)
+        monkeypatch.setenv("SECRET_KEY", "c" * 32)
+        monkeypatch.setenv("APP_ENV", "testing")
+        get_settings.cache_clear()
+        try:
+            # If extra="forbid" incorrectly applied to OS env vars, this
+            # would raise because PATH, TEMP, USERNAME etc. are present.
+            s = get_settings()
+            assert isinstance(s, Settings)
+        finally:
+            get_settings.cache_clear()
 
 
 # ===========================================================================
@@ -229,117 +396,236 @@ class TestGetSettingsCacheBehaviour:
 
 
 # ===========================================================================
-# Session factory — lifecycle tests using in-memory SQLite
+# Database lifecycle, import safety, and session tests
 # ===========================================================================
-# These tests verify the session-management *pattern* (open, yield, close)
-# without connecting to PostgreSQL.  We wire create_engine and sessionmaker
-# identically to how session.py does it, but against SQLite in memory.
-#
-# SQLAlchemy 2.x note on Session.is_active:
-#   is_active is True when the session has NOT been rolled back — it does NOT
-#   mean the session is "open".  A closed session can still have is_active=True.
-#   The correct way to detect that a session has been closed (after a query
-#   started a transaction) is db.in_transaction(), which returns False once
-#   the session is closed and the transaction is gone.
 
 
-class TestSessionLifecycle:
-    """Session opens, can execute, and closes correctly."""
+class TestDatabaseImportSafety:
+    """Importing app.db.session must not require settings or a live database."""
 
-    @pytest.fixture()
-    def sqlite_session_factory(self) -> sessionmaker[Session]:
-        """Create a sessionmaker backed by an in-memory SQLite database.
-
-        SQLite is used here purely to test the open/close lifecycle without
-        requiring PostgreSQL.  The session configuration mirrors session.py.
-
-        Returns:
-            A sessionmaker that produces Session objects.
-        """
-        engine = create_engine("sqlite:///:memory:", echo=False)
-        factory: sessionmaker[Session] = sessionmaker(
-            bind=engine,
-            autocommit=False,
-            autoflush=False,
-        )
-        return factory
-
-    def test_session_can_be_created_and_execute_sql(
-        self, sqlite_session_factory: sessionmaker[Session]
+    def test_import_session_module_without_database_url_or_secret_key(
+        self,
     ) -> None:
-        """A session can be created and used to execute SQL."""
-        db = sqlite_session_factory()
+        """app.db.session can be imported when required settings are absent.
+
+        This ensures importing database utilities never raises a ValidationError
+        due to missing environment variables.
+        """
+        clean_env = {
+            k: v
+            for k, v in os.environ.items()
+            if k not in ("DATABASE_URL", "SECRET_KEY", "APP_ENV")
+        }
+        with patch.dict(os.environ, clean_env, clear=True):
+            if "app.db.session" in sys.modules:
+                del sys.modules["app.db.session"]
+            imported_mod = importlib.import_module("app.db.session")
+
+            assert imported_mod._engine is None
+            assert imported_mod._session_factory is None
+
+
+class TestDatabaseExplicitInitialization:
+    """The database engine and session factory can be initialized explicitly."""
+
+    def test_init_db_with_explicit_test_url(self) -> None:
+        """init_db creates an engine and sessionmaker bound to the provided URL."""
+        init_db("sqlite:///:memory:")
+        engine = get_engine()
+        assert engine.url.drivername == "sqlite"
+
+        factory = get_session_factory()
+        assert isinstance(factory, sessionmaker)
+
+    def test_init_db_with_explicit_engine_instance(self) -> None:
+        """init_db can accept a pre-configured Engine instance."""
+        custom_engine = create_engine("sqlite:///:memory:")
         try:
+            init_db(engine=custom_engine)
+            assert get_engine() is custom_engine
+        finally:
+            custom_engine.dispose()
+
+    def test_init_db_disposes_previous_engine(self) -> None:
+        """Re-initializing disposes the previous engine cleanly."""
+        init_db("sqlite:///:memory:")
+        first_engine = get_engine()
+        init_db("sqlite:///:memory:")
+        second_engine = get_engine()
+        assert first_engine is not second_engine
+
+    def test_failed_reinitialization_resets_state_and_allows_recovery(self) -> None:
+        """Failed reinitialization leaves state reset to None and allows subsequent recovery."""
+        # 1. Successful initialization
+        init_db("sqlite:///:memory:")
+        first_engine = get_engine()
+        assert first_engine is not None
+        assert get_session_factory() is not None
+
+        # 2. Reinitialization with an invalid database URL
+        with pytest.raises(Exception):
+            init_db("invalid_dialect_nonexistent://bad_url")
+
+        # 3. Resulting state after failed reinitialization:
+        # Must not reference the old disposed engine or stale factory.
+        with pytest.raises(RuntimeError, match="not been initialized"):
+            get_engine()
+
+        with pytest.raises(RuntimeError, match="not been initialized"):
+            get_session_factory()
+
+        # 4. Successful initialization after the failed attempt
+        init_db("sqlite:///:memory:")
+        recovered_engine = get_engine()
+        assert recovered_engine is not None
+        assert recovered_engine is not first_engine
+        assert get_session_factory() is not None
+
+
+class TestUninitializedDatabaseErrors:
+    """Calling accessors or get_db before init_db produces clear, actionable errors."""
+
+    def test_get_db_before_initialization_raises_runtime_error(self) -> None:
+        """Calling get_db() before initialization raises RuntimeError."""
+        with pytest.raises(RuntimeError) as exc_info:
+            gen = get_db()
+            next(gen)
+        assert "not been initialized" in str(exc_info.value).lower()
+        assert "init_db()" in str(exc_info.value)
+
+    def test_get_engine_before_initialization_raises_runtime_error(self) -> None:
+        """Calling get_engine() before initialization raises RuntimeError."""
+        with pytest.raises(RuntimeError) as exc_info:
+            get_engine()
+        assert "not been initialized" in str(exc_info.value).lower()
+        assert "init_db()" in str(exc_info.value)
+
+    def test_get_session_factory_before_initialization_raises_runtime_error(
+        self,
+    ) -> None:
+        """Calling get_session_factory() before initialization raises RuntimeError."""
+        with pytest.raises(RuntimeError) as exc_info:
+            get_session_factory()
+        assert "not been initialized" in str(exc_info.value).lower()
+        assert "init_db()" in str(exc_info.value)
+
+
+class TestProductionGetDbDependency:
+    """Tests for the actual get_db generator dependency."""
+
+    @pytest.fixture(autouse=True)
+    def setup_sqlite_database(self) -> Generator[None, None, None]:
+        """Initialize database with in-memory SQLite for each test."""
+        init_db("sqlite:///:memory:")
+        yield
+        close_db()
+
+    def test_get_db_yields_working_session(self) -> None:
+        """The actual get_db yields a Session that can execute SQL."""
+        gen = get_db()
+        db = next(gen)
+        try:
+            assert isinstance(db, Session)
             result = db.execute(text("SELECT 1"))
             assert result.scalar() == 1
         finally:
-            db.close()
+            with pytest.raises(StopIteration):
+                next(gen)
 
-    def test_session_is_closed_after_generator_exits(
-        self, sqlite_session_factory: sessionmaker[Session]
-    ) -> None:
-        """The get_db generator closes the session when exhausted.
-
-        We check in_transaction() rather than is_active because in
-        SQLAlchemy 2.x is_active reflects rollback state, not open/closed
-        state.  Executing a query starts a transaction; closing the session
-        ends it, so in_transaction() moves from True to False.
-        """
-
-        def test_get_db() -> Generator[Session, None, None]:
-            db = sqlite_session_factory()
-            try:
-                yield db
-            finally:
-                db.close()
-
-        gen = test_get_db()
+    def test_get_db_closes_session_after_generator_exhausted(self) -> None:
+        """The actual get_db closes its session after normal use."""
+        gen = get_db()
         db = next(gen)
 
-        # Execute a query to start a transaction.
+        # Executing a query starts a transaction.
         db.execute(text("SELECT 1"))
         assert db.in_transaction(), (
-            "Session should be in a transaction after executing a query."
+            "Session should be in a transaction after query."
         )
 
-        # Exhaust the generator (triggers the finally block → db.close()).
-        with pytest.raises(StopIteration):
-            next(gen)
+        with patch.object(db, "close", wraps=db.close) as spy_close:
+            # Exhaust the generator (triggers finally: db.close())
+            with pytest.raises(StopIteration):
+                next(gen)
 
-        # After close(), the transaction is gone.
+            spy_close.assert_called_once()
+
+        # After closing, the transaction is ended.
         assert not db.in_transaction(), (
-            "Session should have no active transaction after the generator exits."
+            "Session must have no active transaction after close."
         )
 
-    def test_session_is_closed_even_when_exception_occurs(
-        self, sqlite_session_factory: sessionmaker[Session]
-    ) -> None:
-        """The session closes correctly even when the caller raises an exception."""
-
-        def test_get_db_with_error() -> Generator[Session, None, None]:
-            db = sqlite_session_factory()
-            try:
-                yield db
-            finally:
-                db.close()
-
-        gen = test_get_db_with_error()
+    def test_get_db_closes_session_on_exception(self) -> None:
+        """The actual get_db closes its session even when an exception is raised."""
+        gen = get_db()
         db = next(gen)
 
-        # Execute a query to start a transaction.
         db.execute(text("SELECT 1"))
         assert db.in_transaction(), (
-            "Session should be in a transaction after executing a query."
+            "Session should be in a transaction after query."
         )
 
-        # Simulate a route handler raising an exception.
+        with patch.object(db, "close", wraps=db.close) as spy_close:
+            with pytest.raises(RuntimeError, match="simulated route handler failure"):
+                gen.throw(RuntimeError("simulated route handler failure"))
+
+            spy_close.assert_called_once()
+
+        assert not db.in_transaction(), (
+            "Session must have closed its transaction even when an exception was raised."
+        )
+
+
+class TestApplicationLifespanDatabaseManagement:
+    """FastAPI application lifespan initializes and disposes the database engine."""
+
+    def test_lifespan_manages_database_lifecycle(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Application startup initializes engine; shutdown disposes it."""
+        monkeypatch.setenv("DATABASE_URL", "sqlite:///:memory:")
+        monkeypatch.setenv("SECRET_KEY", _VALID_SECRET)
+        monkeypatch.setenv("APP_ENV", "testing")
+        monkeypatch.setattr(
+            "app.core.config.Settings.model_config",
+            {**Settings.model_config, "env_file": ".env.nonexistent"},
+        )
+        get_settings.cache_clear()
+        close_db()
+
+        try:
+            with TestClient(app) as client:
+                # During lifespan startup, engine must be initialized
+                engine = get_engine()
+                assert engine is not None
+                assert engine.url.drivername == "sqlite"
+
+                # Health endpoint continues to work
+                response = client.get("/health")
+                assert response.status_code == 200
+
+            # After exiting lifespan context (shutdown), engine must be disposed/reset
+            with pytest.raises(RuntimeError):
+                get_engine()
+        finally:
+            close_db()
+            get_settings.cache_clear()
+
+    def test_lifespan_cleans_up_on_startup_failure(self) -> None:
+        """When init_db fails during lifespan startup, close_db is called and startup halts."""
+        close_db()
+        with patch("app.main.init_db", side_effect=RuntimeError("simulated init failure")):
+            with patch("app.main.close_db", wraps=close_db) as spy_close:
+                with pytest.raises(RuntimeError, match="simulated init failure"):
+                    with TestClient(app):
+                        pytest.fail("Application should not have continued normal startup.")
+
+                # close_db must have been called in the finally block
+                spy_close.assert_called()
+
+        # Database state remains uninitialized
         with pytest.raises(RuntimeError):
-            gen.throw(RuntimeError("simulated route error"))
-
-        assert not db.in_transaction(), (
-            "Session should have no active transaction even when an exception "
-            "propagated through the generator."
-        )
+            get_engine()
 
 
 # ===========================================================================
@@ -357,14 +643,6 @@ class TestDeclarativeBase:
         from app.db.base import Base
 
         assert isinstance(Base.metadata, MetaData)
-
-    def test_base_has_tables_attribute(self) -> None:
-        """Base.metadata.tables is a dict (possibly empty before models are added)."""
-        from app.db.base import Base
-
-        # No ORM models have been defined yet in this phase, so metadata.tables
-        # should be empty.  We assert it is a dict, which is always true.
-        assert isinstance(Base.metadata.tables, dict)
 
     def test_base_has_no_tables_before_models_defined(self) -> None:
         """Before any model is defined, Base.metadata has no tables."""
