@@ -11,6 +11,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, List, Optional
 
 if TYPE_CHECKING:
+    from app.models.admin import AdminAuditLog
     from app.models.verification import VerificationSubmission
 
 from sqlalchemy import (
@@ -108,6 +109,12 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         foreign_keys="[VerificationSubmission.reviewed_by_admin_id]",
         back_populates="admin_reviewer",
         order_by="VerificationSubmission.reviewed_at",
+    )
+    admin_audit_logs: Mapped[List["AdminAuditLog"]] = relationship(
+        "AdminAuditLog",
+        foreign_keys="[AdminAuditLog.admin_user_id]",
+        back_populates="admin_user",
+        order_by="AdminAuditLog.created_at.desc()",
     )
 
     __table_args__ = (

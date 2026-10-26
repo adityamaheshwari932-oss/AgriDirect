@@ -686,6 +686,7 @@ class TestDeclarativeBase:
             "buyer_profiles",
             "verification_submissions",
             "verification_documents",
+            "admin_audit_logs",
         }
         actual_tables = set(Base.metadata.tables.keys())
         assert actual_tables == expected_tables, (
