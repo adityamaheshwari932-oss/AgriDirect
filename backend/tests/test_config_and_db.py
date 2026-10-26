@@ -676,14 +676,20 @@ class TestDeclarativeBase:
         )
 
     def test_importing_models_registers_exact_implemented_tables(self) -> None:
-        """Importing app.models registers exactly the implemented Phase 2, Group 1 tables."""
+        """Importing app.models registers exactly the implemented Phase 2 models."""
         import app.models  # noqa: F401
         from app.db.base import Base
 
-        expected_tables = {"users", "farmer_profiles", "buyer_profiles"}
+        expected_tables = {
+            "users",
+            "farmer_profiles",
+            "buyer_profiles",
+            "verification_submissions",
+            "verification_documents",
+        }
         actual_tables = set(Base.metadata.tables.keys())
         assert actual_tables == expected_tables, (
-            f"Base.metadata must register exactly the Phase 2 Group 1 tables.\n"
+            f"Base.metadata must register exactly the Phase 2 implemented tables.\n"
             f"Expected: {expected_tables}\n"
             f"Actual:   {actual_tables}\n"
             f"Missing:  {expected_tables - actual_tables}\n"

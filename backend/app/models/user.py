@@ -8,7 +8,10 @@ Implements Module 1 of AgriDirect:
 
 import uuid
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING, List, Optional
+
+if TYPE_CHECKING:
+    from app.models.verification import VerificationSubmission
 
 from sqlalchemy import (
     CheckConstraint,
@@ -91,6 +94,20 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         back_populates="user",
         uselist=False,
         cascade="all, delete-orphan",
+    )
+
+    # 1:N Relationships with verification submissions
+    verification_submissions: Mapped[List["VerificationSubmission"]] = relationship(
+        "VerificationSubmission",
+        foreign_keys="[VerificationSubmission.user_id]",
+        back_populates="user",
+        order_by="VerificationSubmission.created_at",
+    )
+    reviewed_verifications: Mapped[List["VerificationSubmission"]] = relationship(
+        "VerificationSubmission",
+        foreign_keys="[VerificationSubmission.reviewed_by_admin_id]",
+        back_populates="admin_reviewer",
+        order_by="VerificationSubmission.reviewed_at",
     )
 
     __table_args__ = (
