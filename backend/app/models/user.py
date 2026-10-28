@@ -12,6 +12,14 @@ from typing import TYPE_CHECKING, List, Optional
 
 if TYPE_CHECKING:
     from app.models.admin import AdminAuditLog
+    from app.models.chat import Conversation, ConversationParticipant, Message
+    from app.models.listing import ProduceListing
+    from app.models.notification import Notification
+    from app.models.offer import Offer
+    from app.models.order import Order
+    from app.models.report import UserReport
+    from app.models.requirement import BuyerRequirement
+    from app.models.review import RatingReview
     from app.models.verification import VerificationSubmission
 
 from sqlalchemy import (
@@ -116,6 +124,97 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         back_populates="admin_user",
         order_by="AdminAuditLog.created_at.desc()",
     )
+    listings: Mapped[List["ProduceListing"]] = relationship(
+        "ProduceListing",
+        foreign_keys="[ProduceListing.farmer_id]",
+        back_populates="farmer",
+        order_by="ProduceListing.created_at.desc()",
+    )
+    requirements: Mapped[List["BuyerRequirement"]] = relationship(
+        "BuyerRequirement",
+        foreign_keys="[BuyerRequirement.buyer_id]",
+        back_populates="buyer",
+        order_by="BuyerRequirement.created_at.desc()",
+    )
+    conversations_as_farmer: Mapped[List["Conversation"]] = relationship(
+        "Conversation",
+        foreign_keys="[Conversation.farmer_id]",
+        back_populates="farmer",
+        order_by="Conversation.created_at.desc()",
+    )
+    conversations_as_buyer: Mapped[List["Conversation"]] = relationship(
+        "Conversation",
+        foreign_keys="[Conversation.buyer_id]",
+        back_populates="buyer",
+        order_by="Conversation.created_at.desc()",
+    )
+    conversation_participations: Mapped[List["ConversationParticipant"]] = relationship(
+        "ConversationParticipant",
+        foreign_keys="[ConversationParticipant.user_id]",
+        back_populates="user",
+    )
+    sent_messages: Mapped[List["Message"]] = relationship(
+        "Message",
+        foreign_keys="[Message.sender_id]",
+        back_populates="sender",
+        order_by="Message.created_at.desc()",
+    )
+    sent_offers: Mapped[List["Offer"]] = relationship(
+        "Offer",
+        foreign_keys="[Offer.sender_id]",
+        back_populates="sender",
+        order_by="Offer.created_at.desc()",
+    )
+    received_offers: Mapped[List["Offer"]] = relationship(
+        "Offer",
+        foreign_keys="[Offer.recipient_id]",
+        back_populates="recipient",
+        order_by="Offer.created_at.desc()",
+    )
+    orders_as_buyer: Mapped[List["Order"]] = relationship(
+        "Order",
+        foreign_keys="[Order.buyer_id]",
+        back_populates="buyer",
+        order_by="Order.created_at.desc()",
+    )
+    orders_as_farmer: Mapped[List["Order"]] = relationship(
+        "Order",
+        foreign_keys="[Order.farmer_id]",
+        back_populates="farmer",
+        order_by="Order.created_at.desc()",
+    )
+    reviews_given: Mapped[List["RatingReview"]] = relationship(
+        "RatingReview",
+        foreign_keys="[RatingReview.reviewer_id]",
+        back_populates="reviewer",
+        order_by="RatingReview.created_at.desc()",
+    )
+    reviews_received: Mapped[List["RatingReview"]] = relationship(
+        "RatingReview",
+        foreign_keys="[RatingReview.reviewed_user_id]",
+        back_populates="reviewed_user",
+        order_by="RatingReview.created_at.desc()",
+    )
+    notifications: Mapped[List["Notification"]] = relationship(
+        "Notification",
+        foreign_keys="[Notification.user_id]",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        order_by="Notification.created_at.desc()",
+    )
+    reports_filed: Mapped[List["UserReport"]] = relationship(
+        "UserReport",
+        foreign_keys="[UserReport.reporter_id]",
+        back_populates="reporter",
+        order_by="UserReport.created_at.desc()",
+    )
+    reports_received: Mapped[List["UserReport"]] = relationship(
+        "UserReport",
+        foreign_keys="[UserReport.reported_user_id]",
+        back_populates="reported_user",
+        order_by="UserReport.created_at.desc()",
+    )
+
 
     __table_args__ = (
         CheckConstraint(

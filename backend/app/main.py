@@ -92,11 +92,10 @@ def create_app() -> FastAPI:
 
     # -----------------------------------------------------------------------
     # Feature routers — registered here as each phase is implemented.
-    # Example (Phase 2):
-    #   from app.api.v1 import auth, users
-    #   app.include_router(auth.router, prefix="/api/v1")
-    #   app.include_router(users.router, prefix="/api/v1")
     # -----------------------------------------------------------------------
+    from app.notifications.routes import router as notifications_router
+
+    app.include_router(notifications_router, prefix="/api/v1")
 
     return app
 
