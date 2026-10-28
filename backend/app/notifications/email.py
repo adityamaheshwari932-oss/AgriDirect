@@ -10,10 +10,14 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# Feature flag: email notifications disabled by default unless explicitly configured
-EMAIL_NOTIFICATIONS_ENABLED = (
-    os.getenv("ENABLE_EMAIL_NOTIFICATIONS", "false").lower() in ("true", "1", "yes")
-)
+def is_email_notifications_enabled() -> bool:
+    """Return whether email notifications are enabled in application settings."""
+    try:
+        from app.core.config import get_settings
+
+        return get_settings().enable_email_notifications
+    except Exception:
+        return False
 
 
 def send_email_notification(
@@ -36,7 +40,7 @@ def send_email_notification(
     Returns:
         True if email was successfully dispatched, False if disabled or failed.
     """
-    if not EMAIL_NOTIFICATIONS_ENABLED:
+    if not is_email_notifications_enabled():
         logger.debug("Email notifications disabled via feature flag; skipping delivery to %s", to_email)
         return False
 

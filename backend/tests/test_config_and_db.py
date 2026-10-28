@@ -715,3 +715,69 @@ class TestDeclarativeBase:
             f"Missing:  {expected_tables - actual_tables}\n"
             f"Extra:    {actual_tables - expected_tables}"
         )
+
+
+# ===========================================================================
+# Settings — JWT and Email Notification settings
+# ===========================================================================
+
+
+class TestSettingsJWT:
+    """Settings properly validates JWT configuration."""
+
+    def test_default_jwt_settings(self) -> None:
+        s = _valid_settings()
+        assert s.jwt_algorithm == "HS256"
+        assert s.access_token_expire_minutes == 60
+
+    def test_custom_valid_jwt_settings(self) -> None:
+        s = _valid_settings(jwt_algorithm="HS512", access_token_expire_minutes=120)
+        assert s.jwt_algorithm == "HS512"
+        assert s.access_token_expire_minutes == 120
+
+    def test_unsupported_jwt_algorithm_raises_validation_error(self) -> None:
+        with pytest.raises(ValidationError, match="JWT_ALGORITHM must be one of"):
+            _valid_settings(jwt_algorithm="UNSUPPORTED_ALG")
+
+    def test_non_positive_expire_minutes_raises_validation_error(self) -> None:
+        with pytest.raises(ValidationError, match="ACCESS_TOKEN_EXPIRE_MINUTES must be greater than 0"):
+            _valid_settings(access_token_expire_minutes=0)
+
+        with pytest.raises(ValidationError, match="ACCESS_TOKEN_EXPIRE_MINUTES must be greater than 0"):
+            _valid_settings(access_token_expire_minutes=-10)
+
+
+class TestSettingsEmailNotification:
+    """Settings properly validates email notification configuration."""
+
+    def test_default_email_settings(self) -> None:
+        s = _valid_settings()
+        assert s.enable_email_notifications is False
+        assert s.smtp_host is None
+        assert s.smtp_port == 587
+        assert s.smtp_user is None
+        assert s.smtp_password is None
+        assert s.smtp_from_email is None
+
+    def test_custom_valid_email_settings(self) -> None:
+        s = _valid_settings(
+            enable_email_notifications=True,
+            smtp_host="smtp.example.com",
+            smtp_port=465,
+            smtp_user="user@example.com",
+            smtp_password="app_password",
+            smtp_from_email="noreply@example.com",
+        )
+        assert s.enable_email_notifications is True
+        assert s.smtp_host == "smtp.example.com"
+        assert s.smtp_port == 465
+        assert s.smtp_user == "user@example.com"
+        assert s.smtp_password == "app_password"
+        assert s.smtp_from_email == "noreply@example.com"
+
+    def test_invalid_smtp_port_raises_validation_error(self) -> None:
+        with pytest.raises(ValidationError, match="SMTP_PORT must be between 1 and 65535"):
+            _valid_settings(smtp_port=0)
+
+        with pytest.raises(ValidationError, match="SMTP_PORT must be between 1 and 65535"):
+            _valid_settings(smtp_port=70000)

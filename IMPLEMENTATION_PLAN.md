@@ -34,7 +34,7 @@ Each phase corresponds to a slice of the system. The goal is always a working, t
 - `docker-compose.yml` (PostgreSQL, backend, frontend services)
 - `backend/app/main.py` — FastAPI app factory with CORS, lifespan, and exception handlers
 - `backend/app/config.py` — Pydantic `BaseSettings` (reads `.env`)
-- `backend/app/database.py` — Async SQLAlchemy engine and `AsyncSession`
+- `backend/app/db/session.py` — Synchronous SQLAlchemy engine and session management (`get_db`)
 - `backend/requirements.txt` and `backend/Dockerfile`
 - `frontend/` — Vite + React + TypeScript scaffold
 - `frontend/Dockerfile`

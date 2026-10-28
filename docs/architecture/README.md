@@ -34,7 +34,7 @@ What are the trade-offs, benefits, and risks?
 | File | Decision | Status |
 |---|---|---|
 | `ADR-001-modular-monolith.md` | Use modular monolith vs microservices | Pending |
-| `ADR-002-async-sqlalchemy.md` | Use SQLAlchemy 2.x async over sync or other ORMs | Pending |
+| `ADR-002-synchronous-sqlalchemy.md` | Synchronous SQLAlchemy 2.x Session with threadpool execution | Accepted |
 | `ADR-003-jwt-authentication.md` | JWT with refresh tokens vs session-based auth | Pending |
 | `ADR-004-postgresql.md` | PostgreSQL as primary data store | Pending |
 | `ADR-005-soft-deletes.md` | Soft delete strategy for user-facing entities | Pending |

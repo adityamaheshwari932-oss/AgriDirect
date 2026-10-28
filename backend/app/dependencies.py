@@ -1,6 +1,7 @@
 """Shared FastAPI dependencies for authentication and database sessions.
 
-Provides JWT token verification, user retrieval, and active-user validation.
+Provides JWT token verification, user retrieval, active-user validation,
+and role/verification status authorization guards.
 Adheres to the security requirements defined in AGENTS.md.
 """
 
@@ -19,9 +20,6 @@ from app.models.user import User
 
 # Standard bearer token extractor
 http_bearer = HTTPBearer(auto_error=False)
-
-JWT_ALGORITHM = "HS256"
-DEFAULT_ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 
 def create_access_token(
@@ -43,10 +41,10 @@ def create_access_token(
     if expires_delta:
         expire = now + expires_delta
     else:
-        expire = now + timedelta(minutes=DEFAULT_ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = now + timedelta(minutes=settings.access_token_expire_minutes)
 
     to_encode.update({"iat": now, "exp": expire})
-    return jwt.encode(to_encode, settings.secret_key, algorithm=JWT_ALGORITHM)
+    return jwt.encode(to_encode, settings.secret_key, algorithm=settings.jwt_algorithm)
 
 
 def get_current_user(
@@ -81,7 +79,7 @@ def get_current_user(
         payload = jwt.decode(
             token,
             settings.secret_key,
-            algorithms=[JWT_ALGORITHM],
+            algorithms=[settings.jwt_algorithm],
         )
         user_id_str: Optional[str] = payload.get("sub")
         if not user_id_str:
@@ -115,5 +113,93 @@ def get_current_active_user(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account is inactive or suspended",
+        )
+    return current_user
+
+
+def require_verified_user(
+    current_user: User = Depends(get_current_active_user),
+) -> User:
+    """Verify that the authenticated user's account is verified.
+
+    Args:
+        current_user: Active User instance from get_current_active_user.
+
+    Returns:
+        The verified User model instance.
+
+    Raises:
+        HTTPException: 403 Forbidden if user is unverified, pending, or rejected.
+    """
+    if current_user.verification_status != "verified":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Operation requires a verified account",
+        )
+    return current_user
+
+
+def require_verified_farmer(
+    current_user: User = Depends(require_verified_user),
+) -> User:
+    """Verify that the authenticated user is an active, verified farmer.
+
+    Args:
+        current_user: Verified User instance from require_verified_user.
+
+    Returns:
+        The verified farmer User model instance.
+
+    Raises:
+        HTTPException: 403 Forbidden if user role is not farmer.
+    """
+    if current_user.role != "farmer":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Operation requires a verified farmer account",
+        )
+    return current_user
+
+
+def require_verified_buyer(
+    current_user: User = Depends(require_verified_user),
+) -> User:
+    """Verify that the authenticated user is an active, verified buyer.
+
+    Args:
+        current_user: Verified User instance from require_verified_user.
+
+    Returns:
+        The verified buyer User model instance.
+
+    Raises:
+        HTTPException: 403 Forbidden if user role is not buyer.
+    """
+    if current_user.role != "buyer":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Operation requires a verified buyer account",
+        )
+    return current_user
+
+
+def require_admin(
+    current_user: User = Depends(get_current_active_user),
+) -> User:
+    """Verify that the authenticated user has administrator privileges.
+
+    Args:
+        current_user: Active User instance from get_current_active_user.
+
+    Returns:
+        The admin User model instance.
+
+    Raises:
+        HTTPException: 403 Forbidden if user role is not admin.
+    """
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Operation requires administrator privileges",
         )
     return current_user

@@ -20,9 +20,9 @@ For full context, read [`PROJECT_CONTEXT.md`](./PROJECT_CONTEXT.md).
 | Frontend | React 18+ / TypeScript | Vite build tool; strict TypeScript mode |
 | Backend | Python 3.12+ / FastAPI | Async-first; structured package layout |
 | Database | PostgreSQL 16+ | Primary data store |
-| ORM | SQLAlchemy 2.x (async) | Use `AsyncSession`; no raw SQL except analytics |
+| ORM | SQLAlchemy 2.x (synchronous) | Synchronous Session via Psycopg 3; no raw SQL except analytics (ADR-002) |
 | Validation | Pydantic v2 | All request/response schemas must use Pydantic |
-| Auth | JWT + bcrypt | Access + refresh token pattern; bcrypt via passlib |
+| Auth | JWT + Argon2 | Access + refresh token pattern; Argon2 via pwdlib |
 | API | REST | JSON responses; versioned under `/api/v1/` |
 | Containerisation | Docker + Docker Compose | Multi-service compose file |
 | Version Control | Git + GitHub | Feature branches; PRs for all changes |
@@ -45,7 +45,7 @@ backend/
 ├── app/
 │   ├── main.py                  # FastAPI app factory
 │   ├── config.py                # Settings via Pydantic BaseSettings
-│   ├── database.py              # Async SQLAlchemy engine + session
+│   ├── db/session.py            # Synchronous SQLAlchemy engine + session management (get_db)
 │   ├── dependencies.py          # Shared FastAPI dependency injections
 │   ├── auth/                    # JWT, password hashing, auth middleware
 │   ├── users/                   # Registration, profile, verification
@@ -90,7 +90,7 @@ frontend/
 
 1. **Backend enforces all business rules.** The frontend may hide UI elements as UX sugar, but the API must independently reject unauthorised requests.
 2. All protected endpoints must use FastAPI dependency injection to verify JWT tokens and check user role + verification status.
-3. Passwords must never be stored in plain text. Use `passlib[bcrypt]`.
+3. Passwords must never be stored in plain text. Use `pwdlib[argon2]` (Argon2id hashing).
 4. JWT secrets must come from environment variables; they must never be hardcoded.
 5. All user inputs must be validated by Pydantic schemas before reaching service or repository layers.
 6. Use parameterised queries only. SQLAlchemy ORM handles this; never use f-strings to build SQL.
@@ -161,7 +161,7 @@ Phases are defined in [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md). At e
 ### Python
 - Follow **PEP 8**; enforced via `ruff`.
 - Type-annotate all function signatures.
-- Use `async def` for all route handlers and service/repository methods that perform I/O.
+- Route handlers and service/repository methods performing blocking database I/O use standard synchronous `def` (FastAPI automatically runs synchronous route handlers in a worker thread pool via anyio, preventing event-loop blocking; see ADR-002). Use `async def` for purely asynchronous operations.
 - Docstrings on all public functions and classes (Google style).
 - Maximum line length: **100 characters**.
 

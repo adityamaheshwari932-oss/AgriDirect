@@ -107,6 +107,38 @@ class Settings(BaseSettings):
     """Random secret used to sign JWTs.  Never log or expose this value."""
 
     # ------------------------------------------------------------------
+    # JWT / Authentication settings
+    # ------------------------------------------------------------------
+
+    jwt_algorithm: str = "HS256"
+    """Algorithm used for signing and verifying JWT tokens."""
+
+    access_token_expire_minutes: int = 60
+    """Access token lifetime in minutes (default 60)."""
+
+    # ------------------------------------------------------------------
+    # Operational Email Notifications (optional feature flag)
+    # ------------------------------------------------------------------
+
+    enable_email_notifications: bool = False
+    """Feature flag to toggle operational email alerts."""
+
+    smtp_host: str | None = None
+    """SMTP server hostname."""
+
+    smtp_port: int = 587
+    """SMTP port number (default 587)."""
+
+    smtp_user: str | None = None
+    """SMTP username for authentication."""
+
+    smtp_password: str | None = None
+    """SMTP password or app-specific token. Never log this value."""
+
+    smtp_from_email: str | None = None
+    """Sender email address for operational alerts."""
+
+    # ------------------------------------------------------------------
     # Validators
     # ------------------------------------------------------------------
 
@@ -185,6 +217,34 @@ class Settings(BaseSettings):
                 "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
             )
 
+        return value
+
+    @field_validator("jwt_algorithm")
+    @classmethod
+    def jwt_algorithm_must_be_supported(cls, value: str) -> str:
+        """Reject unsupported JWT signing algorithms."""
+        supported = {"HS256", "HS384", "HS512"}
+        normalised = value.strip().upper()
+        if normalised not in supported:
+            raise ValueError(
+                f"JWT_ALGORITHM must be one of {sorted(supported)!r}, got {value!r}."
+            )
+        return normalised
+
+    @field_validator("access_token_expire_minutes")
+    @classmethod
+    def access_token_expire_minutes_must_be_positive(cls, value: int) -> int:
+        """Reject non-positive token expiration duration."""
+        if value <= 0:
+            raise ValueError("ACCESS_TOKEN_EXPIRE_MINUTES must be greater than 0.")
+        return value
+
+    @field_validator("smtp_port")
+    @classmethod
+    def smtp_port_must_be_valid(cls, value: int) -> int:
+        """Reject invalid TCP port numbers."""
+        if value < 1 or value > 65535:
+            raise ValueError("SMTP_PORT must be between 1 and 65535.")
         return value
 
     @field_validator("database_url")
