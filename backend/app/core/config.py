@@ -117,6 +117,19 @@ class Settings(BaseSettings):
     """Access token lifetime in minutes (default 60)."""
 
     # ------------------------------------------------------------------
+    # Rate Limiting settings (Authentication)
+    # ------------------------------------------------------------------
+
+    enable_auth_rate_limit: bool = True
+    """Toggle rate limiting on sensitive authentication endpoints."""
+
+    auth_rate_limit_max_attempts: int = 5
+    """Maximum allowed login attempts per client IP within the rate limit window."""
+
+    auth_rate_limit_window_seconds: int = 60
+    """Duration in seconds for the sliding rate limit window (default: 60s)."""
+
+    # ------------------------------------------------------------------
     # Operational Email Notifications (optional feature flag)
     # ------------------------------------------------------------------
 
@@ -237,6 +250,22 @@ class Settings(BaseSettings):
         """Reject non-positive token expiration duration."""
         if value <= 0:
             raise ValueError("ACCESS_TOKEN_EXPIRE_MINUTES must be greater than 0.")
+        return value
+
+    @field_validator("auth_rate_limit_max_attempts")
+    @classmethod
+    def auth_rate_limit_max_attempts_must_be_positive(cls, value: int) -> int:
+        """Reject non-positive max attempts."""
+        if value <= 0:
+            raise ValueError("AUTH_RATE_LIMIT_MAX_ATTEMPTS must be greater than 0.")
+        return value
+
+    @field_validator("auth_rate_limit_window_seconds")
+    @classmethod
+    def auth_rate_limit_window_seconds_must_be_positive(cls, value: int) -> int:
+        """Reject non-positive window duration."""
+        if value <= 0:
+            raise ValueError("AUTH_RATE_LIMIT_WINDOW_SECONDS must be greater than 0.")
         return value
 
     @field_validator("smtp_port")

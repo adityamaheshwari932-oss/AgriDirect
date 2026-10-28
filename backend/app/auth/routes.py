@@ -18,6 +18,7 @@ from app.auth.schemas import (
     UserRead,
 )
 from app.auth.service import AuthService
+from app.core.rate_limit import check_login_rate_limit
 from app.db.session import get_db
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -73,12 +74,13 @@ def register_buyer(
     description=(
         "Authenticates credentials against stored Argon2id password hash and returns "
         "a signed JWT Bearer access token. Rejects invalid credentials with a generic "
-        "401 response and checks that account is active."
+        "401 response, checks that account is active, and applies rate limiting."
     ),
 )
 def login(
     payload: LoginRequest,
     db: Session = Depends(get_db),
+    _rate_limit: None = Depends(check_login_rate_limit),
 ) -> TokenResponse:
     """Authenticate and obtain an access token."""
     service = AuthService(AuthRepository(db))

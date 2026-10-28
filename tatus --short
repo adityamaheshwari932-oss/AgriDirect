@@ -1,0 +1,161 @@
+warning: in the working copy of 'backend/.env.example', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/app/auth/routes.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/app/core/config.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/app/dependencies.py', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/backend/.env.example b/backend/.env.example[m
+[1mindex 8dbf631..59f670d 100644[m
+[1m--- a/backend/.env.example[m
+[1m+++ b/backend/.env.example[m
+[36m@@ -67,6 +67,16 @@[m [mJWT_ALGORITHM=HS256[m
+ # Access token expiration in minutes (default: 60 minutes)[m
+ ACCESS_TOKEN_EXPIRE_MINUTES=60[m
+ [m
+[32m+[m[32m# Rate limiting for sensitive authentication endpoints (login)[m
+[32m+[m[32m# Set to false to disable rate limiting (default: true)[m
+[32m+[m[32mENABLE_AUTH_RATE_LIMIT=true[m
+[32m+[m
+[32m+[m[32m# Maximum login attempts allowed per client IP within the rate limit window (default: 5)[m
+[32m+[m[32mAUTH_RATE_LIMIT_MAX_ATTEMPTS=5[m
+[32m+[m
+[32m+[m[32m# Duration of the sliding rate limit window in seconds (default: 60)[m
+[32m+[m[32mAUTH_RATE_LIMIT_WINDOW_SECONDS=60[m
+[32m+[m
+ [m
+ # ---------------------------------------------------------------------------[m
+ # Operational Email Notifications (optional feature flag)[m
+[1mdiff --git a/backend/app/auth/routes.py b/backend/app/auth/routes.py[m
+[1mindex ae7468d..4a54988 100644[m
+[1m--- a/backend/app/auth/routes.py[m
+[1m+++ b/backend/app/auth/routes.py[m
+[36m@@ -18,6 +18,7 @@[m [mfrom app.auth.schemas import ([m
+     UserRead,[m
+ )[m
+ from app.auth.service import AuthService[m
+[32m+[m[32mfrom app.core.rate_limit import check_login_rate_limit[m
+ from app.db.session import get_db[m
+ [m
+ router = APIRouter(prefix="/auth", tags=["Authentication"])[m
+[36m@@ -73,12 +74,13 @@[m [mdef register_buyer([m
+     description=([m
+         "Authenticates credentials against stored Argon2id password hash and returns "[m
+         "a signed JWT Bearer access token. Rejects invalid credentials with a generic "[m
+[31m-        "401 response and checks that account is active."[m
+[32m+[m[32m        "401 response, checks that account is active, and applies rate limiting."[m
+     ),[m
+ )[m
+ def login([m
+     payload: LoginRequest,[m
+     db: Session = Depends(get_db),[m
+[32m+[m[32m    _rate_limit: None = Depends(check_login_rate_limit),[m
+ ) -> TokenResponse:[m
+     """Authenticate and obtain an access token."""[m
+     service = AuthService(AuthRepository(db))[m
+[1mdiff --git a/backend/app/core/config.py b/backend/app/core/config.py[m
+[1mindex d0fd6c6..67a0cc7 100644[m
+[1m--- a/backend/app/core/config.py[m
+[1m+++ b/backend/app/core/config.py[m
+[36m@@ -116,6 +116,19 @@[m [mclass Settings(BaseSettings):[m
+     access_token_expire_minutes: int = 60[m
+     """Access token lifetime in minutes (default 60)."""[m
+ [m
+[32m+[m[32m    # ------------------------------------------------------------------[m
+[32m+[m[32m    # Rate Limiting settings (Authentication)[m
+[32m+[m[32m    # ------------------------------------------------------------------[m
+[32m+[m
+[32m+[m[32m    enable_auth_rate_limit: bool = True[m
+[32m+[m[32m    """Toggle rate limiting on sensitive authentication endpoints."""[m
+[32m+[m
+[32m+[m[32m    auth_rate_limit_max_attempts: int = 5[m
+[32m+[m[32m    """Maximum allowed login attempts per client IP within the rate limit window."""[m
+[32m+[m
+[32m+[m[32m    auth_rate_limit_window_seconds: int = 60[m
+[32m+[m[32m    """Duration in seconds for the sliding rate limit window (default: 60s)."""[m
+[32m+[m
+     # ------------------------------------------------------------------[m
+     # Operational Email Notifications (optional feature flag)[m
+     # ------------------------------------------------------------------[m
+[36m@@ -239,6 +252,22 @@[m [mclass Settings(BaseSettings):[m
+             raise ValueError("ACCESS_TOKEN_EXPIRE_MINUTES must be greater than 0.")[m
+         return value[m
+ [m
+[32m+[m[32m    @field_validator("auth_rate_limit_max_attempts")[m
+[32m+[m[32m    @classmethod[m
+[32m+[m[32m    def auth_rate_limit_max_attempts_must_be_positive(cls, value: int) -> int:[m
+[32m+[m[32m        """Reject non-positive max attempts."""[m
+[32m+[m[32m        if value <= 0:[m
+[32m+[m[32m            raise ValueError("AUTH_RATE_LIMIT_MAX_ATTEMPTS must be greater than 0.")[m
+[32m+[m[32m        return value[m
+[32m+[m
+[32m+[m[32m    @field_validator("auth_rate_limit_window_seconds")[m
+[32m+[m[32m    @classmethod[m
+[32m+[m[32m    def auth_rate_limit_window_seconds_must_be_positive(cls, value: int) -> int:[m
+[32m+[m[32m        """Reject non-positive window duration."""[m
+[32m+[m[32m        if value <= 0:[m
+[32m+[m[32m            raise ValueError("AUTH_RATE_LIMIT_WINDOW_SECONDS must be greater than 0.")[m
+[32m+[m[32m        return value[m
+[32m+[m
+     @field_validator("smtp_port")[m
+     @classmethod[m
+     def smtp_port_must_be_valid(cls, value: int) -> int:[m
+[1mdiff --git a/backend/app/dependencies.py b/backend/app/dependencies.py[m
+[1mindex 2bb2361..9403a55 100644[m
+[1m--- a/backend/app/dependencies.py[m
+[1m+++ b/backend/app/dependencies.py[m
+[36m@@ -161,6 +161,28 @@[m [mdef require_verified_farmer([m
+     return current_user[m
+ [m
+ [m
+[32m+[m[32mdef require_farmer([m
+[32m+[m[32m    current_user: User = Depends(get_current_active_user),[m
+[32m+[m[32m) -> User:[m
+[32m+[m[32m    """Verify that the authenticated user is an active farmer (verified or unverified).[m
+[32m+[m
+[32m+[m[32m    Args:[m
+[32m+[m[32m        current_user: Active User instance from get_current_active_user.[m
+[32m+[m
+[32m+[m[32m    Returns:[m
+[32m+[m[32m        The farmer User model instance.[m
+[32m+[m
+[32m+[m[32m    Raises:[m
+[32m+[m[32m        HTTPException: 403 Forbidden if user role is not farmer.[m
+[32m+[m[32m    """[m
+[32m+[m[32m    if current_user.role != "farmer":[m
+[32m+[m[32m        raise HTTPException([m
+[32m+[m[32m            status_code=status.HTTP_403_FORBIDDEN,[m
+[32m+[m[32m            detail="Operation requires a farmer account",[m
+[32m+[m[32m        )[m
+[32m+[m[32m    return current_user[m
+[32m+[m
+[32m+[m
+ def require_verified_buyer([m
+     current_user: User = Depends(require_verified_user),[m
+ ) -> User:[m
+[36m@@ -183,6 +205,28 @@[m [mdef require_verified_buyer([m
+     return current_user[m
+ [m
+ [m
+[32m+[m[32mdef require_buyer([m
+[32m+[m[32m    current_user: User = Depends(get_current_active_user),[m
+[32m+[m[32m) -> User:[m
+[32m+[m[32m    """Verify that the authenticated user is an active buyer (verified or unverified).[m
+[32m+[m
+[32m+[m[32m    Args:[m
+[32m+[m[32m        current_user: Active User instance from get_current_active_user.[m
+[32m+[m
+[32m+[m[32m    Returns:[m
+[32m+[m[32m        The buyer User model instance.[m
+[32m+[m
+[32m+[m[32m    Raises:[m
+[32m+[m[32m        HTTPException: 403 Forbidden if user role is not buyer.[m
+[32m+[m[32m    """[m
+[32m+[m[32m    if current_user.role != "buyer":[m
+[32m+[m[32m        raise HTTPException([m
+[32m+[m[32m            status_code=status.HTTP_403_FORBIDDEN,[m
+[32m+[m[32m            detail="Operation requires a buyer account",[m
+[32m+[m[32m        )[m
+[32m+[m[32m    return current_user[m
+[32m+[m
+[32m+[m
+ def require_admin([m
+     current_user: User = Depends(get_current_active_user),[m
+ ) -> User:[m

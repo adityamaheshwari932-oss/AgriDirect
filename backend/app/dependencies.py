@@ -161,6 +161,28 @@ def require_verified_farmer(
     return current_user
 
 
+def require_farmer(
+    current_user: User = Depends(get_current_active_user),
+) -> User:
+    """Verify that the authenticated user is an active farmer (verified or unverified).
+
+    Args:
+        current_user: Active User instance from get_current_active_user.
+
+    Returns:
+        The farmer User model instance.
+
+    Raises:
+        HTTPException: 403 Forbidden if user role is not farmer.
+    """
+    if current_user.role != "farmer":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Operation requires a farmer account",
+        )
+    return current_user
+
+
 def require_verified_buyer(
     current_user: User = Depends(require_verified_user),
 ) -> User:
@@ -179,6 +201,28 @@ def require_verified_buyer(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Operation requires a verified buyer account",
+        )
+    return current_user
+
+
+def require_buyer(
+    current_user: User = Depends(get_current_active_user),
+) -> User:
+    """Verify that the authenticated user is an active buyer (verified or unverified).
+
+    Args:
+        current_user: Active User instance from get_current_active_user.
+
+    Returns:
+        The buyer User model instance.
+
+    Raises:
+        HTTPException: 403 Forbidden if user role is not buyer.
+    """
+    if current_user.role != "buyer":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Operation requires a buyer account",
         )
     return current_user
 

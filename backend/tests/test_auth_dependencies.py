@@ -15,6 +15,8 @@ from app.dependencies import (
     get_current_active_user,
     get_current_user,
     require_admin,
+    require_buyer,
+    require_farmer,
     require_verified_buyer,
     require_verified_farmer,
     require_verified_user,
@@ -141,6 +143,35 @@ class TestTokenCreationAndVerification:
             get_current_user(credentials=credentials, db=mock_db)
         assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
 
+    def test_get_current_user_malformed_sub_claim_raises_401(self) -> None:
+        settings = get_settings()
+        token = jwt.encode(
+            {"sub": "not-a-valid-uuid", "exp": datetime.now(timezone.utc) + timedelta(hours=1)},
+            settings.secret_key,
+            algorithm=settings.jwt_algorithm,
+        )
+        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
+        mock_db = MagicMock()
+
+        with pytest.raises(HTTPException) as exc_info:
+            get_current_user(credentials=credentials, db=mock_db)
+        assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_get_current_user_disallowed_algorithm_raises_401(self) -> None:
+        settings = get_settings()
+        # Even if signed with secret, using HS512 when app config expects HS256 must be rejected
+        token = jwt.encode(
+            {"sub": str(uuid.uuid4()), "exp": datetime.now(timezone.utc) + timedelta(hours=1)},
+            settings.secret_key,
+            algorithm="HS512" if settings.jwt_algorithm != "HS512" else "HS384",
+        )
+        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
+        mock_db = MagicMock()
+
+        with pytest.raises(HTTPException) as exc_info:
+            get_current_user(credentials=credentials, db=mock_db)
+        assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
+
 
 class TestAccountStatusAndAuthorizationGuards:
     """Tests for get_current_active_user, require_verified_*, and require_admin."""
@@ -207,3 +238,31 @@ class TestAccountStatusAndAuthorizationGuards:
             require_admin(buyer)
         assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
         assert "administrator privileges" in exc_info.value.detail
+
+    @pytest.mark.parametrize("verification", ["unverified", "pending", "verified", "rejected"])
+    def test_require_farmer_allows_active_farmer_regardless_of_verification(
+        self, verification: str
+    ) -> None:
+        user = _make_mock_user(role="farmer", verification_status=verification, account_status="active")
+        assert require_farmer(user) == user
+
+    def test_require_farmer_rejects_non_farmer(self) -> None:
+        buyer = _make_mock_user(role="buyer", account_status="active")
+        with pytest.raises(HTTPException) as exc_info:
+            require_farmer(buyer)
+        assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
+        assert "farmer account" in exc_info.value.detail
+
+    @pytest.mark.parametrize("verification", ["unverified", "pending", "verified", "rejected"])
+    def test_require_buyer_allows_active_buyer_regardless_of_verification(
+        self, verification: str
+    ) -> None:
+        user = _make_mock_user(role="buyer", verification_status=verification, account_status="active")
+        assert require_buyer(user) == user
+
+    def test_require_buyer_rejects_non_buyer(self) -> None:
+        farmer = _make_mock_user(role="farmer", account_status="active")
+        with pytest.raises(HTTPException) as exc_info:
+            require_buyer(farmer)
+        assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
+        assert "buyer account" in exc_info.value.detail
