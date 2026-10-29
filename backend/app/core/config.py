@@ -130,6 +130,16 @@ class Settings(BaseSettings):
     """Duration in seconds for the sliding rate limit window (default: 60s)."""
 
     # ------------------------------------------------------------------
+    # Document Storage Settings (Verification)
+    # ------------------------------------------------------------------
+
+    upload_dir: str = "uploads/verification"
+    """Base filesystem directory for private verification document storage."""
+
+    max_upload_size_bytes: int = 10 * 1024 * 1024  # 10 MB
+    """Maximum permitted file upload size in bytes (default 10 MB)."""
+
+    # ------------------------------------------------------------------
     # Operational Email Notifications (optional feature flag)
     # ------------------------------------------------------------------
 
@@ -266,6 +276,14 @@ class Settings(BaseSettings):
         """Reject non-positive window duration."""
         if value <= 0:
             raise ValueError("AUTH_RATE_LIMIT_WINDOW_SECONDS must be greater than 0.")
+        return value
+
+    @field_validator("max_upload_size_bytes")
+    @classmethod
+    def max_upload_size_bytes_must_be_positive(cls, value: int) -> int:
+        """Reject non-positive max upload size."""
+        if value <= 0:
+            raise ValueError("MAX_UPLOAD_SIZE_BYTES must be greater than 0.")
         return value
 
     @field_validator("smtp_port")
