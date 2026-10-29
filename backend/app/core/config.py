@@ -140,6 +140,13 @@ class Settings(BaseSettings):
     """Maximum permitted file upload size in bytes (default 10 MB)."""
 
     # ------------------------------------------------------------------
+    # Listing Media Storage Settings (Produce Catalog)
+    # ------------------------------------------------------------------
+
+    listing_images_dir: str = "uploads/listings"
+    """Base filesystem directory for produce listing photographic assets."""
+
+    # ------------------------------------------------------------------
     # Operational Email Notifications (optional feature flag)
     # ------------------------------------------------------------------
 
