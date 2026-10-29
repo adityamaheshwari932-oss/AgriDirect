@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 48 20% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* AgriDirect Forest Green (Primary) */
+    --primary: 142 72% 24%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Soft Earth Neutral (Secondary) */
+    --secondary: 48 12% 93%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 48 12% 93%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Harvest Amber Accent */
+    --accent: 38 92% 50%;
+    --accent-foreground: 26 90% 15%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 142 72% 24%;
+
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased min-h-screen selection:bg-primary/20 selection:text-primary;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
