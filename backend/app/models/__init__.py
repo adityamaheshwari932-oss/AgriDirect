@@ -153,6 +153,16 @@ from app.models.requirement import (
     VALID_REQUIREMENT_STATUSES,
     BuyerRequirement,
 )
+from app.models.requirement_approval import (
+    APPROVAL_STATUS_APPROVED,
+    APPROVAL_STATUS_NOT_APPLIED,
+    APPROVAL_STATUS_PENDING,
+    APPROVAL_STATUS_REJECTED,
+    APPROVAL_STATUS_VOIDED,
+    TERMINAL_APPROVAL_STATUSES,
+    VALID_APPROVAL_STATUSES,
+    RequirementFulfillmentApproval,
+)
 from app.models.review import RatingReview
 from app.models.user import BuyerProfile, FarmerProfile, User
 from app.models.verification import (
@@ -208,6 +218,14 @@ __all__ = [
     "PRICE_CONDITION_RANGE",
     "PRICE_CONDITION_NEGOTIABLE",
     "VALID_PRICE_CONDITIONS",
+    "RequirementFulfillmentApproval",
+    "APPROVAL_STATUS_PENDING",
+    "APPROVAL_STATUS_APPROVED",
+    "APPROVAL_STATUS_REJECTED",
+    "APPROVAL_STATUS_NOT_APPLIED",
+    "APPROVAL_STATUS_VOIDED",
+    "VALID_APPROVAL_STATUSES",
+    "TERMINAL_APPROVAL_STATUSES",
     "Conversation",
     "ConversationParticipant",
     "Message",

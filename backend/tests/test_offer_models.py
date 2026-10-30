@@ -215,12 +215,13 @@ class TestOfferMetadata:
             assert table.c[col_name].nullable == nullable
 
     def test_offer_items_columns_and_nullability(self) -> None:
-        """offer_items must have all 11 columns with exact nullabilities."""
+        """offer_items must have all 12 columns with exact nullabilities."""
         table = Base.metadata.tables["offer_items"]
         expected = {
             "id": False,
             "offer_id": False,
             "listing_id": True,
+            "buyer_requirement_id": True,
             "product_name": False,
             "quantity": False,
             "unit": False,
@@ -230,7 +231,7 @@ class TestOfferMetadata:
             "status": False,
             "created_at": False,
         }
-        assert len(table.columns) == 11
+        assert len(table.columns) == 12
         for col_name, nullable in expected.items():
             assert col_name in table.c, f"Column {col_name} missing from offer_items"
             assert table.c[col_name].nullable == nullable
@@ -287,6 +288,8 @@ class TestOfferMetadata:
         assert items_fks["offer_id"].ondelete == "CASCADE"
         assert items_fks["listing_id"].column.table.name == "produce_listings"
         assert items_fks["listing_id"].ondelete == "SET NULL"
+        assert items_fks["buyer_requirement_id"].column.table.name == "buyer_requirements"
+        assert items_fks["buyer_requirement_id"].ondelete == "SET NULL"
 
     def test_check_constraints_and_indexes(self) -> None:
         """All required check constraints and indexes must be registered."""
@@ -315,6 +318,7 @@ class TestOfferMetadata:
         items_idx = {idx.name for idx in items_tbl.indexes}
         assert "idx_offer_items_offer" in items_idx
         assert "idx_offer_items_listing" in items_idx
+        assert "idx_offer_items_requirement" in items_idx
 
     def test_canonical_constants(self) -> None:
         """Canonical offer and offer-item statuses must match specifications."""

@@ -32,10 +32,15 @@ from app.dependencies import (
     require_verified_buyer,
 )
 from app.models.user import User
+from app.requirements.approval_service import FulfillmentApprovalService
 from app.requirements.schemas import (
+    ApproveFulfillmentRequest,
     BuyerRequirementDetailResponse,
     BuyerRequirementListResponse,
     BuyerRequirementPublicListResponse,
+    FulfillmentApprovalListResponse,
+    FulfillmentApprovalResponse,
+    RejectFulfillmentRequest,
     RequirementCreate,
     RequirementStatusUpdate,
     RequirementUpdate,
@@ -107,6 +112,96 @@ def list_my_requirements(
         page=page,
         page_size=page_size,
     )
+
+
+# ---------------------------------------------------------------------------
+# Requirement Fulfillment Approvals (ADR-003)
+# ---------------------------------------------------------------------------
+
+@router.get(
+    "/fulfillment-approvals",
+    response_model=FulfillmentApprovalListResponse,
+    summary="List fulfillment approvals for authenticated buyer",
+    description="Returns paginated fulfillment approval requests for requirements owned by the authenticated verified buyer.",
+    status_code=status.HTTP_200_OK,
+)
+def list_fulfillment_approvals(
+    status_filter: Annotated[
+        Optional[str],
+        Query(alias="status", description="Filter by approval status (pending, approved, rejected, not_applied, voided)"),
+    ] = None,
+    requirement_id: Annotated[
+        Optional[uuid.UUID],
+        Query(description="Filter by specific requirement UUID"),
+    ] = None,
+    page: Annotated[int, Query(ge=1, description="Page number")] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100, description="Items per page")] = 20,
+    current_user: User = Depends(require_verified_buyer),
+    db: Session = Depends(get_db),
+) -> FulfillmentApprovalListResponse:
+    """List fulfillment approvals for the current buyer's requirements."""
+    service = FulfillmentApprovalService(db)
+    return service.list_approvals(
+        current_user=current_user,
+        status_filter=status_filter,
+        requirement_id=requirement_id,
+        page=page,
+        page_size=page_size,
+    )
+
+
+@router.get(
+    "/fulfillment-approvals/{id}",
+    response_model=FulfillmentApprovalResponse,
+    summary="Get fulfillment approval details",
+    description="Retrieve details of a specific fulfillment approval request. Enforces buyer ownership with anti-enumeration security.",
+    status_code=status.HTTP_200_OK,
+)
+def get_fulfillment_approval(
+    id: uuid.UUID,
+    current_user: User = Depends(require_verified_buyer),
+    db: Session = Depends(get_db),
+) -> FulfillmentApprovalResponse:
+    """Retrieve details of a single fulfillment approval."""
+    service = FulfillmentApprovalService(db)
+    return service.get_approval(current_user=current_user, approval_id=id)
+
+
+@router.post(
+    "/fulfillment-approvals/{id}/approve",
+    response_model=FulfillmentApprovalResponse,
+    summary="Approve requirement fulfillment",
+    description="Approve full or partial fulfillment of a buyer requirement. Atomically decrements remaining demand without altering commercial order quantity.",
+    status_code=status.HTTP_200_OK,
+)
+def approve_fulfillment(
+    id: uuid.UUID,
+    payload: ApproveFulfillmentRequest,
+    current_user: User = Depends(require_verified_buyer),
+    db: Session = Depends(get_db),
+) -> FulfillmentApprovalResponse:
+    """Approve a pending requirement fulfillment request."""
+    service = FulfillmentApprovalService(db)
+    return service.approve_fulfillment(current_user=current_user, approval_id=id, payload=payload)
+
+
+@router.post(
+    "/fulfillment-approvals/{id}/reject",
+    response_model=FulfillmentApprovalResponse,
+    summary="Reject requirement fulfillment",
+    description="Reject applying an order toward requirement fulfillment. Preserves open requirement demand per FR-REQ-08.",
+    status_code=status.HTTP_200_OK,
+)
+def reject_fulfillment(
+    id: uuid.UUID,
+    payload: RejectFulfillmentRequest,
+    current_user: User = Depends(require_verified_buyer),
+    db: Session = Depends(get_db),
+) -> FulfillmentApprovalResponse:
+    """Reject a pending requirement fulfillment request."""
+    service = FulfillmentApprovalService(db)
+    return service.reject_fulfillment(current_user=current_user, approval_id=id, payload=payload)
+
 
 
 # ---------------------------------------------------------------------------

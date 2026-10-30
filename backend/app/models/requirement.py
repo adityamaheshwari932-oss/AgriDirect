@@ -7,7 +7,7 @@ Implements Module 2 (Catalog, Listings, and Buyer Requirements) of AgriDirect:
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import (
     Boolean,
@@ -28,6 +28,9 @@ from app.models.base import TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
     from app.models.listing import ProduceCategory
+    from app.models.offer import OfferItem
+    from app.models.order import OrderItem
+    from app.models.requirement_approval import RequirementFulfillmentApproval
     from app.models.user import User
 
 # Canonical requirement lifecycle statuses (schema-design.md Table 2.4 & SRS FR-REQ-05)
@@ -159,6 +162,27 @@ class BuyerRequirement(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         "ProduceCategory",
         foreign_keys=[category_id],
         back_populates="requirements",
+    )
+
+    # 1:N Relationship with negotiation offer items
+    offer_items: Mapped[List["OfferItem"]] = relationship(
+        "OfferItem",
+        foreign_keys="[OfferItem.buyer_requirement_id]",
+        back_populates="buyer_requirement",
+    )
+
+    # 1:N Relationship with order items snapshot
+    order_items: Mapped[List["OrderItem"]] = relationship(
+        "OrderItem",
+        foreign_keys="[OrderItem.buyer_requirement_id]",
+        back_populates="buyer_requirement",
+    )
+
+    # 1:N Relationship with fulfillment approval records
+    fulfillment_approvals: Mapped[List["RequirementFulfillmentApproval"]] = relationship(
+        "RequirementFulfillmentApproval",
+        foreign_keys="[RequirementFulfillmentApproval.requirement_id]",
+        back_populates="requirement",
     )
 
     __table_args__ = (

@@ -147,6 +147,13 @@ class Settings(BaseSettings):
     """Base filesystem directory for produce listing photographic assets."""
 
     # ------------------------------------------------------------------
+    # Offers and Negotiation Settings
+    # ------------------------------------------------------------------
+
+    default_offer_expiry_hours: int = 72
+    """Default offer validity window in hours when expires_at is not explicitly provided."""
+
+    # ------------------------------------------------------------------
     # Operational Email Notifications (optional feature flag)
     # ------------------------------------------------------------------
 

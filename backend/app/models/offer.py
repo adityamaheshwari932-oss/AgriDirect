@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from app.models.chat import Conversation
     from app.models.listing import ProduceListing
     from app.models.order import Order
+    from app.models.requirement import BuyerRequirement
     from app.models.user import User
 
 # Canonical offer lifecycle statuses (schema-design.md Table 4.1 & SRS FR-OFF-03)
@@ -194,6 +195,11 @@ class OfferItem(Base, UUIDPrimaryKeyMixin):
         ForeignKey("produce_listings.id", ondelete="SET NULL"),
         nullable=True,
     )
+    buyer_requirement_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("buyer_requirements.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     product_name: Mapped[str] = mapped_column(
         String(128),
         nullable=False,
@@ -241,6 +247,11 @@ class OfferItem(Base, UUIDPrimaryKeyMixin):
         foreign_keys=[listing_id],
         back_populates="offer_items",
     )
+    buyer_requirement: Mapped[Optional["BuyerRequirement"]] = relationship(
+        "BuyerRequirement",
+        foreign_keys=[buyer_requirement_id],
+        back_populates="offer_items",
+    )
 
     __table_args__ = (
         CheckConstraint(
@@ -261,4 +272,5 @@ class OfferItem(Base, UUIDPrimaryKeyMixin):
         ),
         Index("idx_offer_items_offer", "offer_id"),
         Index("idx_offer_items_listing", "listing_id"),
+        Index("idx_offer_items_requirement", "buyer_requirement_id"),
     )

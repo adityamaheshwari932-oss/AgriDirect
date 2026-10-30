@@ -196,7 +196,7 @@ class RequirementService:
         If caller is public or unrelated user, returns details only if requirement is active
         or partially fulfilled, unexpired, has remaining quantity > 0, and buyer is in good standing.
         """
-        req = self.repository.get_requirement_by_id(requirement_id, include_deleted=True)
+        req = self.repository.get_requirement_by_id(requirement_id, include_deleted=True, for_update=True)
         if not req:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -241,7 +241,7 @@ class RequirementService:
         payload: RequirementUpdate,
     ) -> BuyerRequirementDetailResponse:
         """Update permitted fields on a requirement owned by the caller."""
-        req = self._get_owned_requirement(requirement_id, user)
+        req = self._get_owned_requirement(requirement_id, user, for_update=True)
 
         data = payload.model_dump(exclude_unset=True)
         if not data:
@@ -320,7 +320,7 @@ class RequirementService:
         payload: RequirementStatusUpdate,
     ) -> BuyerRequirementDetailResponse:
         """Transition requirement lifecycle status."""
-        req = self._get_owned_requirement(requirement_id, user)
+        req = self._get_owned_requirement(requirement_id, user, for_update=True)
         self._validate_status_transition(req, payload.status)
 
         try:
@@ -338,7 +338,7 @@ class RequirementService:
         user: User,
     ) -> None:
         """Soft-delete a requirement owned by the caller (or by platform admin)."""
-        req = self.repository.get_requirement_by_id(requirement_id, include_deleted=True)
+        req = self.repository.get_requirement_by_id(requirement_id, include_deleted=True, for_update=True)
         if not req:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -454,11 +454,20 @@ class RequirementService:
                 detail="Account is inactive or suspended",
             )
 
-    def _get_owned_requirement(self, requirement_id: uuid.UUID, user: User) -> BuyerRequirement:
+    def _get_owned_requirement(
+        self,
+        requirement_id: uuid.UUID,
+        user: User,
+        for_update: bool = False,
+    ) -> BuyerRequirement:
         """Retrieve requirement ensuring caller is the buyer owner and it is not deleted."""
         self._require_verified_buyer(user)
 
-        req = self.repository.get_requirement_by_id(requirement_id, include_deleted=True)
+        req = self.repository.get_requirement_by_id(
+            requirement_id,
+            include_deleted=True,
+            for_update=for_update,
+        )
         if not req:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

@@ -471,6 +471,7 @@ Structured line-item proposals allowing multi-product negotiation and independen
 | `id` | `UUID` | No | Primary key |
 | `offer_id` | `UUID` | No | `FOREIGN KEY REFERENCES offers(id) ON DELETE CASCADE` |
 | `listing_id` | `UUID` | Yes | `FOREIGN KEY REFERENCES produce_listings(id) ON DELETE SET NULL` |
+| `buyer_requirement_id` | `UUID` | Yes | `FOREIGN KEY REFERENCES buyer_requirements(id) ON DELETE SET NULL` |
 | `product_name` | `VARCHAR(128)` | No | Free-form product title |
 | `quantity` | `NUMERIC(12, 3)` | No | `CHECK (quantity > 0)` |
 | `unit` | `VARCHAR(16)` | No | Unit string (`'kg'`, `'quintal'`, `'bag'`, etc.) |
@@ -483,6 +484,7 @@ Structured line-item proposals allowing multi-product negotiation and independen
 *Indexes:*
 * `idx_offer_items_offer`: B-Tree index on `offer_id`.
 * `idx_offer_items_listing`: B-Tree index on `listing_id`.
+* `idx_offer_items_requirement`: B-Tree index on `buyer_requirement_id`.
 
 ---
 
@@ -536,6 +538,7 @@ Immutable product terms agreed upon at the moment of offer acceptance. Each item
 | `id` | `UUID` | No | Primary key |
 | `order_id` | `UUID` | No | `FOREIGN KEY REFERENCES orders(id) ON DELETE CASCADE` |
 | `listing_id` | `UUID` | Yes | `FOREIGN KEY REFERENCES produce_listings(id) ON DELETE SET NULL` |
+| `buyer_requirement_id` | `UUID` | Yes | `FOREIGN KEY REFERENCES buyer_requirements(id) ON DELETE SET NULL` |
 | `product_name` | `VARCHAR(128)` | No | Immutable historical snapshot of produce title |
 | `quantity` | `NUMERIC(12, 3)` | No | `CHECK (quantity > 0)` |
 | `unit` | `VARCHAR(16)` | No | Measurement unit |
@@ -548,6 +551,7 @@ Immutable product terms agreed upon at the moment of offer acceptance. Each item
 *Indexes:*
 * `idx_order_items_order`: B-Tree index on `order_id`.
 * `idx_order_items_listing`: B-Tree index on `listing_id`.
+* `idx_order_items_requirement`: B-Tree index on `buyer_requirement_id`.
 
 ---
 

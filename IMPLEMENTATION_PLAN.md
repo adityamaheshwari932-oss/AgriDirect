@@ -143,27 +143,45 @@ Each phase corresponds to a slice of the system. The goal is always a working, t
 
 ---
 
-## Phase 6 — Offers & Negotiation
+## Phase 6 — Offers, Negotiation & Requirement Fulfillment Approvals ✅ (Completed & Verified)
 
 **Depends on:** Phases 4 and 5
 
-**Goal:** Structured offer and counter-offer flow between verified farmers and buyers.
+**Goal:** Structured offer, negotiation, and requirement fulfillment approval flow between verified farmers and commercial buyers (Backend Module 3 & ADR-003).
 
 ### Deliverables
-- `Offer` model and migration (linked to listing or requirement)
-- `POST /api/v1/offers` — create offer
-- `GET /api/v1/offers` — list own offers (buyer or farmer)
-- `GET /api/v1/offers/{id}` — offer detail
-- `POST /api/v1/offers/{id}/counter` — counter-offer
-- `POST /api/v1/offers/{id}/accept` — accept offer → triggers order creation
+- `Offer` and `OfferItem` models and Alembic migration `d4e5f6a1b2c3`
+- `RequirementFulfillmentApproval` model (ADR-003) with composite FK `fk_approvals_order_item_composite`
+- `POST /api/v1/offers` — create structured offer (multi-item, multi-requirement support)
+- `GET /api/v1/offers` — list user offers with status, role, and pagination filters
+- `GET /api/v1/offers/{id}` — detailed offer view with line items and participants
+- `POST /api/v1/offers/{id}/counter` — counter-offer maintaining parent-child lineage
+- `POST /api/v1/offers/{id}/accept` — accept offer → atomically creates order, deducts listing stock, and triggers ADR-003 fulfillment approval
 - `POST /api/v1/offers/{id}/reject` — reject offer
 - `POST /api/v1/offers/{id}/withdraw` — withdraw offer
+- `GET /api/v1/offers/{id}/history` — retrieve chronological negotiation history chain
+- `GET /api/v1/requirements/approvals` — list pending/reviewed fulfillment approvals for buyer
+- `GET /api/v1/requirements/approvals/{id}` — approval detail with anti-enumeration security (404)
+- `POST /api/v1/requirements/approvals/{id}/approve` — buyer approval with custom quantity and explicit closure
+- `POST /api/v1/requirements/approvals/{id}/reject` — buyer rejection preserving open demand (FR-REQ-08)
 - Offer state machine: `pending → countered | accepted | rejected | withdrawn`
+- Approval state machine: `pending → approved | rejected | not_applied | voided`
 
-### Acceptance Criteria
-- Only verified users can make/respond to offers.
-- State transitions are strictly enforced.
-- Accepting an offer atomically creates an order (Phase 7).
+### Acceptance Criteria & Verification Evidence
+- [x] Only verified farmers and buyers can initiate or respond to offers (403 for unverified).
+- [x] Strict state machine enforcement; terminal approval and offer states are immutable.
+- [x] Farmer acceptance creates pending approval without premature demand deduction.
+- [x] Buyer subsequent review applies exact deduction without silent quantity clamping.
+- [x] Order cancellation voids pending approvals while retaining terminal audit records.
+- [x] Atomic acceptance creates order, order items, and `InventoryAdjustment` audit rows.
+- [x] PostgreSQL migration verified on isolated database `agridirect_module3_test` (`upgrade -> downgrade -> upgrade` to `d4e5f6a1b2c3`).
+- [x] Development database `agridirect_db` remained safely untouched at revision `fcf5c991d506`.
+- [x] 23 dedicated live PostgreSQL 18.6 integration & multi-connection concurrency tests passed.
+- [x] 58 targeted SQLite tests and 81 combined Module 3 tests passed.
+- [x] 644 full backend regression suite tests passed.
+- [x] Verified zero overselling, zero duplicate deductions, and zero `40P01` deadlocks across 4 concurrent scenarios.
+- [x] Resolved PostgreSQL runtime `FOR UPDATE` on eager outer joins via `with_for_update(of=Model)` and stale reads via `.populate_existing()`.
+- [x] Enforced global 5-tier lock hierarchy: `Tier 1: Offer -> Tier 2: Order -> Tier 3: Listing (asc UUID) -> Tier 4: Requirement (asc UUID) -> Tier 5: Approval`. Future modules must strictly adhere to this order.
 
 ---
 

@@ -13,6 +13,10 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.listing import ProduceCategory
+from app.models.requirement_approval import (
+    APPROVAL_STATUS_PENDING,
+    RequirementFulfillmentApproval,
+)
 from app.models.user import User
 from app.requirements.models import (
     REQUIREMENT_STATUS_ACTIVE,
@@ -52,6 +56,7 @@ class RequirementRepository:
         self,
         requirement_id: uuid.UUID,
         include_deleted: bool = False,
+        for_update: bool = False,
     ) -> Optional[BuyerRequirement]:
         """Retrieve a requirement by UUID with attached category and buyer profile."""
         query = (
@@ -64,6 +69,8 @@ class RequirementRepository:
         )
         if not include_deleted:
             query = query.filter(BuyerRequirement.is_deleted.is_(False))
+        if for_update:
+            query = query.with_for_update(of=BuyerRequirement).populate_existing()
         return query.first()
 
     def list_buyer_requirements(
@@ -242,4 +249,105 @@ class RequirementRepository:
         self.db.commit()
         self.db.refresh(requirement)
         return requirement
+
+    # -----------------------------------------------------------------------
+    # Requirement Fulfillment Approvals (ADR-003)
+    # -----------------------------------------------------------------------
+
+    def lock_requirements(self, requirement_ids: List[uuid.UUID]) -> Dict[uuid.UUID, BuyerRequirement]:
+        """Acquire row-level locks on buyer requirements in ascending UUID order to minimize deadlocks."""
+        if not requirement_ids:
+            return {}
+        sorted_ids = sorted(list(set(requirement_ids)))
+        stmt = (
+            self.db.query(BuyerRequirement)
+            .filter(BuyerRequirement.id.in_(sorted_ids))
+            .order_by(BuyerRequirement.id.asc())
+            .with_for_update()
+        )
+        results = stmt.all()
+        return {r.id: r for r in results}
+
+    def get_approval_by_id(
+        self,
+        approval_id: uuid.UUID,
+        for_update: bool = False,
+    ) -> Optional[RequirementFulfillmentApproval]:
+        """Retrieve a fulfillment approval by UUID with eager loaded requirement and order."""
+        query = (
+            self.db.query(RequirementFulfillmentApproval)
+            .options(
+                joinedload(RequirementFulfillmentApproval.requirement),
+                joinedload(RequirementFulfillmentApproval.order),
+                joinedload(RequirementFulfillmentApproval.order_item),
+            )
+            .filter(RequirementFulfillmentApproval.id == approval_id)
+        )
+        if for_update:
+            query = query.with_for_update(of=RequirementFulfillmentApproval).populate_existing()
+        return query.first()
+
+    def get_approval_by_order_item_id(
+        self,
+        order_item_id: uuid.UUID,
+    ) -> Optional[RequirementFulfillmentApproval]:
+        """Retrieve a fulfillment approval by its unique order item ID."""
+        return (
+            self.db.query(RequirementFulfillmentApproval)
+            .filter(RequirementFulfillmentApproval.order_item_id == order_item_id)
+            .first()
+        )
+
+    def list_approvals_for_buyer(
+        self,
+        buyer_id: uuid.UUID,
+        status_filter: Optional[str] = None,
+        requirement_id: Optional[uuid.UUID] = None,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> Tuple[List[RequirementFulfillmentApproval], int]:
+        """List fulfillment approvals for requirements owned by the specified buyer."""
+        query = (
+            self.db.query(RequirementFulfillmentApproval)
+            .join(BuyerRequirement, RequirementFulfillmentApproval.requirement_id == BuyerRequirement.id)
+            .options(
+                joinedload(RequirementFulfillmentApproval.requirement),
+                joinedload(RequirementFulfillmentApproval.order),
+                joinedload(RequirementFulfillmentApproval.order_item),
+            )
+            .filter(BuyerRequirement.buyer_id == buyer_id)
+        )
+
+        if status_filter:
+            query = query.filter(RequirementFulfillmentApproval.status == status_filter)
+
+        if requirement_id:
+            query = query.filter(RequirementFulfillmentApproval.requirement_id == requirement_id)
+
+        total = query.count()
+        offset = (page - 1) * page_size
+        items = (
+            query.order_by(RequirementFulfillmentApproval.created_at.desc())
+            .offset(offset)
+            .limit(page_size)
+            .all()
+        )
+        return items, total
+
+    def create_approval(self, approval_data: Dict[str, Any]) -> RequirementFulfillmentApproval:
+        """Create and persist a new requirement fulfillment approval record."""
+        approval = RequirementFulfillmentApproval(**approval_data)
+        self.db.add(approval)
+        self.db.flush()
+        return approval
+    def update_approval(
+        self,
+        approval: RequirementFulfillmentApproval,
+        data: Dict[str, Any],
+    ) -> RequirementFulfillmentApproval:
+        """Update fields on a fulfillment approval record."""
+        for key, value in data.items():
+            setattr(approval, key, value)
+        self.db.flush()
+        return approval
 

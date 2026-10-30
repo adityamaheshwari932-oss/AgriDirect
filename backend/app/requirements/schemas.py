@@ -315,11 +315,74 @@ class BuyerRequirementPublicListResponse(BaseModel):
     page_size: int
     total_pages: int
 
-
 class BuyerRequirementListResponse(BaseModel):
     """Paginated response for buyer's own requirements."""
 
     items: List[BuyerRequirementDetailResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+class ApproveFulfillmentRequest(BaseModel):
+    """Payload to approve a requirement fulfillment deduction."""
+
+    approved_quantity: Optional[Decimal] = Field(
+        default=None,
+        gt=0,
+        decimal_places=3,
+        description="Quantity to deduct from requirement remaining demand. If omitted, defaults to proposed quantity.",
+    )
+    close_requirement: bool = Field(
+        default=False,
+        description="Explicit instruction to close the requirement. If False, requirement remains open/partially_fulfilled.",
+    )
+
+
+class RejectFulfillmentRequest(BaseModel):
+    """Payload to reject a requirement fulfillment deduction."""
+
+    reason: Optional[str] = Field(
+        default=None,
+        max_length=500,
+        description="Optional reason for rejecting the fulfillment deduction.",
+    )
+
+
+class FulfillmentApprovalResponse(BaseModel):
+    """Detailed response for a fulfillment approval record."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    requirement_id: uuid.UUID
+    order_id: uuid.UUID
+    order_item_id: uuid.UUID
+    proposed_quantity: Decimal
+    approved_quantity: Optional[Decimal] = None
+    status: str
+    reviewed_by_user_id: Optional[uuid.UUID] = None
+    reviewed_at: Optional[datetime] = None
+    rejection_reason: Optional[str] = None
+    voided_by_user_id: Optional[uuid.UUID] = None
+    voided_at: Optional[datetime] = None
+    void_reason: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    # Summary enrichment fields for UI/API clients
+    requirement_title: Optional[str] = None
+    product_name: Optional[str] = None
+    unit: Optional[str] = None
+    requirement_remaining_quantity: Optional[Decimal] = None
+    requirement_status: Optional[str] = None
+    order_number: Optional[str] = None
+
+
+class FulfillmentApprovalListResponse(BaseModel):
+    """Paginated list of fulfillment approvals for a buyer."""
+
+    items: List[FulfillmentApprovalResponse]
     total: int
     page: int
     page_size: int

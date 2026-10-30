@@ -35,6 +35,8 @@ if TYPE_CHECKING:
     from app.models.listing import ProduceListing
     from app.models.offer import Offer
     from app.models.payment import PaymentRecord
+    from app.models.requirement import BuyerRequirement
+    from app.models.requirement_approval import RequirementFulfillmentApproval
     from app.models.review import RatingReview
     from app.models.user import User
 
@@ -277,6 +279,11 @@ class Order(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         foreign_keys="[RatingReview.order_id]",
         back_populates="order",
     )
+    fulfillment_approvals: Mapped[List["RequirementFulfillmentApproval"]] = relationship(
+        "RequirementFulfillmentApproval",
+        foreign_keys="[RequirementFulfillmentApproval.order_id]",
+        back_populates="order",
+    )
 
     __table_args__ = (
         CheckConstraint(
@@ -316,6 +323,11 @@ class OrderItem(Base, UUIDPrimaryKeyMixin):
     listing_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("produce_listings.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    buyer_requirement_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("buyer_requirements.id", ondelete="SET NULL"),
         nullable=True,
     )
     product_name: Mapped[str] = mapped_column(
@@ -364,8 +376,25 @@ class OrderItem(Base, UUIDPrimaryKeyMixin):
         "ProduceListing",
         foreign_keys=[listing_id],
     )
+    buyer_requirement: Mapped[Optional["BuyerRequirement"]] = relationship(
+        "BuyerRequirement",
+        foreign_keys=[buyer_requirement_id],
+        back_populates="order_items",
+    )
+    fulfillment_approval: Mapped[Optional["RequirementFulfillmentApproval"]] = relationship(
+        "RequirementFulfillmentApproval",
+        foreign_keys="[RequirementFulfillmentApproval.order_item_id]",
+        back_populates="order_item",
+        uselist=False,
+    )
 
     __table_args__ = (
+        UniqueConstraint(
+            "id",
+            "order_id",
+            "buyer_requirement_id",
+            name="uq_order_items_identity_requirement",
+        ),
         CheckConstraint(
             "quantity > 0",
             name="chk_order_items_quantity",
@@ -384,6 +413,7 @@ class OrderItem(Base, UUIDPrimaryKeyMixin):
         ),
         Index("idx_order_items_order", "order_id"),
         Index("idx_order_items_listing", "listing_id"),
+        Index("idx_order_items_requirement", "buyer_requirement_id"),
     )
 
 

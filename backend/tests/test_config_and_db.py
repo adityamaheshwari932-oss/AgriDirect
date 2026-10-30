@@ -691,6 +691,7 @@ class TestDeclarativeBase:
             "produce_listings",
             "listing_images",
             "buyer_requirements",
+            "requirement_fulfillment_approvals",
             "conversations",
             "conversation_participants",
             "messages",
