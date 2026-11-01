@@ -43,6 +43,8 @@ What are the trade-offs, benefits, and risks?
 | `ADR-008-order-lifecycle-and-amendments.md` | Orders, inventory lifecycle, and bilateral amendment workflow | Accepted & Verified |
 | `ADR-009-contextual-messaging-and-communication.md` | Contextual messaging, media attachments, contact disclosure, and communication system | Accepted & Verified |
 | `ADR-010-payment-tracking-and-dispute-moderation.md` | Off-platform payment tracking, evidence archival, and administrative dispute moderation | Accepted & Verified |
+| `ADR-011-ratings-reviews-and-notifications.md` | Mutual ratings, reviews, reputation aggregation, and operational alerts | Accepted & Verified |
+| `ADR-012-user-reports-and-administrative-audit-trail.md` | User reporting, safety moderation, and administrative audit trail | Accepted & Verified |
 
 ## Planned Design Documents
 

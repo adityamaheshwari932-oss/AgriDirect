@@ -84,3 +84,17 @@ class NotificationMarkReadResponse(BaseModel):
     is_read: bool = True
     read_at: datetime
     message: str = "Notification marked as read successfully"
+
+
+class NotificationUnreadCountResponse(BaseModel):
+    """Response containing total unread notification count."""
+
+    unread_count: int = Field(..., ge=0, description="Total unread notifications for caller")
+
+
+class NotificationMarkAllReadResponse(BaseModel):
+    """Response returned when all notifications are marked as read."""
+
+    marked_count: int = Field(..., ge=0, description="Total notifications updated to read")
+    message: str = "All notifications marked as read successfully"
+

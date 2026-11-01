@@ -161,6 +161,58 @@ class NotificationService:
             page_size=page_size,
         )
 
+    def get_notification(
+        self,
+        notification_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> Notification:
+        """Retrieve a specific notification ensuring user ownership.
+
+        Args:
+            notification_id: Primary key of notification.
+            user_id: Authenticated user ID.
+
+        Returns:
+            Notification model instance.
+
+        Raises:
+            HTTPException 404: If notification does not exist.
+            HTTPException 403: If notification belongs to another user.
+        """
+        notification = self.repo.get_by_id_and_user(
+            notification_id=notification_id,
+            user_id=user_id,
+        )
+        if notification is None:
+            other = self.repo.get_by_id(notification_id)
+            if other is not None:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Forbidden: You do not have permission to access this notification",
+                )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Notification not found",
+            )
+        return notification
+
+    def get_unread_count(self, user_id: uuid.UUID) -> int:
+        """Count unread notifications for a user."""
+        return self.repo.count_unread_for_user(user_id=user_id)
+
+    def mark_all_as_read(self, user_id: uuid.UUID) -> int:
+        """Mark all unread notifications for a user as read.
+
+        Args:
+            user_id: Authenticated user ID.
+
+        Returns:
+            Count of notifications marked as read.
+        """
+        count = self.repo.mark_all_as_read(user_id=user_id)
+        self.db.commit()
+        return count
+
     def mark_as_read(
         self,
         notification_id: uuid.UUID,

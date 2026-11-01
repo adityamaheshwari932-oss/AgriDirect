@@ -5,8 +5,10 @@ from app.notifications.routes import router
 from app.notifications.schemas import (
     NotificationCreate,
     NotificationListResponse,
+    NotificationMarkAllReadResponse,
     NotificationMarkReadResponse,
     NotificationRead,
+    NotificationUnreadCountResponse,
 )
 from app.notifications.service import NotificationService
 
@@ -17,5 +19,7 @@ __all__ = [
     "NotificationRead",
     "NotificationListResponse",
     "NotificationMarkReadResponse",
+    "NotificationUnreadCountResponse",
+    "NotificationMarkAllReadResponse",
     "router",
 ]

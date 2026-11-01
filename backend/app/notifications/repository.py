@@ -163,3 +163,28 @@ class NotificationRepository:
             notification.read_at = read_time or datetime.now(timezone.utc)
         self.db.flush()
         return notification
+
+    def mark_all_as_read(
+        self, user_id: uuid.UUID, read_time: Optional[datetime] = None
+    ) -> int:
+        """Mark all unread notifications for a user as read.
+
+        Args:
+            user_id: Target user ID.
+            read_time: Timestamp to set (defaults to current UTC time).
+
+        Returns:
+            Number of notifications marked as read.
+        """
+        now = read_time or datetime.now(timezone.utc)
+        stmt = select(Notification).where(
+            Notification.user_id == user_id,
+            Notification.is_read.is_(False),
+        )
+        unread_items = list(self.db.scalars(stmt).all())
+        for notif in unread_items:
+            notif.is_read = True
+            notif.read_at = now
+        self.db.flush()
+        return len(unread_items)
+
