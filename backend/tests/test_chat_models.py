@@ -145,7 +145,7 @@ class TestChatMetadata:
         assert "message_attachments" in Base.metadata.tables
 
     def test_conversations_columns_and_nullability(self) -> None:
-        """conversations must have all 7 columns with exact nullabilities."""
+        """conversations must have all 9 columns with exact nullabilities."""
         table = Base.metadata.tables["conversations"]
         expected = {
             "id": False,
@@ -155,8 +155,10 @@ class TestChatMetadata:
             "initial_context_id": True,
             "created_at": False,
             "last_message_at": False,
+            "order_id": True,
+            "status": False,
         }
-        assert len(table.columns) == 7
+        assert len(table.columns) == 9
         for col_name, nullable in expected.items():
             assert col_name in table.c, f"Column {col_name} missing from conversations"
             assert table.c[col_name].nullable == nullable
@@ -178,7 +180,7 @@ class TestChatMetadata:
             assert table.c[col_name].nullable == nullable
 
     def test_messages_columns_and_nullability(self) -> None:
-        """messages must have all 6 columns with exact nullabilities."""
+        """messages must have all 11 columns with exact nullabilities."""
         table = Base.metadata.tables["messages"]
         expected = {
             "id": False,
@@ -187,14 +189,19 @@ class TestChatMetadata:
             "content": False,
             "is_read": False,
             "created_at": False,
+            "message_type": False,
+            "delivery_status": False,
+            "delivered_at": True,
+            "read_at": True,
+            "order_id": True,
         }
-        assert len(table.columns) == 6
+        assert len(table.columns) == 11
         for col_name, nullable in expected.items():
             assert col_name in table.c, f"Column {col_name} missing from messages"
             assert table.c[col_name].nullable == nullable
 
     def test_message_attachments_columns_and_nullability(self) -> None:
-        """message_attachments must have all 7 columns with exact nullabilities."""
+        """message_attachments must have all 8 columns with exact nullabilities."""
         table = Base.metadata.tables["message_attachments"]
         expected = {
             "id": False,
@@ -204,8 +211,9 @@ class TestChatMetadata:
             "file_mime_type": False,
             "file_size_bytes": False,
             "created_at": False,
+            "attachment_type": False,
         }
-        assert len(table.columns) == 7
+        assert len(table.columns) == 8
         for col_name, nullable in expected.items():
             assert col_name in table.c, f"Column {col_name} missing from message_attachments"
             assert table.c[col_name].nullable == nullable
@@ -290,7 +298,7 @@ class TestChatMetadata:
         assert CONTEXT_TYPE_LISTING == "listing"
         assert CONTEXT_TYPE_REQUIREMENT == "requirement"
         assert CONTEXT_TYPE_GENERAL == "general"
-        assert set(VALID_CONTEXT_TYPES) == {"listing", "requirement", "general"}
+        assert set(VALID_CONTEXT_TYPES) == {"listing", "requirement", "general", "order", "offer"}
 
 
 # ===========================================================================

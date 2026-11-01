@@ -284,6 +284,13 @@ class Order(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         foreign_keys="[RequirementFulfillmentApproval.order_id]",
         back_populates="order",
     )
+    delivery_acknowledgements: Mapped[List["OrderDeliveryAcknowledgement"]] = relationship(
+        "OrderDeliveryAcknowledgement",
+        foreign_keys="[OrderDeliveryAcknowledgement.order_id]",
+        back_populates="order",
+        cascade="all, delete-orphan",
+        order_by="OrderDeliveryAcknowledgement.acknowledged_at.asc()",
+    )
 
     __table_args__ = (
         CheckConstraint(
@@ -572,3 +579,56 @@ class InventoryAdjustment(Base, UUIDPrimaryKeyMixin):
         Index("idx_inv_adjustments_listing", "listing_id", "change_type"),
         Index("idx_inv_adjustments_order", "order_id"),
     )
+
+
+class OrderDeliveryAcknowledgement(Base, UUIDPrimaryKeyMixin):
+    """Bilateral and admin delivery completion acknowledgement records.
+
+    Supports:
+    - Normal completion: single acknowledgement from counterparty.
+    - Admin-initiated completion: dual independent acknowledgements from both farmer and buyer.
+    """
+
+    __tablename__ = "order_delivery_acknowledgements"
+
+    order_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("orders.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    acknowledged_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    notes: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
+    # Relationships
+    order: Mapped["Order"] = relationship(
+        "Order",
+        foreign_keys=[order_id],
+        back_populates="delivery_acknowledgements",
+    )
+    user: Mapped["User"] = relationship(
+        "User",
+        foreign_keys=[user_id],
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "order_id",
+            "user_id",
+            name="uq_order_delivery_acknowledgements_order_user",
+        ),
+        Index("idx_order_delivery_acknowledgements_order_id", "order_id"),
+        Index("idx_order_delivery_acknowledgements_user_id", "user_id"),
+    )
+

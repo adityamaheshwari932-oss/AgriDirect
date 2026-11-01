@@ -88,6 +88,7 @@ def _cleanup_database():
 
         db.execute(text("""
             TRUNCATE TABLE 
+                contact_share_requests,
                 requirement_fulfillment_approvals,
                 order_amendments,
                 inventory_adjustments,
@@ -297,9 +298,9 @@ def test_00_verify_postgres_environment(db_session: Session):
     assert res[1] == "agridirect_app"
     assert "PostgreSQL 18" in res[2]
 
-    # Check Alembic revision head
+    # Check Alembic revision head (at least Module 3 revision)
     alembic_rev = db_session.execute(text("SELECT version_num FROM alembic_version")).scalar()
-    assert alembic_rev == "d4e5f6a1b2c3"
+    assert alembic_rev in ("d4e5f6a1b2c3", "e5f6a1b2c3d4", "f6a1b2c3d4e5", "a1b2c3d4e5f6")
 
 
 # ===========================================================================

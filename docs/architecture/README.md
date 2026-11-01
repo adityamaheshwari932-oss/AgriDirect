@@ -40,7 +40,8 @@ What are the trade-offs, benefits, and risks?
 | `ADR-005-postgresql.md` | PostgreSQL as primary data store | Pending |
 | `ADR-006-soft-deletes.md` | Soft delete strategy for user-facing entities | Pending |
 | `ADR-007-inventory-workflow.md` | Explicit approval workflow for inventory changes | Pending |
-| `ADR-008-order-amendments.md` | Recorded amendment model for order changes | Pending |
+| `ADR-008-order-lifecycle-and-amendments.md` | Orders, inventory lifecycle, and bilateral amendment workflow | Accepted & Verified |
+| `ADR-009-contextual-messaging-and-communication.md` | Contextual messaging, media attachments, contact disclosure, and communication system | Accepted & Verified |
 
 ## Planned Design Documents
 
