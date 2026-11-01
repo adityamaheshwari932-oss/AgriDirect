@@ -250,22 +250,24 @@ Each phase corresponds to a slice of the system. The goal is always a working, t
 
 ---
 
-## Phase 10 — Descriptive Market Analytics
+## Phase 10 — Descriptive Market Analytics ✅ (Completed)
 
 **Depends on:** Phases 4, 7 (real listings and orders data)
 
 **Goal:** Aggregate descriptive statistics for farmers, buyers, and admins. No ML or forecasting.
 
 ### Deliverables
-- `GET /api/v1/analytics/market-summary` — price ranges, volume by category
-- `GET /api/v1/analytics/my-performance` — per-user sales/purchase summary
-- `GET /api/v1/admin/analytics/platform` — platform-wide metrics (admin only)
-- All queries use clearly identified, real transaction data
+- [x] `GET /api/v1/analytics/market-summary` — unit-safe supply and completed trade summary with Version 2.5 statistical privacy controls
+- [x] `GET /api/v1/analytics/demand-summary` — active buyer demands and permanent fulfillment audit retention
+- [x] `GET /api/v1/analytics/my-performance` — role-specialized farmer/buyer dashboard with non-pending denominators and payment settlement
+- [x] `GET /api/v1/analytics/admin/platform` & `GET /api/v1/admin/analytics/platform` — platform GMV, pipeline GMV, inventory, outcomes, velocity
+- [x] All queries use clearly identified, real transaction data with read-only transaction enforcement
 
 ### Acceptance Criteria
-- Analytics are read-only and never modify data.
-- All figures are traceable to source records.
-- ML/forecasting is explicitly absent.
+- [x] Analytics are read-only and never modify data (enforced via `get_read_only_db` and ORM `before_flush` barrier).
+- [x] All figures are traceable to source records.
+- [x] ML/forecasting is explicitly absent.
+- [x] Version 2.5 statistical privacy protections (diversity k>=3, dominance >=50%, coarse count bands, extrema clustering, median ownership).
 
 ---
 

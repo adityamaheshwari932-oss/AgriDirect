@@ -1,0 +1,14 @@
+backend/app/analytics/__init__.py:10: new blank line at EOF.
+backend/app/analytics/repository.py:594: new blank line at EOF.
+backend/app/analytics/routes.py:167: new blank line at EOF.
+backend/app/analytics/schemas.py:627: new blank line at EOF.
+backend/app/analytics/service.py:1199: new blank line at EOF.
+backend/tests/test_analytics_api.py:1309: new blank line at EOF.
+backend/tests/test_postgres_module9.py:84: trailing whitespace.
+[32m+[m[32m            TRUNCATE TABLE[m[41m [m
+backend/tests/test_postgres_module9.py:471: new blank line at EOF.
+docs/architecture/ADR-013-descriptive-market-analytics.md:3: trailing whitespace.
+[32m+[m[32m**Status:** Accepted & Verified[m[41m  [m
+docs/architecture/ADR-013-descriptive-market-analytics.md:4: trailing whitespace.
+[32m+[m[32m**Date:** 2026-11-02[m[41m  [m
+docs/architecture/ADR-013-descriptive-market-analytics.md:124: new blank line at EOF.

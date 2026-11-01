@@ -45,6 +45,7 @@ What are the trade-offs, benefits, and risks?
 | `ADR-010-payment-tracking-and-dispute-moderation.md` | Off-platform payment tracking, evidence archival, and administrative dispute moderation | Accepted & Verified |
 | `ADR-011-ratings-reviews-and-notifications.md` | Mutual ratings, reviews, reputation aggregation, and operational alerts | Accepted & Verified |
 | `ADR-012-user-reports-and-administrative-audit-trail.md` | User reporting, safety moderation, and administrative audit trail | Accepted & Verified |
+| `ADR-013-descriptive-market-analytics.md` | Descriptive market analytics and statistical disclosure controls | Accepted & Verified |
 
 ## Planned Design Documents
 
