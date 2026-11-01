@@ -208,10 +208,11 @@ class TestPaymentMetadata:
             "status": False,
             "payment_date": False,
             "acknowledged_at": True,
+            "original_acknowledged_at": True,
             "created_at": False,
             "updated_at": False,
         }
-        assert len(table.columns) == 12
+        assert len(table.columns) == 13
         for col_name, nullable in expected.items():
             assert col_name in table.c, f"Column {col_name} missing from payment_records"
             assert table.c[col_name].nullable == nullable

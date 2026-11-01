@@ -42,6 +42,7 @@ What are the trade-offs, benefits, and risks?
 | `ADR-007-inventory-workflow.md` | Explicit approval workflow for inventory changes | Pending |
 | `ADR-008-order-lifecycle-and-amendments.md` | Orders, inventory lifecycle, and bilateral amendment workflow | Accepted & Verified |
 | `ADR-009-contextual-messaging-and-communication.md` | Contextual messaging, media attachments, contact disclosure, and communication system | Accepted & Verified |
+| `ADR-010-payment-tracking-and-dispute-moderation.md` | Off-platform payment tracking, evidence archival, and administrative dispute moderation | Accepted & Verified |
 
 ## Planned Design Documents
 

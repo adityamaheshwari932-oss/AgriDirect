@@ -99,6 +99,7 @@ def create_app() -> FastAPI:
     from app.notifications.routes import router as notifications_router
     from app.offers.routes import router as offers_router
     from app.orders.routes import router as orders_router
+    from app.payments.routes import router as payments_router
     from app.requirements.routes import router as requirements_router
     from app.users.routes import router as users_router
     from app.verification.routes import router as verification_router
@@ -109,6 +110,7 @@ def create_app() -> FastAPI:
     app.include_router(requirements_router, prefix="/api/v1")
     app.include_router(offers_router, prefix="/api/v1")
     app.include_router(orders_router, prefix="/api/v1")
+    app.include_router(payments_router, prefix="/api/v1")
     app.include_router(chat_router, prefix="/api/v1")
     app.include_router(notifications_router, prefix="/api/v1")
     app.include_router(verification_router, prefix="/api/v1")
