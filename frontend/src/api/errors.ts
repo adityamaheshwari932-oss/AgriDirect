@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Normalized API error class representing HTTP and network errors.
  */
 
@@ -46,6 +46,54 @@ export class ApiError extends Error {
 
   get isServerError(): boolean {
     return this.status >= 500;
+  }
+
+  get isAborted(): boolean {
+    return this.message.toLowerCase().includes("abort");
+  }
+
+  private get detailText(): string {
+    if (typeof this.detail === "string") {
+      return this.detail.toLowerCase();
+    }
+    return this.message.toLowerCase();
+  }
+
+  /**
+   * Distinguishes account status restriction/suspension from ordinary permission denials.
+   */
+  get isAccountSuspendedOrRestricted(): boolean {
+    if (!this.isForbidden) return false;
+    const text = this.detailText;
+    return (
+      text.includes("suspended") ||
+      text.includes("restricted") ||
+      text.includes("blocked") ||
+      text.includes("account_restricted") ||
+      text.includes("account_suspended") ||
+      text.includes("account_blocked")
+    );
+  }
+
+  get isAccountInactive(): boolean {
+    if (!this.isForbidden) return false;
+    return this.detailText.includes("inactive");
+  }
+
+  get isVerificationRequired(): boolean {
+    if (!this.isForbidden) return false;
+    const text = this.detailText;
+    return text.includes("requires a verified") || text.includes("verification");
+  }
+
+  get isRoleForbidden(): boolean {
+    if (!this.isForbidden) return false;
+    const text = this.detailText;
+    return (
+      text.includes("farmer account") ||
+      text.includes("buyer account") ||
+      text.includes("administrator privileges")
+    );
   }
 
   /**

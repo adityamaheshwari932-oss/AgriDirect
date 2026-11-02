@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../store/authStore";
 
@@ -30,6 +30,10 @@ export const DashboardRedirectPage: React.FC = () => {
 
   if (user.role === "buyer") {
     return <Navigate to="/dashboard/buyer" replace />;
+  }
+
+  if (user.role === "admin") {
+    return <Navigate to="/admin/users" replace />;
   }
 
   return <Navigate to="/" replace />;

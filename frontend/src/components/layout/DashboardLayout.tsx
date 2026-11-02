@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   Sprout,
@@ -10,6 +10,17 @@ import {
   Menu,
   X,
   ExternalLink,
+  Layers,
+  ClipboardList,
+  MessageSquare,
+  BarChart3,
+  ShoppingBag,
+  Users,
+  ShieldAlert,
+  CheckSquare,
+  History,
+  LineChart,
+  AlertTriangle,
 } from "lucide-react";
 import { useAuth } from "../../store/authStore";
 import { VERIFICATION_STATUS_CONFIG } from "../../utils/status";
@@ -26,6 +37,7 @@ export const DashboardLayout: React.FC = () => {
 
   const isFarmer = user.role === "farmer";
   const isBuyer = user.role === "buyer";
+  const isAdmin = user.role === "admin";
 
   // Role-appropriate display names
   const displayName = isFarmer
@@ -34,6 +46,8 @@ export const DashboardLayout: React.FC = () => {
     ? user.buyer_profile?.contact_person_name ||
       user.buyer_profile?.business_name ||
       user.email
+    : isAdmin
+    ? "Platform Administrator"
     : user.email;
 
   const entitySubtitle = isFarmer
@@ -44,32 +58,70 @@ export const DashboardLayout: React.FC = () => {
     ? user.buyer_profile?.business_name && user.buyer_profile.business_name !== displayName
       ? user.buyer_profile.business_name
       : "Commercial Buyer"
+    : isAdmin
+    ? user.email
     : "AgriDirect User";
 
   const verificationConfig =
     VERIFICATION_STATUS_CONFIG[user.verification_status] ||
     VERIFICATION_STATUS_CONFIG.unverified;
 
-  // Nav links tailored by role
-  const navItems = [
-    {
-      label: "Dashboard",
-      to: isFarmer ? "/dashboard/farmer" : "/dashboard/buyer",
-      icon: isFarmer ? Tractor : Store,
-    },
-    {
-      label: "My Profile",
-      to: "/dashboard/profile",
-      icon: UserIcon,
-    },
-    {
-      label: "Verification",
-      to: "/dashboard/verification",
-      icon: ShieldCheck,
-      badge: verificationConfig.label,
-      badgeClass: verificationConfig.badgeClass,
-    },
-  ];
+  // Role-specific navigation items
+  const navItems = isFarmer
+    ? [
+        { label: "Dashboard", to: "/dashboard/farmer", icon: Tractor },
+        { label: "My Listings", to: "/dashboard/listings", icon: Layers },
+        { label: "Orders", to: "/dashboard/orders", icon: ClipboardList },
+        { label: "Messages", to: "/dashboard/messages", icon: MessageSquare },
+        { label: "Analytics", to: "/dashboard/analytics", icon: BarChart3 },
+        { label: "Profile", to: "/dashboard/profile", icon: UserIcon },
+        {
+          label: "Verification",
+          to: "/dashboard/verification",
+          icon: ShieldCheck,
+          badge: verificationConfig.label,
+          badgeClass: verificationConfig.badgeClass,
+        },
+      ]
+    : isBuyer
+    ? [
+        { label: "Dashboard", to: "/dashboard/buyer", icon: Store },
+        { label: "Marketplace", to: "/dashboard/marketplace", icon: ShoppingBag },
+        { label: "Requirements", to: "/dashboard/requirements", icon: Layers },
+        { label: "Orders", to: "/dashboard/orders", icon: ClipboardList },
+        { label: "Messages", to: "/dashboard/messages", icon: MessageSquare },
+        { label: "Analytics", to: "/dashboard/analytics", icon: BarChart3 },
+        { label: "Profile", to: "/dashboard/profile", icon: UserIcon },
+        {
+          label: "Verification",
+          to: "/dashboard/verification",
+          icon: ShieldCheck,
+          badge: verificationConfig.label,
+          badgeClass: verificationConfig.badgeClass,
+        },
+      ]
+    : isAdmin
+    ? [
+        { label: "User Moderation", to: "/admin/users", icon: Users },
+        { label: "Content Moderation", to: "/admin/content", icon: ShieldAlert },
+        { label: "Verification Queue", to: "/admin/verification", icon: CheckSquare },
+        { label: "Audit Logs", to: "/admin/audit-logs", icon: History },
+        { label: "Platform Analytics", to: "/admin/analytics", icon: LineChart },
+      ]
+    : [
+        { label: "Profile", to: "/dashboard/profile", icon: UserIcon },
+      ];
+
+  const homeDestination = isFarmer
+    ? "/dashboard/farmer"
+    : isBuyer
+    ? "/dashboard/buyer"
+    : isAdmin
+    ? "/admin/users"
+    : "/dashboard";
+
+  const isRestricted = user.account_status === "restricted";
+  const isSuspendedOrBlocked = user.account_status === "suspended" || user.account_status === "blocked";
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground antialiased selection:bg-primary/20">
@@ -78,13 +130,18 @@ export const DashboardLayout: React.FC = () => {
         <div className="mx-auto max-w-7xl w-full flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span
-              className={`inline-block w-2 h-2 rounded-full ${verificationConfig.dotClass}`}
+              className={`inline-block w-2 h-2 rounded-full ${
+                isAdmin ? "bg-purple-400" : verificationConfig.dotClass
+              }`}
               aria-hidden="true"
             />
             <span>
-              {isFarmer ? "Producer Portal" : "Commercial Procurement Portal"} —
-              Verification:{" "}
-              <span className="font-semibold">{verificationConfig.label}</span>
+              {isAdmin
+                ? "Platform Governance Portal — Administrator Console"
+                : isFarmer
+                ? "Producer Portal — Verification: "
+                : "Commercial Procurement Portal — Verification: "}
+              {!isAdmin && <span className="font-semibold">{verificationConfig.label}</span>}
             </span>
           </div>
           <Link
@@ -97,15 +154,42 @@ export const DashboardLayout: React.FC = () => {
         </div>
       </div>
 
+      {/* Account Status Warning Banner */}
+      {isRestricted && (
+        <div
+          role="alert"
+          className="bg-amber-500/15 border-b border-amber-500/30 text-amber-950 px-4 py-2.5 text-xs flex items-center justify-center gap-2 text-center"
+        >
+          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" aria-hidden="true" />
+          <span>
+            <strong>Account Restricted:</strong> Your account is currently in read-only mode. You
+            can view marketplace records, but creating listings, requirements, or offers is disabled.
+          </span>
+        </div>
+      )}
+
+      {isSuspendedOrBlocked && (
+        <div
+          role="alert"
+          className="bg-destructive/15 border-b border-destructive/30 text-destructive px-4 py-2.5 text-xs flex items-center justify-center gap-2 text-center"
+        >
+          <ShieldAlert className="w-4 h-4 text-destructive shrink-0" aria-hidden="true" />
+          <span>
+            <strong>Account {user.account_status === "blocked" ? "Blocked" : "Suspended"}:</strong>{" "}
+            Transactional access has been disabled by platform governance. Contact support for assistance.
+          </span>
+        </div>
+      )}
+
       {/* Main Authenticated Header */}
       <header className="border-b border-border bg-card/95 backdrop-blur sticky top-0 z-40 transition-colors shadow-xs">
         <div className="mx-auto px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
           <div className="h-16 flex items-center justify-between gap-4">
             {/* Logo / Home */}
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4 sm:gap-6">
               <Link
-                to={isFarmer ? "/dashboard/farmer" : "/dashboard/buyer"}
-                className="flex items-center gap-2.5 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg p-1"
+                to={homeDestination}
+                className="flex items-center gap-2.5 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg p-1 shrink-0"
                 aria-label="AgriDirect Dashboard Home"
               >
                 <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-primary-foreground shadow-sm">
@@ -116,14 +200,18 @@ export const DashboardLayout: React.FC = () => {
                     AgriDirect
                   </span>
                   <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold block">
-                    {isFarmer ? "Farmer Dashboard" : "Buyer Dashboard"}
+                    {isAdmin
+                      ? "Admin Console"
+                      : isFarmer
+                      ? "Farmer Dashboard"
+                      : "Buyer Dashboard"}
                   </span>
                 </div>
               </Link>
 
               {/* Desktop Navigation Links */}
               <nav
-                className="hidden md:flex items-center gap-1 pl-4 border-l border-border"
+                className="hidden lg:flex items-center gap-1 pl-4 border-l border-border overflow-x-auto"
                 aria-label="Dashboard Navigation"
               >
                 {navItems.map((item) => {
@@ -133,13 +221,13 @@ export const DashboardLayout: React.FC = () => {
                     <NavLink
                       key={item.to}
                       to={item.to}
-                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
                         isActive
-                          ? "bg-primary text-primary-foreground shadow-xs"
+                          ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                           : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                       }`}
                     >
-                      <Icon className="w-4 h-4" aria-hidden="true" />
+                      <Icon className="w-3.5 h-3.5" aria-hidden="true" />
                       <span>{item.label}</span>
                     </NavLink>
                   );
@@ -148,31 +236,37 @@ export const DashboardLayout: React.FC = () => {
             </div>
 
             {/* Desktop User Info & Sign Out */}
-            <div className="hidden md:flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-3">
               <div className="text-right">
-                <div className="text-xs font-semibold text-foreground truncate max-w-[180px]">
+                <div className="text-xs font-semibold text-foreground truncate max-w-[160px]">
                   {displayName}
                 </div>
-                <div className="text-[11px] text-muted-foreground truncate max-w-[180px]">
+                <div className="text-[10px] text-muted-foreground truncate max-w-[160px]">
                   {entitySubtitle}
                 </div>
               </div>
 
-              <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${verificationConfig.badgeClass}`}
-                title={verificationConfig.description}
-              >
+              {!isAdmin ? (
                 <span
-                  className={`w-1.5 h-1.5 rounded-full ${verificationConfig.dotClass}`}
-                  aria-hidden="true"
-                />
-                <span>{verificationConfig.label}</span>
-              </span>
+                  className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border ${verificationConfig.badgeClass}`}
+                  title={verificationConfig.description}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${verificationConfig.dotClass}`}
+                    aria-hidden="true"
+                  />
+                  <span>{verificationConfig.label}</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-100 text-purple-800 border border-purple-200">
+                  Admin
+                </span>
+              )}
 
               <button
                 type="button"
                 onClick={logout}
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors px-3 py-1.5 rounded-md border border-destructive/20 focus:outline-none focus:ring-2 focus:ring-destructive"
+                className="inline-flex items-center gap-1 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors px-2.5 py-1.5 rounded-md border border-destructive/20 focus:outline-none focus:ring-2 focus:ring-destructive"
                 aria-label="Sign out of AgriDirect"
               >
                 <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
@@ -181,13 +275,7 @@ export const DashboardLayout: React.FC = () => {
             </div>
 
             {/* Mobile Menu Hamburger */}
-            <div className="flex md:hidden items-center gap-2">
-              <span
-                className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${verificationConfig.badgeClass}`}
-              >
-                {verificationConfig.label}
-              </span>
-
+            <div className="flex lg:hidden items-center gap-2">
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -203,11 +291,22 @@ export const DashboardLayout: React.FC = () => {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-border bg-card px-4 pt-3 pb-6 space-y-4 shadow-lg animate-in slide-in-from-top duration-200">
+          <div className="lg:hidden border-t border-border bg-card px-4 pt-3 pb-6 space-y-4 shadow-lg animate-in slide-in-from-top duration-200">
             {/* User Details in Drawer */}
             <div className="p-3 bg-secondary/50 rounded-lg space-y-1">
-              <div className="text-sm font-semibold text-foreground">
-                {displayName}
+              <div className="text-sm font-semibold text-foreground flex items-center justify-between">
+                <span>{displayName}</span>
+                {isAdmin ? (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 font-semibold">
+                    Admin
+                  </span>
+                ) : (
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full border ${verificationConfig.badgeClass}`}
+                  >
+                    {verificationConfig.label}
+                  </span>
+                )}
               </div>
               <div className="text-xs text-muted-foreground">
                 {user.email} • {entitySubtitle}
@@ -275,7 +374,7 @@ export const DashboardLayout: React.FC = () => {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col py-8 px-4 sm:px-6 lg:px-8">
+      <main className="flex-1 flex flex-col py-6 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto w-full max-w-7xl flex-1 flex flex-col">
           <Outlet />
         </div>

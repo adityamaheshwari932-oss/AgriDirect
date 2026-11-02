@@ -1,9 +1,11 @@
-﻿/**
+/**
  * Centralized API client using the native Fetch API.
- * Handles base URLs, header injection, Bearer authentication, and standardized error parsing.
+ * Handles base URLs, header injection, Bearer authentication, standardized error parsing,
+ * and centralized event dispatching for 401 and 403 status responses.
  */
 
 import { ApiError } from "./errors";
+import { dispatchForbidden, dispatchUnauthorized } from "./events";
 import { tokenStorage } from "./tokenStorage";
 import type { ApiErrorResponse, ValidationErrorItem } from "../types/api";
 
@@ -37,6 +39,7 @@ export class ApiClient {
 
     const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
 
+    // Do NOT set Content-Type for FormData; browser must generate boundary automatically
     if (options.body !== undefined && !isFormData && !headers.has("Content-Type")) {
       headers.set("Content-Type", "application/json");
     }
@@ -62,6 +65,12 @@ export class ApiClient {
         body,
       });
     } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        throw new ApiError(0, "Request was aborted");
+      }
+      if (err instanceof Error && err.name === "AbortError") {
+        throw new ApiError(0, "Request was aborted");
+      }
       const msg = err instanceof Error ? err.message : "Unable to reach server";
       throw new ApiError(0, `Network error: ${msg}`);
     }
@@ -108,7 +117,32 @@ export class ApiClient {
         message = data;
       }
 
-      throw new ApiError(response.status, message, detail);
+      const apiError = new ApiError(response.status, message, detail);
+
+      // Centralized 401 Unauthorized handling: clear token and dispatch decoupled event
+      if (response.status === 401) {
+        tokenStorage.clearToken();
+        dispatchUnauthorized({
+          status: 401,
+          url,
+          message,
+        });
+      }
+
+      // Centralized 403 Forbidden handling: dispatch decoupled event with categorization
+      if (response.status === 403) {
+        dispatchForbidden({
+          status: 403,
+          url,
+          message,
+          detail,
+          isAccountSuspendedOrRestricted: apiError.isAccountSuspendedOrRestricted,
+          isVerificationRequired: apiError.isVerificationRequired,
+          isRoleForbidden: apiError.isRoleForbidden,
+        });
+      }
+
+      throw apiError;
     }
 
     return data as T;
@@ -165,6 +199,12 @@ export class ApiClient {
         headers,
       });
     } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        throw new ApiError(0, "Request was aborted");
+      }
+      if (err instanceof Error && err.name === "AbortError") {
+        throw new ApiError(0, "Request was aborted");
+      }
       const msg = err instanceof Error ? err.message : "Unable to reach server";
       throw new ApiError(0, `Network error: ${msg}`);
     }
@@ -197,7 +237,30 @@ export class ApiClient {
         }
       }
 
-      throw new ApiError(response.status, message, detail);
+      const apiError = new ApiError(response.status, message, detail);
+
+      if (response.status === 401) {
+        tokenStorage.clearToken();
+        dispatchUnauthorized({
+          status: 401,
+          url,
+          message,
+        });
+      }
+
+      if (response.status === 403) {
+        dispatchForbidden({
+          status: 403,
+          url,
+          message,
+          detail,
+          isAccountSuspendedOrRestricted: apiError.isAccountSuspendedOrRestricted,
+          isVerificationRequired: apiError.isVerificationRequired,
+          isRoleForbidden: apiError.isRoleForbidden,
+        });
+      }
+
+      throw apiError;
     }
 
     let filename: string | undefined;
