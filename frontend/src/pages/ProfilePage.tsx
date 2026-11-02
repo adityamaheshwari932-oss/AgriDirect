@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   User as UserIcon,
@@ -17,6 +17,7 @@ import {
 import { useAuth } from "../store/authStore";
 import { usersApi } from "../api/users";
 import { ApiError } from "../api/errors";
+import { ToastContext } from "../components/ui/toast/ToastContext";
 import {
   ACCOUNT_STATUS_CONFIG,
   BUYER_TYPE_LABELS,
@@ -39,6 +40,7 @@ const BUYER_TYPE_OPTIONS = [
 
 export const ProfilePage: React.FC = () => {
   const { user, setUser } = useAuth();
+  const toast = useContext(ToastContext);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -218,14 +220,18 @@ export const ProfilePage: React.FC = () => {
       const updatedUser = await usersApi.updateFarmerProfile(payload);
       setUser(updatedUser);
       setSuccessMessage("Farm profile updated successfully.");
+      toast?.success("Farm profile updated successfully.", "Profile Updated");
       setIsEditing(false);
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         if (err.isConflict) {
-          setFormError(err.message || "This phone number is already registered to another account.");
+          const msg = err.message || "This phone number is already registered to another account.";
+          setFormError(msg);
           setFieldErrors({ phone_number: "Phone number already in use" });
+          toast?.error(msg, "Conflict Error");
         } else if (err.isValidationError) {
           setFormError("Validation error: please check highlighted fields.");
+          toast?.warning("Validation error: please check highlighted fields.", "Validation Failed");
           const backendErrors: Record<string, string> = {};
           for (const [key, msgs] of Object.entries(err.fieldErrors)) {
             backendErrors[key] = msgs[0];
@@ -274,14 +280,18 @@ export const ProfilePage: React.FC = () => {
       const updatedUser = await usersApi.updateBuyerProfile(payload);
       setUser(updatedUser);
       setSuccessMessage("Commercial business profile updated successfully.");
+      toast?.success("Commercial business profile updated successfully.", "Profile Updated");
       setIsEditing(false);
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         if (err.isConflict) {
-          setFormError(err.message || "This phone number is already registered to another account.");
+          const msg = err.message || "This phone number is already registered to another account.";
+          setFormError(msg);
           setFieldErrors({ phone_number: "Phone number already in use" });
+          toast?.error(msg, "Conflict Error");
         } else if (err.isValidationError) {
           setFormError("Validation error: please check highlighted fields.");
+          toast?.warning("Validation error: please check highlighted fields.", "Validation Failed");
           const backendErrors: Record<string, string> = {};
           for (const [key, msgs] of Object.entries(err.fieldErrors)) {
             backendErrors[key] = msgs[0];

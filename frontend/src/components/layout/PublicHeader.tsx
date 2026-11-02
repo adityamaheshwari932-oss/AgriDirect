@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Sprout, Menu, X, LogOut, User as UserIcon } from "lucide-react";
 import { useAuth } from "../../store/authStore";
@@ -53,6 +53,12 @@ export const PublicHeader: React.FC = () => {
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               Overview
+            </Link>
+            <Link
+              to="/marketplace"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Marketplace
             </Link>
 
             {isAuthenticated ? (
@@ -128,6 +134,13 @@ export const PublicHeader: React.FC = () => {
               className="block text-sm font-medium text-foreground px-3 py-2 rounded-md hover:bg-secondary"
             >
               Overview
+            </Link>
+            <Link
+              to="/marketplace"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-sm font-medium text-foreground px-3 py-2 rounded-md hover:bg-secondary"
+            >
+              Marketplace
             </Link>
 
             {isAuthenticated ? (

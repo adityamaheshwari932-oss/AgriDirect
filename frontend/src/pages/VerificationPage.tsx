@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ShieldCheck,
@@ -21,6 +21,7 @@ import {
 import { useAuth } from "../store/authStore";
 import { verificationApi } from "../api/verification";
 import { ApiError } from "../api/errors";
+import { ToastContext } from "../components/ui/toast/ToastContext";
 import {
   SUBMISSION_STATUS_CONFIG,
   VERIFICATION_STATUS_CONFIG,
@@ -36,6 +37,7 @@ import { VerificationHistoryList } from "../components/verification/Verification
 
 export const VerificationPage: React.FC = () => {
   const { user, refreshUser } = useAuth();
+  const toast = useContext(ToastContext);
 
   const [currentSubmission, setCurrentSubmission] = useState<VerificationSubmission | null>(null);
   const [history, setHistory] = useState<VerificationSubmission[]>([]);
@@ -84,6 +86,7 @@ export const VerificationPage: React.FC = () => {
   };
 
   const handleUploadSuccess = async (_newDoc: VerificationDocument) => {
+    toast?.success("Evidence document attached successfully.", "Document Uploaded");
     try {
       await Promise.all([loadVerificationData(), refreshUser()]);
     } catch {
@@ -92,6 +95,7 @@ export const VerificationPage: React.FC = () => {
   };
 
   const handleSubmitSuccess = async (_newSub: VerificationSubmission) => {
+    toast?.success("Verification application submitted for administrative review.", "Application Submitted");
     try {
       await Promise.all([loadVerificationData(), refreshUser()]);
     } catch {

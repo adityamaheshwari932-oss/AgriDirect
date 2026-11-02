@@ -1,0 +1,220 @@
+import React, { useEffect, useState } from "react";
+import {
+  X,
+  Loader2,
+  AlertCircle,
+  Clock,
+  ShieldCheck,
+  Building,
+} from "lucide-react";
+import { requirementsApi } from "../../api/requirements";
+import type { BuyerRequirementDetail } from "../../types/requirements";
+
+interface RequirementDetailModalProps {
+  requirementId: string | null;
+  onClose: () => void;
+}
+
+export const RequirementDetailModal: React.FC<RequirementDetailModalProps> = ({
+  requirementId,
+  onClose,
+}) => {
+  const [detail, setDetail] = useState<BuyerRequirementDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!requirementId) {
+      setDetail(null);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    requirementsApi
+      .getRequirement(requirementId)
+      .then((data) => {
+        setDetail(data);
+      })
+      .catch((err) => {
+        setError(err.message || "Failed to load procurement requirement specifications.");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [requirementId]);
+
+  if (!requirementId) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-req-detail-title"
+    >
+      <div className="bg-card w-full max-w-2xl rounded-2xl border border-border shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-secondary/40">
+          <div>
+            <h2 id="modal-req-detail-title" className="text-lg font-bold text-foreground">
+              Procurement Demand Specifications
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Official procurement requirement posted by verified commercial buyer
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
+            aria-label="Close dialog"
+          >
+            <X className="w-5 h-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 max-h-[75vh] overflow-y-auto space-y-6">
+          {isLoading ? (
+            <div className="py-12 flex flex-col items-center justify-center text-muted-foreground gap-3">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" aria-hidden="true" />
+              <p className="text-sm">Retrieving procurement demand details...</p>
+            </div>
+          ) : error ? (
+            <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <div>
+                <p className="font-semibold">Unable to Load Details</p>
+                <p className="text-xs">{error}</p>
+              </div>
+            </div>
+          ) : detail ? (
+            <>
+              {/* Title & Badges */}
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200 flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-blue-600" aria-hidden="true" />
+                    Verified Commercial Buyer
+                  </span>
+
+                  {detail.category?.name && (
+                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-secondary text-foreground border border-border">
+                      {detail.category.name}
+                    </span>
+                  )}
+
+                  {detail.quality_grade && (
+                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-secondary text-foreground border border-border">
+                      {detail.quality_grade}
+                    </span>
+                  )}
+                </div>
+
+                <h3 className="text-xl font-bold text-foreground">{detail.product_name}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed font-medium">
+                  {detail.title}
+                </p>
+              </div>
+
+              {/* Description */}
+              {detail.description && (
+                <div className="space-y-1 p-4 rounded-xl bg-secondary/30 border border-border">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Procurement Specifications & Receiving Dock Instructions
+                  </h4>
+                  <p className="text-xs text-foreground leading-relaxed whitespace-pre-line">
+                    {detail.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Demand Specifications Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-secondary/40 border border-border text-xs">
+                <div>
+                  <span className="text-muted-foreground block text-[11px]">Remaining Demand</span>
+                  <span className="text-base font-bold text-primary">
+                    {detail.remaining_quantity} {detail.unit}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground block text-[11px]">Total Volume</span>
+                  <span className="text-base font-bold text-foreground">
+                    {detail.required_quantity} {detail.unit}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground block text-[11px]">Pricing Term</span>
+                  <span className="font-semibold text-foreground capitalize">
+                    {detail.price_condition}
+                  </span>
+                  {detail.target_price_per_unit && (
+                    <span className="text-[11px] text-muted-foreground block">
+                      Target: ₹{Number(detail.target_price_per_unit).toLocaleString()}
+                    </span>
+                  )}
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground block text-[11px]">Required By Date</span>
+                  <span className="font-semibold text-amber-700 flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-amber-600" aria-hidden="true" />
+                    {detail.required_by_date}
+                  </span>
+                </div>
+              </div>
+
+              {/* Commercial Enterprise Summary */}
+              {detail.buyer && (
+                <div className="p-4 rounded-xl border border-border bg-card space-y-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Building className="w-4 h-4 text-blue-600" aria-hidden="true" />
+                    <span>Commercial Buyer Enterprise</span>
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">Business Name:</span>{" "}
+                      <span className="font-semibold text-foreground">{detail.buyer.business_name}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Contact Person:</span>{" "}
+                      <span className="font-semibold text-foreground">{detail.buyer.contact_person_name}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Enterprise Type:</span>{" "}
+                      <span className="font-semibold text-foreground capitalize">{detail.buyer.business_type}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Delivery Receiving Dock:</span>{" "}
+                      <span className="font-semibold text-foreground">
+                        {detail.destination_city}, {detail.destination_state}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : null}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-3 border-t border-border flex items-center justify-between bg-secondary/20">
+          <span className="text-[11px] text-muted-foreground">
+            Direct Commercial Procurement — Standardized Grading & Trade Terms
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+

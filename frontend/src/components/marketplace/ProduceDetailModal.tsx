@@ -1,0 +1,248 @@
+import React, { useEffect, useState } from "react";
+import {
+  X,
+  Sparkles,
+  Tractor,
+  Loader2,
+  AlertCircle,
+  ShieldCheck,
+} from "lucide-react";
+import { listingsApi } from "../../api/listings";
+import type { ProduceListingDetail } from "../../types/listings";
+
+interface ProduceDetailModalProps {
+  listingId: string | null;
+  onClose: () => void;
+}
+
+export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
+  listingId,
+  onClose,
+}) => {
+  const [detail, setDetail] = useState<ProduceListingDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+  useEffect(() => {
+    if (!listingId) {
+      setDetail(null);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    listingsApi
+      .getListing(listingId)
+      .then((data) => {
+        setDetail(data);
+        setActiveImageIndex(0);
+      })
+      .catch((err) => {
+        setError(err.message || "Failed to load complete produce listing specifications.");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [listingId]);
+
+  if (!listingId) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-produce-detail-title"
+    >
+      <div className="bg-card w-full max-w-2xl rounded-2xl border border-border shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-secondary/40">
+          <div>
+            <h2 id="modal-produce-detail-title" className="text-lg font-bold text-foreground">
+              Produce Lot Specifications
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Official catalog listing published by verified agricultural producer
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
+            aria-label="Close dialog"
+          >
+            <X className="w-5 h-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 max-h-[75vh] overflow-y-auto space-y-6">
+          {isLoading ? (
+            <div className="py-12 flex flex-col items-center justify-center text-muted-foreground gap-3">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" aria-hidden="true" />
+              <p className="text-sm">Retrieving lot specifications and verified farm credentials...</p>
+            </div>
+          ) : error ? (
+            <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <div>
+                <p className="font-semibold">Unable to Load Details</p>
+                <p className="text-xs">{error}</p>
+              </div>
+            </div>
+          ) : detail ? (
+            <>
+              {/* Photo Gallery (if images present) */}
+              {detail.images && detail.images.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="aspect-video w-full rounded-xl overflow-hidden bg-secondary relative">
+                    <img
+                      src={listingsApi.getImageUrl(detail.id, detail.images[activeImageIndex].id)}
+                      alt={detail.title}
+                      className="w-full h-full object-cover"
+                    />
+                    {detail.images[activeImageIndex].is_primary && (
+                      <span className="absolute top-3 left-3 px-2 py-0.5 rounded-md bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider shadow-xs">
+                        Catalog Primary Photo
+                      </span>
+                    )}
+                  </div>
+
+                  {detail.images.length > 1 && (
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                      {detail.images.map((img, idx) => (
+                        <button
+                          key={img.id}
+                          type="button"
+                          onClick={() => setActiveImageIndex(idx)}
+                          className={`w-16 h-12 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all ${
+                            activeImageIndex === idx ? "border-primary ring-2 ring-primary/20" : "border-border opacity-60 hover:opacity-100"
+                          }`}
+                        >
+                          <img
+                            src={listingsApi.getImageUrl(detail.id, img.id)}
+                            alt={`Thumbnail ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : null}
+
+              {/* Title & Headline */}
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" aria-hidden="true" />
+                    Verified Agricultural Producer
+                  </span>
+
+                  {detail.category?.name && (
+                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-secondary text-foreground border border-border">
+                      {detail.category.name}
+                    </span>
+                  )}
+
+                  {detail.quality_grade && (
+                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 fill-current" aria-hidden="true" />
+                      {detail.quality_grade}
+                    </span>
+                  )}
+                </div>
+
+                <h3 className="text-xl font-bold text-foreground">{detail.product_name}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed font-medium">
+                  {detail.title}
+                </p>
+              </div>
+
+              {/* Description */}
+              {detail.description && (
+                <div className="space-y-1 p-4 rounded-xl bg-secondary/30 border border-border">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Produce Lot Description & Storage
+                  </h4>
+                  <p className="text-xs text-foreground leading-relaxed whitespace-pre-line">
+                    {detail.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Lot Specifications Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-secondary/40 border border-border text-xs">
+                <div>
+                  <span className="text-muted-foreground block text-[11px]">Available Volume</span>
+                  <span className="text-base font-bold text-primary">
+                    {detail.available_quantity} {detail.unit}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground block text-[11px]">Wholesale Unit Price</span>
+                  <span className="text-base font-bold text-foreground">
+                    ₹{Number(detail.price_per_unit).toLocaleString()}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground block text-[11px]">Dispatch Available From</span>
+                  <span className="font-semibold text-foreground">{detail.available_from}</span>
+                </div>
+
+                <div>
+                  <span className="text-muted-foreground block text-[11px]">Harvest Date</span>
+                  <span className="font-semibold text-foreground">{detail.harvest_date || "—"}</span>
+                </div>
+              </div>
+
+              {/* Farm Origin Summary */}
+              {detail.farmer && (
+                <div className="p-4 rounded-xl border border-border bg-card space-y-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Tractor className="w-4 h-4 text-primary" aria-hidden="true" />
+                    <span>Originating Farm & Producer</span>
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">Producer Name:</span>{" "}
+                      <span className="font-semibold text-foreground">{detail.farmer.full_name}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Farm Operation:</span>{" "}
+                      <span className="font-semibold text-foreground">{detail.farmer.farm_name}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Location:</span>{" "}
+                      <span className="font-semibold text-foreground">
+                        {detail.farmer.city}, {detail.farmer.state}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : null}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-3 border-t border-border flex items-center justify-between bg-secondary/20">
+          <span className="text-[11px] text-muted-foreground">
+            Direct B2B Agricultural Trade — No Middlemen Markups
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+

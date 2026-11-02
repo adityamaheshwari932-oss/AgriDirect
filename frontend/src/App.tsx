@@ -19,6 +19,9 @@ import {
   BuyerDashboardPage,
   VerificationPage,
   ProfilePage,
+  FarmerListingsPage,
+  BuyerRequirementsPage,
+  MarketplacePage,
 } from "./pages";
 import { useAuth } from "./store/authStore";
 
@@ -103,36 +106,25 @@ export const App: React.FC = () => {
                   path="listings"
                   element={
                     <RequireRole allowedRoles={["farmer"]}>
-                      <FeaturePlaceholderPage
-                        title="My Produce Listings"
-                        description="Create and manage your agricultural produce listings, harvest schedules, unit pricing, and quality certifications."
-                        stageBadge="Module 3 — Produce Listings"
-                      />
+                      <FarmerListingsPage />
+                    </RequireRole>
+                  }
+                />
+                {/* Marketplace Discovery route (Farmer & Buyer) */}
+                <Route
+                  path="marketplace"
+                  element={
+                    <RequireRole allowedRoles={["farmer", "buyer"]}>
+                      <MarketplacePage />
                     </RequireRole>
                   }
                 />
                 {/* Buyer specific routes */}
                 <Route
-                  path="marketplace"
-                  element={
-                    <RequireRole allowedRoles={["buyer"]}>
-                      <FeaturePlaceholderPage
-                        title="Public Marketplace & Search"
-                        description="Explore farm-fresh produce lots, filter by crop categories, and initiate direct procurement with verified farmers."
-                        stageBadge="Module 3 — Produce Marketplace"
-                      />
-                    </RequireRole>
-                  }
-                />
-                <Route
                   path="requirements"
                   element={
                     <RequireRole allowedRoles={["buyer"]}>
-                      <FeaturePlaceholderPage
-                        title="Buyer Requirements Board"
-                        description="Post commercial procurement requirements, specify delivery receiving docks, and review producer fulfillment offers."
-                        stageBadge="Module 4 — Buyer Requirements"
-                      />
+                      <BuyerRequirementsPage />
                     </RequireRole>
                   }
                 />
@@ -247,6 +239,7 @@ export const App: React.FC = () => {
               {/* Public & Authentication Shell */}
               <Route element={<AppLayout />}>
                 <Route path="/" element={<LandingPage />} />
+                <Route path="/marketplace" element={<MarketplacePage />} />
                 <Route
                   path="/login"
                   element={
