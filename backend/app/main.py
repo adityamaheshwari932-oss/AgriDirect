@@ -93,7 +93,7 @@ def create_app() -> FastAPI:
     # -----------------------------------------------------------------------
     # Feature routers — registered here as each phase is implemented.
     # -----------------------------------------------------------------------
-    from app.admin.routes import router as admin_audit_logs_router
+    from app.admin.routes import router as admin_router
     from app.analytics.routes import router as analytics_router
     from app.auth.routes import router as auth_router
     from app.chat.routes import router as chat_router
@@ -120,7 +120,7 @@ def create_app() -> FastAPI:
     app.include_router(verification_router, prefix="/api/v1")
     app.include_router(reviews_router, prefix="/api/v1")
     app.include_router(reports_router, prefix="/api/v1")
-    app.include_router(admin_audit_logs_router, prefix="/api/v1")
+    app.include_router(admin_router, prefix="/api/v1")
     app.include_router(analytics_router, prefix="/api/v1")
 
     return app

@@ -14,6 +14,7 @@ from app.auth.schemas import UserRead
 from app.db.session import get_db
 from app.dependencies import (
     get_current_active_user,
+    get_current_permitted_user,
     require_buyer,
     require_farmer,
 )
@@ -40,7 +41,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
     ),
 )
 def get_current_user_profile(
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_permitted_user),
 ) -> UserRead:
     """Return the profile for the authenticated active user."""
     return UserRead.model_validate(current_user)

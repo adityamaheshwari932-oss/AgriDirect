@@ -185,8 +185,8 @@ class AuthService:
         if user is None or not verify_password(payload.password, user.password_hash):
             raise generic_unauthorized
 
-        # Account status check
-        if user.account_status != "active":
+        # Account status check: suspended and blocked users cannot log in
+        if user.account_status in ("suspended", "blocked"):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Account is suspended or restricted",

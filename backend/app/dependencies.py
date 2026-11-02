@@ -95,6 +95,31 @@ def get_current_user(
     return user
 
 
+def get_current_permitted_user(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Verify that the authenticated user's account is permitted (active or restricted).
+
+    Permits read-only profile access for restricted users while rejecting
+    suspended and blocked accounts.
+
+    Args:
+        current_user: The authenticated User model.
+
+    Returns:
+        The permitted User model instance.
+
+    Raises:
+        HTTPException: 403 Forbidden if account is suspended or blocked.
+    """
+    if current_user.account_status in ("suspended", "blocked"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is inactive or suspended",
+        )
+    return current_user
+
+
 def get_current_active_user(
     current_user: User = Depends(get_current_user),
 ) -> User:

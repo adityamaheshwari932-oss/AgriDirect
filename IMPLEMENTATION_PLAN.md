@@ -271,6 +271,28 @@ Each phase corresponds to a slice of the system. The goal is always a working, t
 
 ---
 
+## Module 10 — Administrative User Moderation & Platform Governance ✅ (Completed)
+
+**Depends on:** All prior modules (users, listings, requirements, reports, audit logs)
+
+**Goal:** Authoritative administrative capabilities for platform governance, user moderation, catalog queues, and audit logging.
+
+### Deliverables
+- [x] `GET /api/v1/admin/users` — paginated user directory with role, status, verification, date range filters, and search
+- [x] `GET /api/v1/admin/users/{id}` — detailed user inspection view with profile, activity metrics, verification history, and recent audit logs
+- [x] `PATCH /api/v1/admin/users/{id}/status` — account status moderation (`active`, `restricted`, `suspended`, `blocked`) with permitted transitions, self-modification prevention, and concurrency-safe last active admin protection
+- [x] `GET /api/v1/admin/listings` & `POST /api/v1/admin/listings/{id}/moderate` — produce listing moderation queue and actions (`close`, `remove`, `restore`) with domain field immutability
+- [x] `GET /api/v1/admin/requirements` & `POST /api/v1/admin/requirements/{id}/moderate` — buyer requirement moderation queue and actions (`close`, `remove`, `restore`) with domain field immutability
+- [x] Cross-module account status enforcement: `restricted` permitted read-only profile access while blocked from mutations; `suspended` and `blocked` prohibited from authentication and operations
+- [x] Atomic persistence of status changes, `AdminAuditLog` records, and in-app `Notification` alerts within a single database transaction
+
+### Acceptance Criteria
+- [x] Concurrency-safe last active administrator protection guarantees platform cannot lose administrative access under race conditions.
+- [x] Zero database migrations required; leverages production PostgreSQL schema at revision `fcf5c991d506`.
+- [x] All 44 Module 10 unit, integration, and PostgreSQL concurrency tests pass cleanly (866 total passing tests).
+
+---
+
 ## Phase 11 — Notifications
 
 **Depends on:** Phases 2–9 (events to notify about)

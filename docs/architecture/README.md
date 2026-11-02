@@ -46,6 +46,7 @@ What are the trade-offs, benefits, and risks?
 | `ADR-011-ratings-reviews-and-notifications.md` | Mutual ratings, reviews, reputation aggregation, and operational alerts | Accepted & Verified |
 | `ADR-012-user-reports-and-administrative-audit-trail.md` | User reporting, safety moderation, and administrative audit trail | Accepted & Verified |
 | `ADR-013-descriptive-market-analytics.md` | Descriptive market analytics and statistical disclosure controls | Accepted & Verified |
+| `ADR-014-administrative-user-moderation-and-platform-governance.md` | Administrative user moderation, platform governance, and catalog oversight | Accepted & Verified |
 
 ## Planned Design Documents
 
