@@ -7,6 +7,7 @@ import {
   RotateCw,
   Search,
   ShieldAlert,
+  ShieldCheck,
   ChevronLeft,
   ChevronRight,
   MapPin,
@@ -15,14 +16,17 @@ import {
 import { useAuth } from "../store/authStore";
 import { requirementsApi } from "../api/requirements";
 import { listingsApi } from "../api/listings";
+import { ordersApi } from "../api/orders";
 import { ApiError } from "../api/errors";
 import { ToastContext } from "../components/ui/toast/ToastContext";
 import { EmptyState, ErrorState, LoadingState } from "../components/ui/states";
 import { RequirementCreateEditModal } from "../components/requirements/RequirementCreateEditModal";
 import { RequirementDeleteModal } from "../components/requirements/RequirementDeleteModal";
+import { FulfillmentApprovalModal } from "../components/requirements/FulfillmentApprovalModal";
 import type {
   BuyerRequirementDetail,
   ProduceCategory,
+  FulfillmentApproval,
 } from "../types";
 
 export const BuyerRequirementsPage: React.FC = () => {
@@ -46,6 +50,11 @@ export const BuyerRequirementsPage: React.FC = () => {
   const [editingRequirement, setEditingRequirement] = useState<BuyerRequirementDetail | null>(null);
   const [deletingRequirement, setDeletingRequirement] = useState<BuyerRequirementDetail | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Fulfillment Approvals
+  const [pendingApprovals, setPendingApprovals] = useState<FulfillmentApproval[]>([]);
+  const [selectedApproval, setSelectedApproval] = useState<FulfillmentApproval | null>(null);
+  const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
 
   const isVerified = user?.verification_status === "verified";
 
@@ -86,6 +95,20 @@ export const BuyerRequirementsPage: React.FC = () => {
   useEffect(() => {
     void loadRequirements();
   }, [loadRequirements]);
+
+  const loadPendingApprovals = useCallback(async () => {
+    if (!isVerified) return;
+    try {
+      const res = await ordersApi.listFulfillmentApprovals({ status: "pending" });
+      setPendingApprovals(res.items || []);
+    } catch {
+      // Non-blocking background sync
+    }
+  }, [isVerified]);
+
+  useEffect(() => {
+    void loadPendingApprovals();
+  }, [loadPendingApprovals]);
 
   // Status transitions
   const handleToggleStatus = async (
@@ -250,6 +273,33 @@ export const BuyerRequirementsPage: React.FC = () => {
           >
             Complete Verification →
           </Link>
+        </div>
+      )}
+
+      {/* Pending Fulfillment Approvals Notice */}
+      {isVerified && pendingApprovals.length > 0 && (
+        <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-foreground flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="w-5 h-5 text-blue-600 flex-shrink-0" aria-hidden="true" />
+            <div>
+              <h4 className="text-xs font-bold text-foreground">
+                Pending Demand Fulfillment Reviews ({pendingApprovals.length})
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                A farmer has accepted an offer linked to your requirement. Authorize demand deduction to keep your procurement targets accurate.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedApproval(pendingApprovals[0]);
+              setIsApprovalModalOpen(true);
+            }}
+            className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold self-start sm:self-center transition-colors"
+          >
+            Review Approvals
+          </button>
         </div>
       )}
 
@@ -541,6 +591,20 @@ export const BuyerRequirementsPage: React.FC = () => {
         isDeleting={isDeleting}
         onClose={() => setDeletingRequirement(null)}
         onConfirm={handleConfirmDelete}
+      />
+
+      <FulfillmentApprovalModal
+        isOpen={isApprovalModalOpen}
+        approval={selectedApproval}
+        onClose={() => {
+          setIsApprovalModalOpen(false);
+          setSelectedApproval(null);
+        }}
+        onSuccess={() => {
+          void loadPendingApprovals();
+          void loadRequirements();
+          toast?.success("Requirement demand updated successfully.", "Approval Recorded");
+        }}
       />
     </div>
   );

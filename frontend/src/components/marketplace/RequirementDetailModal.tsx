@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   X,
   Loader2,
@@ -6,9 +7,14 @@ import {
   Clock,
   ShieldCheck,
   Building,
+  Handshake,
+  MessageSquare,
 } from "lucide-react";
 import { requirementsApi } from "../../api/requirements";
+import { chatApi } from "../../api/chat";
 import type { BuyerRequirementDetail } from "../../types/requirements";
+import { useAuth } from "../../store/authStore";
+import { OfferCreateModal } from "../offers/OfferCreateModal";
 
 interface RequirementDetailModalProps {
   requirementId: string | null;
@@ -19,9 +25,37 @@ export const RequirementDetailModal: React.FC<RequirementDetailModalProps> = ({
   requirementId,
   onClose,
 }) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [detail, setDetail] = useState<BuyerRequirementDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isMessaging, setIsMessaging] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
+
+  const canSubmitOffer =
+    Boolean(user && user.role === "farmer" && user.verification_status === "verified" && detail && detail.status === "active");
+
+  const canMessageBuyer =
+    Boolean(user && detail && user.id !== detail.buyer?.id);
+
+  const handleMessageBuyer = async () => {
+    if (!detail || !user) return;
+    setIsMessaging(true);
+    try {
+      const conv = await chatApi.createOrGetConversation({
+        requirement_id: detail.id,
+        target_user_id: detail.buyer?.id || null,
+      });
+      onClose();
+      navigate(`/dashboard/messages?conversationId=${conv.id}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to open conversation.";
+      setError(msg);
+    } finally {
+      setIsMessaging(false);
+    }
+  };
 
   useEffect(() => {
     if (!requirementId) {
@@ -205,15 +239,55 @@ export const RequirementDetailModal: React.FC<RequirementDetailModalProps> = ({
           <span className="text-[11px] text-muted-foreground">
             Direct Commercial Procurement — Standardized Grading & Trade Terms
           </span>
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors"
-          >
-            Close
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors"
+            >
+              Close
+            </button>
+            {canMessageBuyer && (
+              <button
+                type="button"
+                onClick={handleMessageBuyer}
+                disabled={isMessaging}
+                className="px-3.5 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {isMessaging ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <MessageSquare className="w-3.5 h-3.5 text-primary" />
+                )}
+                <span>Message Buyer</span>
+              </button>
+            )}
+            {canSubmitOffer && (
+              <button
+                type="button"
+                onClick={() => setIsOfferModalOpen(true)}
+                className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5"
+              >
+                <Handshake className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>Submit Supply Offer</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
+
+      {detail && (
+        <OfferCreateModal
+          isOpen={isOfferModalOpen}
+          onClose={() => setIsOfferModalOpen(false)}
+          targetType="requirement"
+          targetRequirement={detail}
+          onSuccess={() => {
+            setIsOfferModalOpen(false);
+            onClose();
+          }}
+        />
+      )}
     </div>
   );
 };
