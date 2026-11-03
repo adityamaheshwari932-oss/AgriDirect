@@ -22,6 +22,11 @@ import {
   FarmerListingsPage,
   BuyerRequirementsPage,
   MarketplacePage,
+  OffersPage,
+  OrdersPage,
+  MessagesPage,
+  AnalyticsDashboardPage,
+  UserReportsPage,
 } from "./pages";
 import { useAuth } from "./store/authStore";
 
@@ -130,14 +135,18 @@ export const App: React.FC = () => {
                 />
                 {/* Shared authenticated routes */}
                 <Route
+                  path="offers"
+                  element={
+                    <RequireRole allowedRoles={["farmer", "buyer"]}>
+                      <OffersPage />
+                    </RequireRole>
+                  }
+                />
+                <Route
                   path="orders"
                   element={
                     <RequireRole allowedRoles={["farmer", "buyer"]}>
-                      <FeaturePlaceholderPage
-                        title="Order Lifecycle & Deliveries"
-                        description="Track confirmed trade orders, dispatch updates, inspection records, delivery confirmations, and off-platform payments."
-                        stageBadge="Module 6 & 7 — Orders & Payments"
-                      />
+                      <OrdersPage />
                     </RequireRole>
                   }
                 />
@@ -145,11 +154,7 @@ export const App: React.FC = () => {
                   path="messages"
                   element={
                     <RequireRole allowedRoles={["farmer", "buyer", "admin"]}>
-                      <FeaturePlaceholderPage
-                        title="Contextual Messaging & Inquiries"
-                        description="Communicate with counterparties regarding active listings, delivery coordinates, and trade terms."
-                        stageBadge="Module 8 — Contextual Chat"
-                      />
+                      <MessagesPage />
                     </RequireRole>
                   }
                 />
@@ -157,11 +162,15 @@ export const App: React.FC = () => {
                   path="analytics"
                   element={
                     <RequireRole allowedRoles={["farmer", "buyer"]}>
-                      <FeaturePlaceholderPage
-                        title="Market Price & Demand Analytics"
-                        description="Review volume-weighted average prices (VWAP), realized trades, and crop pricing benchmarks."
-                        stageBadge="Module 9 — Market Analytics"
-                      />
+                      <AnalyticsDashboardPage />
+                    </RequireRole>
+                  }
+                />
+                <Route
+                  path="reports"
+                  element={
+                    <RequireRole allowedRoles={["farmer", "buyer"]}>
+                      <UserReportsPage />
                     </RequireRole>
                   }
                 />

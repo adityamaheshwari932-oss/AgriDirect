@@ -21,10 +21,12 @@ import {
   History,
   LineChart,
   AlertTriangle,
+  Handshake,
 } from "lucide-react";
 import { useAuth } from "../../store/authStore";
 import { VERIFICATION_STATUS_CONFIG } from "../../utils/status";
 import { PublicFooter } from "./PublicFooter";
+import { NotificationBell } from "../notifications/NotificationBell";
 
 export const DashboardLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -71,9 +73,11 @@ export const DashboardLayout: React.FC = () => {
     ? [
         { label: "Dashboard", to: "/dashboard/farmer", icon: Tractor },
         { label: "My Listings", to: "/dashboard/listings", icon: Layers },
+        { label: "Offers", to: "/dashboard/offers", icon: Handshake },
         { label: "Orders", to: "/dashboard/orders", icon: ClipboardList },
         { label: "Messages", to: "/dashboard/messages", icon: MessageSquare },
         { label: "Analytics", to: "/dashboard/analytics", icon: BarChart3 },
+        { label: "Reports", to: "/dashboard/reports", icon: ShieldAlert },
         { label: "Profile", to: "/dashboard/profile", icon: UserIcon },
         {
           label: "Verification",
@@ -88,9 +92,11 @@ export const DashboardLayout: React.FC = () => {
         { label: "Dashboard", to: "/dashboard/buyer", icon: Store },
         { label: "Marketplace", to: "/dashboard/marketplace", icon: ShoppingBag },
         { label: "Requirements", to: "/dashboard/requirements", icon: Layers },
+        { label: "Offers", to: "/dashboard/offers", icon: Handshake },
         { label: "Orders", to: "/dashboard/orders", icon: ClipboardList },
         { label: "Messages", to: "/dashboard/messages", icon: MessageSquare },
         { label: "Analytics", to: "/dashboard/analytics", icon: BarChart3 },
+        { label: "Reports", to: "/dashboard/reports", icon: ShieldAlert },
         { label: "Profile", to: "/dashboard/profile", icon: UserIcon },
         {
           label: "Verification",
@@ -237,6 +243,8 @@ export const DashboardLayout: React.FC = () => {
 
             {/* Desktop User Info & Sign Out */}
             <div className="hidden sm:flex items-center gap-3">
+              <NotificationBell />
+
               <div className="text-right">
                 <div className="text-xs font-semibold text-foreground truncate max-w-[160px]">
                   {displayName}
@@ -276,6 +284,7 @@ export const DashboardLayout: React.FC = () => {
 
             {/* Mobile Menu Hamburger */}
             <div className="flex lg:hidden items-center gap-2">
+              <NotificationBell />
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

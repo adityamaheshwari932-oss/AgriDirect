@@ -14,3 +14,8 @@ export * from "./ProfilePage";
 export * from "./FarmerListingsPage";
 export * from "./BuyerRequirementsPage";
 export * from "./MarketplacePage";
+export * from "./OffersPage";
+export * from "./OrdersPage";
+export * from "./MessagesPage";
+export * from "./AnalyticsDashboardPage";
+export * from "./UserReportsPage";
