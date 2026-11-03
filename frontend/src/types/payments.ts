@@ -7,7 +7,7 @@ export type PaymentMethod = "upi" | "bank_transfer" | "cash" | "other";
 
 export type PaymentRecordStatus = "recorded" | "acknowledged" | "disputed";
 
-export type PaymentComplaintStatus = "submitted" | "under_review" | "resolved" | "dismissed";
+export type PaymentComplaintStatus = "open" | "under_review" | "resolved" | "dismissed";
 
 export type PaymentSettlementStatus =
   | "unpaid"

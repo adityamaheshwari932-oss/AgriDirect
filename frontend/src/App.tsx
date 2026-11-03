@@ -13,7 +13,6 @@ import {
   BuyerRegisterPage,
   NotFoundPage,
   ProtectedPlaceholderPage,
-  FeaturePlaceholderPage,
   DashboardRedirectPage,
   FarmerDashboardPage,
   BuyerDashboardPage,
@@ -27,6 +26,11 @@ import {
   MessagesPage,
   AnalyticsDashboardPage,
   UserReportsPage,
+  AdminPlatformAnalyticsPage,
+  AdminUsersPage,
+  AdminContentModerationPage,
+  AdminVerificationQueuePage,
+  AdminAuditLogsPage,
 } from "./pages";
 import { useAuth } from "./store/authStore";
 
@@ -187,62 +191,12 @@ export const App: React.FC = () => {
                   </RequireAdmin>
                 }
               >
-                <Route index element={<Navigate to="/admin/users" replace />} />
-                <Route
-                  path="users"
-                  element={
-                    <FeaturePlaceholderPage
-                      title="User Directory & Moderation"
-                      description="Inspect registered user accounts, manage account statuses (restricted, suspended, blocked), and review appeals."
-                      stageBadge="Module 10 — Platform Governance"
-                      returnTo="/admin/users"
-                    />
-                  }
-                />
-                <Route
-                  path="content"
-                  element={
-                    <FeaturePlaceholderPage
-                      title="Content Moderation"
-                      description="Moderate produce listings and buyer requirements for policy compliance and platform safety."
-                      stageBadge="Module 10 — Platform Governance"
-                      returnTo="/admin/users"
-                    />
-                  }
-                />
-                <Route
-                  path="verification"
-                  element={
-                    <FeaturePlaceholderPage
-                      title="Administrative Verification Queue"
-                      description="Review uploaded farmer and commercial buyer verification documents, credentials, and identity submissions."
-                      stageBadge="Module 2 — Verification Workflows"
-                      returnTo="/admin/users"
-                    />
-                  }
-                />
-                <Route
-                  path="audit-logs"
-                  element={
-                    <FeaturePlaceholderPage
-                      title="Administrative Audit Trail"
-                      description="View immutable audit logs of platform governance actions, status moderations, and security events."
-                      stageBadge="Module 10 — Platform Governance"
-                      returnTo="/admin/users"
-                    />
-                  }
-                />
-                <Route
-                  path="analytics"
-                  element={
-                    <FeaturePlaceholderPage
-                      title="Platform-Wide Analytics"
-                      description="Macro marketplace statistics, aggregate transaction volumes, dispute frequencies, and fulfillment rates."
-                      stageBadge="Module 9 — Descriptive Market Analytics"
-                      returnTo="/admin/users"
-                    />
-                  }
-                />
+                <Route index element={<Navigate to="/admin/analytics" replace />} />
+                <Route path="analytics" element={<AdminPlatformAnalyticsPage />} />
+                <Route path="users" element={<AdminUsersPage />} />
+                <Route path="content" element={<AdminContentModerationPage />} />
+                <Route path="verification" element={<AdminVerificationQueuePage />} />
+                <Route path="audit-logs" element={<AdminAuditLogsPage />} />
               </Route>
 
               {/* Public & Authentication Shell */}

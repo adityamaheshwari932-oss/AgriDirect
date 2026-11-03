@@ -123,7 +123,7 @@ export const DashboardLayout: React.FC = () => {
     : isBuyer
     ? "/dashboard/buyer"
     : isAdmin
-    ? "/admin/users"
+    ? "/admin/analytics"
     : "/dashboard";
 
   const isRestricted = user.account_status === "restricted";

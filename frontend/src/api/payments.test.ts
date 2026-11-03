@@ -72,7 +72,7 @@ describe("PaymentsApi", () => {
 
   it("files payment complaint dispute", async () => {
     const payload = { complaint_reason: "Bank transaction bounced or fraudulent slip" };
-    const mockComplaint = { id: "comp-1", status: "submitted" };
+    const mockComplaint = { id: "comp-1", status: "open" };
     vi.spyOn(apiClient, "post").mockResolvedValue(mockComplaint);
 
     const res = await paymentsApi.filePaymentComplaint("pay-1", payload);

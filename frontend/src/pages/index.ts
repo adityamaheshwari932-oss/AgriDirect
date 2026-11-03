@@ -19,3 +19,4 @@ export * from "./OrdersPage";
 export * from "./MessagesPage";
 export * from "./AnalyticsDashboardPage";
 export * from "./UserReportsPage";
+export * from "./admin";

@@ -12,3 +12,4 @@ export * from "./reviews";
 export * from "./notifications";
 export * from "./analytics";
 export * from "./reports";
+export * from "./admin";
