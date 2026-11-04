@@ -16,6 +16,8 @@ import {
   MessageSquare,
   Star,
   ShieldAlert,
+  FileText,
+  Check,
 } from "lucide-react";
 import { ordersApi } from "../../api/orders";
 import { chatApi } from "../../api/chat";
@@ -218,6 +220,77 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
     }
   };
 
+  const getOrderStages = () => {
+    if (!order) return [];
+
+    const isCancelled = order.status === "cancelled";
+    const isCompleted = order.status === "completed";
+
+    // Stage 1: Created
+    const s1Status = isCancelled ? "cancelled" : "complete";
+
+    // Stage 2: Confirmed
+    let s2Status: "complete" | "current" | "upcoming" | "cancelled" = "upcoming";
+    let s2Desc = "Terms locked";
+    if (isCancelled) {
+      s2Status = "cancelled";
+    } else if (order.status === "pending") {
+      s2Status = "current";
+      s2Desc = "Awaiting confirmation";
+    } else {
+      s2Status = "complete";
+    }
+
+    // Stage 3: In Transit / Dispatched
+    let s3Status: "complete" | "current" | "upcoming" | "cancelled" = "upcoming";
+    let s3Desc = "Pending dispatch";
+    if (isCancelled) {
+      s3Status = "cancelled";
+    } else if (order.status === "pending") {
+      s3Status = "upcoming";
+    } else if (order.delivery_status === "not_arranged") {
+      s3Status = "current";
+      s3Desc = "Arrange logistics";
+    } else {
+      s3Status = "complete";
+      s3Desc = "Dispatched / En route";
+    }
+
+    // Stage 4: Delivery Receipt
+    let s4Status: "complete" | "current" | "upcoming" | "cancelled" = "upcoming";
+    let s4Desc = "Awaiting delivery";
+    if (isCancelled) {
+      s4Status = "cancelled";
+    } else if (order.delivery_status === "completed" || isCompleted) {
+      s4Status = "complete";
+      s4Desc = "Receipt confirmed";
+    } else if (order.delivery_status === "completion_marked") {
+      s4Status = "current";
+      s4Desc = "Pending acknowledgement";
+    }
+
+    // Stage 5: Settlement & Concluded
+    let s5Status: "complete" | "current" | "upcoming" | "cancelled" = "upcoming";
+    let s5Desc = "Direct settlement";
+    if (isCancelled) {
+      s5Status = "cancelled";
+    } else if (isCompleted) {
+      s5Status = "complete";
+      s5Desc = "Trade concluded";
+    } else if (order.delivery_status === "completed") {
+      s5Status = "current";
+      s5Desc = "Finalizing records";
+    }
+
+    return [
+      { id: "created", step: 1, label: "Created", desc: "Contract bound", status: s1Status },
+      { id: "confirmed", step: 2, label: "Confirmed", desc: s2Desc, status: s2Status },
+      { id: "transit", step: 3, label: "In Transit", desc: s3Desc, status: s3Status },
+      { id: "received", step: 4, label: "Delivered", desc: s4Desc, status: s4Status },
+      { id: "concluded", step: 5, label: "Concluded", desc: s5Desc, status: s5Status },
+    ];
+  };
+
   const getOrderStatusBadge = (st: string) => {
     switch (st) {
       case "pending":
@@ -318,6 +391,96 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   <span>{actionError}</span>
                 </div>
               )}
+
+              {/* Chronological Bilateral Trade Lifecycle Stepper */}
+              <div className="p-4 rounded-xl border border-border bg-secondary/20 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+                    Bilateral Trade Lifecycle
+                  </span>
+                  {order.status === "cancelled" ? (
+                    <span className="text-xs font-semibold text-destructive flex items-center gap-1">
+                      <XCircle className="w-3.5 h-3.5" aria-hidden="true" /> Order Cancelled
+                    </span>
+                  ) : order.status === "completed" ? (
+                    <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Trade Concluded
+                    </span>
+                  ) : (
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Active Stage:{" "}
+                      <span className="font-semibold text-foreground capitalize">
+                        {order.delivery_status === "completed"
+                          ? "Final Settlement"
+                          : order.delivery_status === "completion_marked"
+                          ? "Receipt Ack"
+                          : order.delivery_status === "arranged"
+                          ? "In Transit"
+                          : order.status === "confirmed"
+                          ? "Logistics Planning"
+                          : "Confirmation"}
+                      </span>
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  {getOrderStages().map((st) => {
+                    const isComplete = st.status === "complete";
+                    const isCurrent = st.status === "current";
+                    const isCancelled = st.status === "cancelled";
+
+                    return (
+                      <div
+                        key={st.id}
+                        className={`p-2.5 rounded-lg border text-xs transition-colors flex flex-col justify-between ${
+                          isComplete
+                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-800"
+                            : isCurrent
+                            ? "bg-primary/10 border-primary text-foreground shadow-xs"
+                            : isCancelled
+                            ? "bg-destructive/5 border-destructive/20 text-muted-foreground opacity-60"
+                            : "bg-card/70 border-border text-muted-foreground"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <span
+                            className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                              isComplete
+                                ? "bg-emerald-600 text-white"
+                                : isCurrent
+                                ? "bg-primary text-primary-foreground animate-pulse"
+                                : isCancelled
+                                ? "bg-destructive text-destructive-foreground"
+                                : "bg-secondary text-muted-foreground"
+                            }`}
+                          >
+                            {isComplete ? <Check className="w-3 h-3" aria-hidden="true" /> : st.step}
+                          </span>
+                          <span className="text-[10px] font-semibold uppercase tracking-wider">
+                            {isComplete
+                              ? "Done"
+                              : isCurrent
+                              ? "Active"
+                              : isCancelled
+                              ? "Void"
+                              : "Next"}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-bold text-xs leading-tight text-foreground">
+                            {st.label}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                            {st.desc}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
 
               {/* Status & Participants Overview */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

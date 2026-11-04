@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import {
   Tractor,
@@ -12,6 +12,13 @@ import {
   ShieldCheck,
   ArrowRight,
   Sparkles,
+  Layers,
+  Handshake,
+  ClipboardList,
+  MessageSquare,
+  CheckCircle2,
+  Clock,
+  Truck,
 } from "lucide-react";
 import { useAuth } from "../store/authStore";
 import { VerificationSummaryCard } from "../components/ui/VerificationSummaryCard";
@@ -29,6 +36,7 @@ export const FarmerDashboardPage: React.FC = () => {
   const farmerName = profile?.full_name || profile?.farm_name || user.email;
   const accountStatusConfig =
     ACCOUNT_STATUS_CONFIG[user.account_status] || ACCOUNT_STATUS_CONFIG.active;
+  const isVerified = user.verification_status === "verified";
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -56,7 +64,7 @@ export const FarmerDashboardPage: React.FC = () => {
           <div className="pt-2 flex flex-wrap gap-3">
             <Link
               to="/dashboard/profile"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-primary-900 font-semibold text-xs sm:text-sm hover:bg-primary-50 transition-colors shadow-xs"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-primary-900 font-semibold text-xs sm:text-sm hover:bg-primary-50 transition-colors shadow-xs"
             >
               <UserIcon className="w-4 h-4 text-primary-700" aria-hidden="true" />
               <span>Update Farm Profile</span>
@@ -64,7 +72,7 @@ export const FarmerDashboardPage: React.FC = () => {
 
             <Link
               to="/dashboard/verification"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-800/80 border border-primary-700 text-white font-medium text-xs sm:text-sm hover:bg-primary-700 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-800/80 border border-primary-700 text-white font-medium text-xs sm:text-sm hover:bg-primary-700 transition-colors"
             >
               <ShieldCheck className="w-4 h-4 text-harvest-400" aria-hidden="true" />
               <span>Verification Status</span>
@@ -82,9 +90,174 @@ export const FarmerDashboardPage: React.FC = () => {
         <ProfileCompletionCard user={user} />
       </div>
 
+      {/* Direct Trade Operations Fast-Action Hub */}
+      <div className="p-6 rounded-2xl bg-card border border-border shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-3">
+          <div>
+            <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+              <Sprout className="w-4 h-4 text-primary" />
+              Farm Trade Operations Navigation
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Quick access to your active harvest listings, buyer negotiations, and fulfillment agreements
+            </p>
+          </div>
+          <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-secondary text-foreground border border-border self-start sm:self-auto">
+            {isVerified ? "Direct Trading Active" : "Verification Pending"}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Link
+            to="/dashboard/listings"
+            className="p-4 rounded-xl bg-secondary/30 hover:bg-secondary/60 border border-border/80 hover:border-primary/40 transition-all flex flex-col justify-between space-y-3 group"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-700 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                <Layers className="w-4 h-4" />
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                My Harvest Lots
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Create, manage, and monitor your listed wholesale produce lots
+              </p>
+            </div>
+          </Link>
+
+          <Link
+            to="/dashboard/offers"
+            className="p-4 rounded-xl bg-secondary/30 hover:bg-secondary/60 border border-border/80 hover:border-primary/40 transition-all flex flex-col justify-between space-y-3 group"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-lg bg-amber-500/10 text-amber-700 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                <Handshake className="w-4 h-4" />
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-amber-600 group-hover:translate-x-0.5 transition-all" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-foreground group-hover:text-amber-700 transition-colors">
+                Buyer Offers & Bids
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Review incoming price offers and submit structured counter-terms
+              </p>
+            </div>
+          </Link>
+
+          <Link
+            to="/dashboard/orders"
+            className="p-4 rounded-xl bg-secondary/30 hover:bg-secondary/60 border border-border/80 hover:border-primary/40 transition-all flex flex-col justify-between space-y-3 group"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-lg bg-blue-500/10 text-blue-700 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <ClipboardList className="w-4 h-4" />
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-foreground group-hover:text-blue-700 transition-colors">
+                Trade Agreements
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Coordinate lot dispatches, track deliveries, and manage settlements
+              </p>
+            </div>
+          </Link>
+
+          <Link
+            to="/dashboard/messages"
+            className="p-4 rounded-xl bg-secondary/30 hover:bg-secondary/60 border border-border/80 hover:border-primary/40 transition-all flex flex-col justify-between space-y-3 group"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-lg bg-purple-500/10 text-purple-700 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                <MessageSquare className="w-4 h-4" />
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-foreground group-hover:text-purple-700 transition-colors">
+                Direct Communications
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Coordinate logistics details and share authenticated transport receipts
+              </p>
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* Visual 5-Stage Wholesale Trade Lifecycle Roadmap */}
+      <div className="p-6 rounded-2xl bg-card border border-border shadow-xs space-y-4">
+        <div>
+          <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-primary" />
+            Direct Agricultural Trade Lifecycle
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            How wholesale deals are formed, fulfilled, and acknowledged on AgriDirect
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 pt-2">
+          <div className="p-3.5 rounded-xl bg-secondary/30 border border-border/80 space-y-1.5">
+            <div className="flex items-center gap-1.5 text-primary text-xs font-bold">
+              <span className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[11px]">1</span>
+              <span>Publish Harvest</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Post verified lot with price per quintal, moisture, and available dispatch date.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-secondary/30 border border-border/80 space-y-1.5">
+            <div className="flex items-center gap-1.5 text-amber-700 text-xs font-bold">
+              <span className="w-5 h-5 rounded-full bg-amber-500/10 flex items-center justify-center text-[11px]">2</span>
+              <span>Offer Bidding</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Receive buyer inquiries, review target prices, or send structured counter-offers.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-secondary/30 border border-border/80 space-y-1.5">
+            <div className="flex items-center gap-1.5 text-blue-700 text-xs font-bold">
+              <span className="w-5 h-5 rounded-full bg-blue-500/10 flex items-center justify-center text-[11px]">3</span>
+              <span>Binding Order</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Mutual acceptance generates an atomic, legally-binding trade order with audit trail.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-secondary/30 border border-border/80 space-y-1.5">
+            <div className="flex items-center gap-1.5 text-purple-700 text-xs font-bold">
+              <span className="w-5 h-5 rounded-full bg-purple-500/10 flex items-center justify-center text-[11px]">4</span>
+              <span>Fulfillment & Dock</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Dispatch lot as scheduled; goods arrive at receiving dock for quality check.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-secondary/30 border border-border/80 space-y-1.5">
+            <div className="flex items-center gap-1.5 text-emerald-700 text-xs font-bold">
+              <span className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-[11px]">5</span>
+              <span>Direct Settlement</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Buyer records direct bank transfer; farmer acknowledges receipt and leaves review.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Farm & Account Overview Section */}
-      <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
-        <div className="p-5 border-b border-border flex items-center justify-between">
+      <div className="rounded-2xl border border-border bg-card shadow-xs overflow-hidden">
+        <div className="p-5 border-b border-border flex items-center justify-between bg-secondary/20">
           <div className="flex items-center gap-2.5">
             <Tractor className="w-5 h-5 text-primary" aria-hidden="true" />
             <h2 className="text-base font-bold text-foreground">
@@ -253,7 +426,7 @@ export const FarmerDashboardPage: React.FC = () => {
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
               Farm Biography & Capacity
             </h3>
-            <p className="text-sm text-foreground leading-relaxed bg-secondary/30 p-3.5 rounded-lg border border-border">
+            <p className="text-sm text-foreground leading-relaxed bg-secondary/30 p-3.5 rounded-xl border border-border">
               {profile.bio}
             </p>
           </div>
@@ -261,13 +434,13 @@ export const FarmerDashboardPage: React.FC = () => {
       </div>
 
       {/* Practical Next Steps / Quick Actions */}
-      <div className="p-6 rounded-xl border border-border bg-card shadow-xs space-y-4">
+      <div className="p-6 rounded-2xl border border-border bg-card shadow-xs space-y-4">
         <h2 className="text-base font-bold text-foreground">
           Recommended Next Actions
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-4 rounded-lg bg-secondary/50 border border-border space-y-2">
+          <div className="p-4 rounded-xl bg-secondary/40 border border-border space-y-2">
             <div className="flex items-center gap-2 text-primary font-semibold text-sm">
               <FileText className="w-4 h-4" aria-hidden="true" />
               <span>1. Complete Profile</span>
@@ -284,7 +457,7 @@ export const FarmerDashboardPage: React.FC = () => {
             </Link>
           </div>
 
-          <div className="p-4 rounded-lg bg-secondary/50 border border-border space-y-2">
+          <div className="p-4 rounded-xl bg-secondary/40 border border-border space-y-2">
             <div className="flex items-center gap-2 text-primary font-semibold text-sm">
               <ShieldCheck className="w-4 h-4" aria-hidden="true" />
               <span>2. Identity Verification</span>
@@ -301,7 +474,7 @@ export const FarmerDashboardPage: React.FC = () => {
             </Link>
           </div>
 
-          <div className="p-4 rounded-lg bg-secondary/50 border border-border space-y-2">
+          <div className="p-4 rounded-xl bg-secondary/40 border border-border space-y-2">
             <div className="flex items-center gap-2 text-primary font-semibold text-sm">
               <Calendar className="w-4 h-4" aria-hidden="true" />
               <span>3. Marketplace Trading</span>
