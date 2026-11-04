@@ -7,6 +7,10 @@ import {
   ChevronLeft,
   ChevronRight,
   SlidersHorizontal,
+  X,
+  LayoutGrid,
+  Grid3X3,
+  ShieldCheck,
 } from "lucide-react";
 import { listingsApi } from "../api/listings";
 import { requirementsApi } from "../api/requirements";
@@ -52,6 +56,9 @@ export const MarketplacePage: React.FC = () => {
   >("created_at");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
 
+  // View density mode
+  const [viewMode, setViewMode] = useState<"grid" | "compact">("grid");
+
   // Pagination
   const [page, setPage] = useState(1);
   const [pageSize] = useState(12);
@@ -68,7 +75,7 @@ export const MarketplacePage: React.FC = () => {
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
   const [selectedRequirementId, setSelectedRequirementId] = useState<string | null>(null);
 
-  // Mobile filter drawer
+  // Mobile & Expandable filter drawer
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Load Categories once
@@ -212,31 +219,65 @@ export const MarketplacePage: React.FC = () => {
     setPage(1);
   };
 
+  // Active filter count computation
+  const activeFilters = [
+    searchQuery ? { label: `Search: "${searchQuery}"`, clear: () => setSearchQuery("") } : null,
+    selectedCategoryId
+      ? {
+          label: `Category: ${categories.find((c) => c.id === selectedCategoryId)?.name || "Selected"}`,
+          clear: () => setSelectedCategoryId(""),
+        }
+      : null,
+    locationState ? { label: `State: ${locationState}`, clear: () => setLocationState("") } : null,
+    locationCity ? { label: `District: ${locationCity}`, clear: () => setLocationCity("") } : null,
+    minPrice || maxPrice
+      ? {
+          label: `Price: ₹${minPrice || 0} - ₹${maxPrice || "Max"}`,
+          clear: () => {
+            setMinPrice("");
+            setMaxPrice("");
+          },
+        }
+      : null,
+    qualityGrade ? { label: `Grade: ${qualityGrade}`, clear: () => setQualityGrade("") } : null,
+    unit ? { label: `Unit: ${unit}`, clear: () => setUnit("") } : null,
+    priceCondition ? { label: `Condition: ${priceCondition}`, clear: () => setPriceCondition("") } : null,
+  ].filter(Boolean) as { label: string; clear: () => void }[];
+
+  const activeFilterCount = activeFilters.length;
+
   return (
     <div className="space-y-6">
       {/* Marketplace Header */}
-      <div className="pb-4 border-b border-border space-y-2">
+      <div className="pb-4 border-b border-border space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-primary/10 text-primary border border-primary/20">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Verified B2B Direct Trade
+              </span>
+            </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
               AgriDirect Wholesale Marketplace
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground mt-0.5">
               Discover verified farm produce lots and commercial procurement requirements across India
             </p>
           </div>
 
           {/* Dual Tab Discovery Switcher */}
-          <div className="flex items-center p-1 rounded-xl bg-secondary border border-border w-fit">
+          <div className="flex items-center p-1.5 rounded-2xl bg-secondary/80 border border-border w-fit shadow-2xs">
             <button
               type="button"
               role="tab"
               aria-selected={activeTab === "produce"}
               onClick={() => handleTabSwitch("produce")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "produce"
-                ? "bg-card text-primary shadow-xs border border-border"
-                : "text-muted-foreground hover:text-foreground"
-                }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeTab === "produce"
+                  ? "bg-card text-primary shadow-xs border border-border"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
               <Tractor className="w-4 h-4" aria-hidden="true" />
               <span>Find Produce (Supply)</span>
@@ -247,16 +288,54 @@ export const MarketplacePage: React.FC = () => {
               role="tab"
               aria-selected={activeTab === "buyers"}
               onClick={() => handleTabSwitch("buyers")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "buyers"
-                ? "bg-card text-primary shadow-xs border border-border"
-                : "text-muted-foreground hover:text-foreground"
-                }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeTab === "buyers"
+                  ? "bg-card text-primary shadow-xs border border-border"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
               <Store className="w-4 h-4" aria-hidden="true" />
               <span>Find Buyers (Demand)</span>
             </button>
           </div>
         </div>
+
+        {/* Quick Category Carousel / Horizontal Pills */}
+        {categories.length > 0 && (
+          <div className="flex items-center gap-2 overflow-x-auto pt-2 pb-1 scrollbar-none text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCategoryId("");
+                setPage(1);
+              }}
+              className={`px-3.5 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all border ${
+                selectedCategoryId === ""
+                  ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                  : "bg-card text-muted-foreground border-border hover:bg-secondary hover:text-foreground"
+              }`}
+            >
+              All Commodities
+            </button>
+            {categories.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => {
+                  setSelectedCategoryId(selectedCategoryId === c.id ? "" : c.id);
+                  setPage(1);
+                }}
+                className={`px-3.5 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all border ${
+                  selectedCategoryId === c.id
+                    ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                    : "bg-card text-muted-foreground border-border hover:bg-secondary hover:text-foreground"
+                }`}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Main Filter & Search Controls */}
@@ -264,7 +343,7 @@ export const MarketplacePage: React.FC = () => {
         {/* Search Bar & Quick Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-3" aria-hidden="true" />
+            <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-3" aria-hidden="true" />
             <input
               type="text"
               value={searchQuery}
@@ -277,18 +356,40 @@ export const MarketplacePage: React.FC = () => {
                   ? "Search produce lots (e.g. Sharbati Wheat, Alphonso Mango, Potatoes)..."
                   : "Search buyer procurement demands (e.g. Basmati Rice, Food-Grade Soy)..."
               }
-              className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full pl-10 pr-9 py-2 text-sm rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-2xs"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setPage(1);
+                }}
+                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground p-0.5 rounded-full"
+                aria-label="Clear search input"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border bg-card text-foreground text-xs font-semibold hover:bg-secondary transition-colors"
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-semibold transition-all ${
+                activeFilterCount > 0 || mobileFiltersOpen
+                  ? "bg-primary/10 border-primary/30 text-primary"
+                  : "border-border bg-card text-foreground hover:bg-secondary"
+              }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Filters</span>
+              {activeFilterCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
+                  {activeFilterCount}
+                </span>
+              )}
             </button>
 
             <button
@@ -304,7 +405,11 @@ export const MarketplacePage: React.FC = () => {
         </div>
 
         {/* Expandable Filter Panel (Desktop & Mobile toggle) */}
-        <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-border ${mobileFiltersOpen ? "block" : "hidden sm:grid"}`}>
+        <div
+          className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-border ${
+            mobileFiltersOpen ? "block" : "hidden sm:grid"
+          }`}
+        >
           {/* Category Filter */}
           <div>
             <label className="block text-[11px] font-semibold text-muted-foreground uppercase mb-1">
@@ -413,16 +518,105 @@ export const MarketplacePage: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {/* Price Range Filter Inputs */}
+          <div>
+            <label className="block text-[11px] font-semibold text-muted-foreground uppercase mb-1">
+              Min Price (₹)
+            </label>
+            <input
+              type="number"
+              placeholder="e.g. 1500"
+              value={minPrice}
+              onChange={(e) => {
+                setMinPrice(e.target.value);
+                setPage(1);
+              }}
+              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-semibold text-muted-foreground uppercase mb-1">
+              Max Price (₹)
+            </label>
+            <input
+              type="number"
+              placeholder="e.g. 6000"
+              value={maxPrice}
+              onChange={(e) => {
+                setMaxPrice(e.target.value);
+                setPage(1);
+              }}
+              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+
+          {/* Quality Grade */}
+          <div>
+            <label className="block text-[11px] font-semibold text-muted-foreground uppercase mb-1">
+              Quality Grade
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Grade A, Organic"
+              value={qualityGrade}
+              onChange={(e) => {
+                setQualityGrade(e.target.value);
+                setPage(1);
+              }}
+              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+
+          {/* Unit of Measure */}
+          <div>
+            <label className="block text-[11px] font-semibold text-muted-foreground uppercase mb-1">
+              Unit
+            </label>
+            <select
+              value={unit}
+              onChange={(e) => {
+                setUnit(e.target.value);
+                setPage(1);
+              }}
+              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="">All Units</option>
+              <option value="quintal">Quintal</option>
+              <option value="kg">Kilogram (kg)</option>
+              <option value="metric_ton">Metric Ton</option>
+              <option value="crate">Crate</option>
+            </select>
+          </div>
         </div>
 
-        {/* Clear Filters Indicator */}
-        {(searchQuery || selectedCategoryId || locationState || locationCity || minPrice || maxPrice) && (
-          <div className="flex items-center justify-between pt-2 border-t border-border text-xs">
-            <span className="text-muted-foreground">Active search filters applied</span>
+        {/* Active Filters Tag Bar */}
+        {activeFilters.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-border text-xs">
+            <span className="text-muted-foreground font-medium text-[11px] uppercase tracking-wider mr-1">
+              Active Filters:
+            </span>
+            {activeFilters.map((f, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary text-foreground text-xs font-medium border border-border"
+              >
+                <span>{f.label}</span>
+                <button
+                  type="button"
+                  onClick={f.clear}
+                  className="hover:text-primary transition-colors p-0.5"
+                  aria-label={`Remove filter ${f.label}`}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
             <button
               type="button"
               onClick={handleResetFilters}
-              className="text-primary hover:text-primary-800 font-semibold"
+              className="text-xs font-semibold text-primary hover:text-primary-800 ml-2"
             >
               Reset All Filters
             </button>
@@ -430,15 +624,46 @@ export const MarketplacePage: React.FC = () => {
         )}
       </div>
 
-      {/* Results Header */}
-      <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-        <span>
-          Showing {activeTab === "produce" ? produceListings.length : buyerRequirements.length} of{" "}
-          {totalCount} verified marketplace listings
-        </span>
-        <span className="font-semibold text-foreground">
-          {activeTab === "produce" ? "Catalog View: Farm Produce Lots" : "Demand Board: Buyer Requirements"}
-        </span>
+      {/* Results Header with View Mode Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-muted-foreground px-1">
+        <div className="flex items-center gap-2">
+          <span>
+            Showing {activeTab === "produce" ? produceListings.length : buyerRequirements.length} of{" "}
+            <strong className="text-foreground">{totalCount}</strong> verified marketplace listings
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-foreground hidden sm:inline">
+            {activeTab === "produce" ? "Catalog: Farm Produce Lots" : "Demand Board: Buyer Requirements"}
+          </span>
+
+          {/* Density Toggle */}
+          <div className="flex items-center p-0.5 rounded-lg bg-secondary border border-border">
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={`p-1 rounded-md transition-colors ${
+                viewMode === "grid" ? "bg-card text-foreground shadow-2xs" : "text-muted-foreground hover:text-foreground"
+              }`}
+              title="Standard Grid View"
+              aria-label="Standard Grid View"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("compact")}
+              className={`p-1 rounded-md transition-colors ${
+                viewMode === "compact" ? "bg-card text-foreground shadow-2xs" : "text-muted-foreground hover:text-foreground"
+              }`}
+              title="Compact Grid View"
+              aria-label="Compact Grid View"
+            >
+              <Grid3X3 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Content View */}
@@ -464,7 +689,13 @@ export const MarketplacePage: React.FC = () => {
             onAction={handleResetFilters}
           />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div
+            className={
+              viewMode === "grid"
+                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+            }
+          >
             {produceListings.map((listing) => (
               <ProduceListingCard
                 key={listing.id}
@@ -482,7 +713,13 @@ export const MarketplacePage: React.FC = () => {
           onAction={handleResetFilters}
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+          className={
+            viewMode === "grid"
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+              : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+          }
+        >
           {buyerRequirements.map((req) => (
             <BuyerRequirementCard
               key={req.id}
