@@ -72,7 +72,6 @@ export const AdminDisputeModerateModal: React.FC<AdminDisputeModerateModalProps>
   if (!isOpen || !complaintId) return null;
 
   const isTerminal = status === "resolved" || status === "dismissed";
-  const isValidNotes = !isTerminal || resolutionNotes.trim().length >= 5;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

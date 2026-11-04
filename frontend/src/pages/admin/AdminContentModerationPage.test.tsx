@@ -4,6 +4,7 @@ import { AdminContentModerationPage } from "./AdminContentModerationPage";
 import { ToastProvider } from "../../components/ui/toast";
 import { adminApi } from "../../api/admin";
 import type { PaymentComplaint, PaymentComplaintStatus } from "../../types/payments";
+import type { ReportItem } from "../../types/reports";
 
 vi.mock("../../api/admin", () => ({
   adminApi: {
@@ -73,7 +74,7 @@ describe("AdminContentModerationPage", () => {
     },
   ];
 
-  const mockReports = [
+  const mockReports: ReportItem[] = [
     {
       id: "rep-1",
       reporter_id: "user-1",
