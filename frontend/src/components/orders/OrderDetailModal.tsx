@@ -18,6 +18,7 @@ import {
   ShieldAlert,
   FileText,
   Check,
+  Printer,
 } from "lucide-react";
 import { ordersApi } from "../../api/orders";
 import { chatApi } from "../../api/chat";
@@ -35,6 +36,7 @@ import { PaymentRecordModal } from "../payments/PaymentRecordModal";
 import { PaymentHistoryModal } from "../payments/PaymentHistoryModal";
 import { ReviewSubmitModal } from "../reviews/ReviewSubmitModal";
 import { ReportCreateModal } from "../reports/ReportCreateModal";
+import { OrderSlipModal } from "./OrderSlipModal";
 
 interface OrderDetailModalProps {
   orderId: string | null;
@@ -66,6 +68,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   const [isPaymentHistoryOpen, setIsPaymentHistoryOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isSlipModalOpen, setIsSlipModalOpen] = useState(false);
 
   // Action states
   const [isConfirming, setIsConfirming] = useState(false);
@@ -351,14 +354,27 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               Official binding trade record created via bilateral negotiation on AgriDirect
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Close dialog"
-          >
-            <X className="w-5 h-5" aria-hidden="true" />
-          </button>
+          <div className="flex items-center gap-2">
+            {order && (order.status === "completed" || order.status === "confirmed") && (
+              <button
+                type="button"
+                onClick={() => setIsSlipModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold transition-colors shadow-xs"
+                title="Print or download official B2B trade confirmation slip"
+              >
+                <Printer className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>Trade Slip</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
+              aria-label="Close dialog"
+            >
+              <X className="w-5 h-5" aria-hidden="true" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -841,6 +857,16 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   <History className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>Audit Ledger</span>
                 </button>
+                {(order.status === "completed" || order.status === "confirmed") && (
+                  <button
+                    type="button"
+                    onClick={() => setIsSlipModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-semibold transition-colors"
+                  >
+                    <Printer className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>Print Slip</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={handleMessageCounterparty}
@@ -1006,6 +1032,13 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
             onSuccess={() => {
               setActionSuccess("Safety report submitted.");
             }}
+          />
+
+          <OrderSlipModal
+            isOpen={isSlipModalOpen}
+            order={order}
+            paymentSummary={paymentSummary}
+            onClose={() => setIsSlipModalOpen(false)}
           />
         </>
       )}

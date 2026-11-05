@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   XCircle,
   ShoppingBag,
+  Printer,
 } from "lucide-react";
 import { ordersApi } from "../api/orders";
 import { useAuth } from "../store/authStore";
@@ -263,14 +264,28 @@ export const OrdersPage: React.FC = () => {
                         {new Date(ord.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedOrderId(ord.id)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors"
-                        >
-                          <Eye className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
-                          <span>View Order</span>
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          {ord.status === "completed" && (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedOrderId(ord.id)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold transition-colors"
+                              title="View & Print Trade Slip"
+                              aria-label={`Print Trade Slip for ${ord.order_number}`}
+                            >
+                              <Printer className="w-3.5 h-3.5" aria-hidden="true" />
+                              <span className="hidden lg:inline">Slip</span>
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedOrderId(ord.id)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
+                            <span>View Order</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { OrderDetailModal } from "./OrderDetailModal";
@@ -225,5 +225,37 @@ describe("OrderDetailModal — Bilateral Delivery Acknowledgement", () => {
     expect(
       screen.queryByText(/Awaiting counterparty delivery receipt acknowledgement/i)
     ).not.toBeInTheDocument();
+  });
+
+  it("renders Trade Slip button for confirmed or completed order and opens slip modal on click", async () => {
+    const completedOrder: OrderDetail = {
+      ...baseOrder,
+      status: "completed",
+      delivery_status: "completed",
+    };
+
+    authStore.setUser(farmerUser);
+    vi.mocked(ordersApi.getOrderDetail).mockResolvedValue(completedOrder);
+
+    render(
+      <MemoryRouter>
+        <OrderDetailModal orderId="order-123" onClose={vi.fn()} />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/ORD-2026-0123/)).toBeInTheDocument();
+    });
+
+    // Check that Trade Slip button is present (in header or footer)
+    const tradeSlipButtons = screen.getAllByRole("button", { name: /Trade Slip/i });
+    expect(tradeSlipButtons.length).toBeGreaterThanOrEqual(1);
+
+    // Click Trade Slip button
+    fireEvent.click(tradeSlipButtons[0]);
+
+    // Verify OrderSlipModal opened with document title
+    expect(screen.getByText(/Trade Confirmation & Delivery Slip/i)).toBeInTheDocument();
+    expect(screen.getByText(/SLIP-ORD-2026-0123/i)).toBeInTheDocument();
   });
 });

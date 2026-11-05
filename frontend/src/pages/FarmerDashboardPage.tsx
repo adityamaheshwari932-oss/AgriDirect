@@ -17,8 +17,6 @@ import {
   ClipboardList,
   MessageSquare,
   CheckCircle2,
-  Clock,
-  Truck,
 } from "lucide-react";
 import { useAuth } from "../store/authStore";
 import { VerificationSummaryCard } from "../components/ui/VerificationSummaryCard";
