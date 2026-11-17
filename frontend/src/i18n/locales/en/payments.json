@@ -1,0 +1,21 @@
+{
+  "title": "Off-Platform Direct Bank Settlement",
+  "subtitle": "Bilateral record-keeping for bank transfers (RTGS/NEFT/UPI). AgriDirect does not intermediate or escrow funds.",
+  "record_payment_button": "Record Direct Bank Payment",
+  "history_button": "Payment Ledger History",
+  "method_label": "Direct Transfer Channel",
+  "method_bank_transfer": "Bank Direct Transfer (NEFT / RTGS / IMPS)",
+  "method_upi": "Unified Payments Interface (UPI)",
+  "method_cash": "Cash on Delivery / Spot Settlement",
+  "method_other": "Other Bilateral Mode",
+  "amount_label": "Settled Amount (₹)",
+  "reference_number_label": "Bank Transaction UTR / Ref Number",
+  "reference_placeholder": "e.g. UTR1234567890",
+  "payment_date_label": "Transfer Execution Date",
+  "proof_file_label": "Bank Transfer Receipt / Statement Proof",
+  "summary_total_contract": "Agreed Contract Total:",
+  "summary_recorded": "Total Recorded by Buyer:",
+  "summary_confirmed": "Confirmed by Producer:",
+  "summary_outstanding": "Remaining Balance:",
+  "toast_payment_recorded": "Payment record submitted. Counterparty can acknowledge receipt."
+}

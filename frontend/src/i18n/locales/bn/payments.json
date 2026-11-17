@@ -1,0 +1,21 @@
+{
+  "title": "প্ল্যাটফর্ম-বহির্ভূত সরাসরি ব্যাংক নিষ্পত্তি",
+  "subtitle": "ব্যাংক ট্রান্সফারের (RTGS/NEFT/UPI) জন্য দ্বিপাক্ষিক রেকর্ড সংরক্ষণ। AgriDirect কোনো তহবিল মধ্যস্থতা বা এসক্রো করে না।",
+  "record_payment_button": "সরাসরি ব্যাংক পেমেন্ট রেকর্ড করুন",
+  "history_button": "পেমেন্ট খতিয়ান ইতিহাস",
+  "method_label": "সরাসরি স্থানান্তরের মাধ্যম",
+  "method_bank_transfer": "সরাসরি ব্যাংক ট্রান্সফার (NEFT / RTGS / IMPS)",
+  "method_upi": "ইউপিআই (UPI)",
+  "method_cash": "ক্যাশ অন ডেলিভারি / নগদ",
+  "method_other": "অন্যান্য মাধ্যম",
+  "amount_label": "নিষ্পত্তিকৃত পরিমাণ (₹)",
+  "reference_number_label": "ব্যাংক লেনদেন UTR / রেফারেন্স নম্বর",
+  "reference_placeholder": "যেমন: UTR1234567890",
+  "payment_date_label": "লেনদেনের তারিখ",
+  "proof_file_label": "ব্যাংক ট্রান্সফারের রসিদ / প্রমাণ",
+  "summary_total_contract": "সম্মত মোট চুক্তি:",
+  "summary_recorded": "ক্রেতা কর্তৃক রেকর্ডকৃত:",
+  "summary_confirmed": "কৃষক কর্তৃক নিশ্চিতকৃত:",
+  "summary_outstanding": "অবশিষ্ট বকেয়া:",
+  "toast_payment_recorded": "পেমেন্ট রেকর্ড জমা হয়েছে।"
+}

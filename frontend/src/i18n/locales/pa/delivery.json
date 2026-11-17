@@ -1,0 +1,20 @@
+{
+  "arrange_title": "ਲਾਟ ਰਵਾਨਗੀ ਅਤੇ ਲੌਜਿਸਟਿਕਸ ਨਿਰਧਾਰਤ ਕਰੋ",
+  "method_label": "ਆਵਾਜਾਈ ਦਾ ਤਰੀਕਾ",
+  "method_direct": "ਵੇਚਣ ਵਾਲੇ ਵੱਲੋਂ ਸਿੱਧੀ ਸੜਕੀ ਆਵਾਜਾਈ",
+  "method_pickup": "ਖਰੀਦਦਾਰ ਟਰੱਕ ਪਿਕਅੱਪ",
+  "method_third_party": "ਤੀਜੀ ਧਿਰ ਲੌਜਿਸਟਿਕਸ",
+  "destination_label": "ਡਿਲੀਵਰੀ ਡੌਕ ਪਤਾ",
+  "date_label": "ਸੰਭਾਵਿਤ ਰਵਾਨਗੀ / ਪਹੁੰਚ ਮਿਤੀ",
+  "notes_label": "ਸੰਭਾਲ ਹਦਾਇਤਾਂ",
+  "confirm_dispatch": "ਰਵਾਨਗੀ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ",
+  "mark_completed_button": "ਡਿਲੀਵਰੀ ਮੁਕੰਮਲ ਵਜੋਂ ਚਿੰਨ੍ਹਿਤ ਕਰੋ",
+  "mark_completed_desc": "ਤਸਦੀਕ ਕਰੋ ਕਿ ਮਾਲ ਡੌਕ 'ਤੇ ਪਹੁੰਚ ਗਿਆ ਹੈ।",
+  "acknowledge_receipt_button": "ਡਿਲੀਵਰੀ ਰਸੀਦ ਸਵੀਕਾਰ ਕਰੋ",
+  "acknowledge_receipt_desc": "ਮਾਲ ਪ੍ਰਾਪਤੀ ਦੀ ਆਪਸੀ ਪੁਸ਼ਟੀ।",
+  "awaiting_ack": "ਦੂਜੀ ਧਿਰ ਦੀ ਰਸੀਦ ਦੀ ਉਡੀਕ ਹੈ।",
+  "status_not_arranged": "ਰਵਾਨਗੀ ਬਕਾਇਆ",
+  "status_arranged": "ਪ੍ਰਬੰਧ ਹੋਇਆ ਅਤੇ ਰਸਤੇ ਵਿੱਚ",
+  "status_completion_marked": "ਵੇਚਣ ਵਾਲੇ ਵੱਲੋਂ ਮੁਕੰਮਲ ਚਿੰਨ੍ਹਿਤ",
+  "status_completed": "ਡਿਲੀਵਰ ਹੋਇਆ ਅਤੇ ਪੁਸ਼ਟੀ ਹੋਈ"
+}

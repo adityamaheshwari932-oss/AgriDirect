@@ -1,0 +1,15 @@
+{
+  "title": "Trade Communications",
+  "subtitle": "Contextual, secure bilateral messaging tied to trade contracts and negotiations",
+  "active_threads": "Active Conversations",
+  "type_placeholder": "Type your trade message...",
+  "send_button": "Send Message",
+  "share_contact_button": "Request Direct Contact Exchange",
+  "share_contact_modal_title": "Bilateral Contact Sharing",
+  "share_contact_desc": "AgriDirect protects participant privacy by default. Both parties must mutually agree to share direct phone numbers and emails.",
+  "confirm_share": "Authorize Contact Sharing",
+  "attachment_button": "Upload Document / Quality Certificate",
+  "download_attachment": "Download File",
+  "empty_title": "No Conversations Active",
+  "empty_desc": "Negotiations on active lots or requirements automatically establish contextual chat threads."
+}

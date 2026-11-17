@@ -1,0 +1,21 @@
+{
+  "title": "தளத்திற்கு வெளியே நேரடி வங்கி தீர்வு",
+  "subtitle": "வங்கி பரிமாற்றங்களுக்கான (RTGS/NEFT/UPI) இருதரப்பு பதிவேடு. AgriDirect நிதிகளைத் தன்னிடம் வைத்திருக்கவோ எஸ்க்ரோ செய்யவோ இல்லை.",
+  "record_payment_button": "நேரடி வங்கி கட்டணத்தைப் பதிவுசெய்",
+  "history_button": "கட்டண வரலாற்றுப் பதிவேடு",
+  "method_label": "பரிமாற்ற முறை",
+  "method_bank_transfer": "வங்கி பரிமாற்றம் (NEFT / RTGS / IMPS)",
+  "method_upi": "UPI இடைமுகம்",
+  "method_cash": "நேரடி ரொக்கம் / ஸ்பாட் தீர்வு",
+  "method_other": "பிற முறை",
+  "amount_label": "செலுத்தப்பட்ட தொகை (₹)",
+  "reference_number_label": "பரிவர்த்தனை UTR / குறிப்பு எண்",
+  "reference_placeholder": "எ.கா. UTR1234567890",
+  "payment_date_label": "செலுத்தப்பட்ட தேதி",
+  "proof_file_label": "வங்கி ரசீது ஆதாரம்",
+  "summary_total_contract": "ஒப்பந்த மொத்தம்:",
+  "summary_recorded": "வாங்குபவர் பதிவுசெய்தது:",
+  "summary_confirmed": "விவசாயி உறுதிப்படுத்தியது:",
+  "summary_outstanding": "மீதமுள்ள தொகை:",
+  "toast_payment_recorded": "கட்டணப் பதிவு சமர்ப்பிக்கப்பட்டது."
+}

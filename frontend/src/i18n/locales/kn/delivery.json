@@ -1,0 +1,20 @@
+{
+  "arrange_title": "ಲಾಟ್ ರವಾನೆ ಮತ್ತು ಲಾಜಿಸ್ಟಿಕ್ಸ್ ನಿಗದಿಪಡಿಸಿ",
+  "method_label": "ಸಾರಿಗೆ ಮತ್ತು ಸರಬರಾಜು ವಿಧಾನ",
+  "method_direct": "ಮಾರಾಟಗಾರರ ನೇರ ರಸ್ತೆ ಸಾರಿಗೆ",
+  "method_pickup": "ಖರೀದಿದಾರರ ಲಾರಿ ಪಿಕಪ್",
+  "method_third_party": "ಮೂರನೇ ವ್ಯಕ್ತಿಯ ಸಾರಿಗೆ",
+  "destination_label": "ಡೆಲಿವರಿ ಡಾಕ್ ಸ್ಥಳ",
+  "date_label": "ನಿರೀಕ್ಷಿತ ರವಾನೆ / ಆಗಮನ ದಿನಾಂಕ",
+  "notes_label": "ನಿರ್ವಹಣಾ ಸೂಚನೆಗಳು",
+  "confirm_dispatch": "ರವಾನೆಯನ್ನು ದೃಢೀಕರಿಸಿ",
+  "mark_completed_button": "ವಿತರಣೆ ಪೂರ್ಣಗೊಂಡಿದೆ ಎಂದು ಗುರುತಿಸಿ",
+  "mark_completed_desc": "ಸರಕುಗಳು ತಲುಪಿವೆ ಎಂದು ಪ್ರಮಾಣೀಕರಿಸಿ.",
+  "acknowledge_receipt_button": "ವಿತರಣಾ ರಶೀದಿಯನ್ನು ದೃಢೀಕರಿಸಿ",
+  "acknowledge_receipt_desc": "ಸರಕು ತಲುಪಿದ ದ್ವಿಪಕ್ಷೀಯ ಸ್ವೀಕೃತಿ.",
+  "awaiting_ack": "ಎದುರು ಪಕ್ಷದ ಸ್ವೀಕೃತಿಗೆ ಕಾಯಲಾಗುತ್ತಿದೆ.",
+  "status_not_arranged": "ರವಾನೆ ಬಾಕಿ ಇದೆ",
+  "status_arranged": "ವ್ಯವಸ್ಥೆಗೊಳಿಸಲಾಗಿದೆ ಮತ್ತು ಸಾಗಣೆಯಲ್ಲಿದೆ",
+  "status_completion_marked": "ಮಾರಾಟಗಾರರು ಪೂರ್ಣ ಎಂದು ಗುರುತಿಸಿದ್ದಾರೆ",
+  "status_completed": "ತಲುಪಿಸಲಾಗಿದೆ ಮತ್ತು ದೃಢೀಕರಿಸಲಾಗಿದೆ"
+}

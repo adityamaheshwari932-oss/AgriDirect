@@ -1,0 +1,17 @@
+{
+  "title": "Buyer Sourcing Requirements",
+  "subtitle": "Direct procurement specifications posted by verified commercial buyers",
+  "post_new": "Post New Sourcing Requirement",
+  "edit_requirement": "Edit Requirement",
+  "delete_requirement": "Delete Requirement",
+  "target_quantity": "Required Quantity",
+  "max_price": "Target Price per Unit",
+  "procurement_deadline": "Procurement Deadline",
+  "delivery_location": "Delivery Destination",
+  "quality_grade": "Quality Grade Requirement",
+  "fulfillment_approval": "Fulfillment Approval",
+  "empty_title": "No Buyer Requirements Found",
+  "empty_desc": "There are currently no active procurement requirements matching your filters.",
+  "card_deadline": "Target Delivery: {{date}}",
+  "card_make_offer": "Supply to this Requirement"
+}

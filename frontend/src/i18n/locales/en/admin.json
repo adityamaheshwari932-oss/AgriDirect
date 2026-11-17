@@ -1,0 +1,22 @@
+{
+  "portal_title": "Platform Governance & Compliance Portal",
+  "portal_subtitle": "Administrative controls, verification queues, content moderation, and audit ledgers",
+  "users_title": "User Account Moderation",
+  "users_subtitle": "Manage member verification credentials, account standing, and trading restrictions",
+  "content_title": "Content & Transaction Moderation",
+  "content_subtitle": "Review flagged listings, buyer requirements, incident reports, and payment complaints",
+  "verification_title": "Producer & Buyer Verification Queue",
+  "verification_subtitle": "Approve or reject submitted identity documents, land records, and tax registrations",
+  "audit_title": "Immutable Platform Audit Ledger",
+  "audit_subtitle": "Cryptographically chained, read-only audit log tracking all administrative interventions",
+  "analytics_title": "System Platform Analytics",
+  "analytics_subtitle": "High-level platform trading activity, fulfillment rates, and liquidity metrics",
+  "btn_approve": "Approve Credentials",
+  "btn_reject": "Reject Submission",
+  "btn_suspend": "Suspend Account",
+  "btn_reinstate": "Reinstate Account",
+  "btn_dismiss": "Dismiss Complaint",
+  "btn_resolve": "Mark Dispute Resolved",
+  "reason_placeholder": "Enter formal administrative justification for this sanction...",
+  "audit_immutable_notice": "Audit log entries are cryptographically protected and immutable. Modifications and deletions are strictly disabled."
+}

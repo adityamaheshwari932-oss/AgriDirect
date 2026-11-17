@@ -1,0 +1,20 @@
+{
+  "arrange_title": "લૉટ ડિસ્પેચ અને લૉજિસ્ટિક્સ સુનિશ્ચિત કરો",
+  "method_label": "પરિવહન પદ્ધતિ",
+  "method_direct": "વિક્રેતા દ્વારા સીધું રોડ પરિવહન",
+  "method_pickup": "ખરીદદાર ટ્રક દ્વારા પિકઅપ",
+  "method_third_party": "થર્ડ-પાર્ટી લોજિસ્ટિક્સ",
+  "destination_label": "ડિલિવરી ડોક સરનામું",
+  "date_label": "અપેક્ષિત રવાનગી / આગમન તારીખ",
+  "notes_label": "સૂચનાઓ",
+  "confirm_dispatch": "રવાનગીની પુષ્ટિ કરો",
+  "mark_completed_button": "ડિલિવરી પૂર્ણ તરીકે ચિહ્નિત કરો",
+  "mark_completed_desc": "માલ પહોંચી ગયો છે તે પ્રમાણિત કરો.",
+  "acknowledge_receipt_button": "ડિલિવરી રસીદ સ્વીકારો",
+  "acknowledge_receipt_desc": "માલ મળ્યાની દ્વિપક્ષીય સ્વીકૃતિ.",
+  "awaiting_ack": "સામેના પક્ષની સ્વીકૃતિની રાહ જોવાઈ રહી છે.",
+  "status_not_arranged": "રવાનગી બાકી",
+  "status_arranged": "વ્યવસ્થા થઈ અને ટ્રાન્ઝિટમાં",
+  "status_completion_marked": "વિક્રેતા દ્વારા પૂર્ણ ચિહ્નિત",
+  "status_completed": "ડિલિવર અને પુષ્ટિ થયેલ"
+}

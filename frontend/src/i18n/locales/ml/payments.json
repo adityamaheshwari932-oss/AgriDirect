@@ -1,0 +1,21 @@
+{
+  "title": "പ്ലാറ്റ്‌ഫോമിന് പുറത്തുള്ള നേരിട്ടുള്ള ബാങ്ക് സെറ്റിൽമെന്റ്",
+  "subtitle": "ബാങ്ക് ട്രാൻസ്ഫറുകൾക്കായുള്ള (RTGS/NEFT/UPI) ഉഭയകക്ഷി രേഖ സൂക്ഷിക്കൽ. AgriDirect ഫണ്ടുകൾ കൈവശം വയ്ക്കുകയോ എസ്ക്രോ ചെയ്യുകയോ ചെയ്യുന്നില്ല.",
+  "record_payment_button": "നേരിട്ടുള്ള ബാങ്ക് പേയ്‌മെന്റ് രേഖപ്പെടുത്തുക",
+  "history_button": "പേയ്‌മെന്റ് ചരിത്രം",
+  "method_label": "കൈമാറ്റ രീതി",
+  "method_bank_transfer": "ബാങ്ക് കൈമാറ്റം (NEFT / RTGS / IMPS)",
+  "method_upi": "UPI സംവിധാനം",
+  "method_cash": "ക്യാഷ് ഓൺ ഡെലിവറി / പണം",
+  "method_other": "മറ്റ് രീതി",
+  "amount_label": "തീർപ്പാക്കിയ തുക (₹)",
+  "reference_number_label": "ഇടപാട് UTR / റഫറൻസ് നമ്പർ",
+  "reference_placeholder": "ഉദാ. UTR1234567890",
+  "payment_date_label": "കൈമാറ്റ തീയതി",
+  "proof_file_label": "ബാങ്ക് രസീത് തെളിവ്",
+  "summary_total_contract": "ആകെ കരാർ തുക:",
+  "summary_recorded": "വാങ്ങലുകാരൻ രേഖപ്പെടുത്തിയത്:",
+  "summary_confirmed": "കർഷകൻ സ്ഥിരീകരിച്ചത്:",
+  "summary_outstanding": "ബാക്കി തുക:",
+  "toast_payment_recorded": "പേയ്‌മെന്റ് രേഖ സമർപ്പിച്ചു."
+}

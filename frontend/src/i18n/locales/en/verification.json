@@ -1,0 +1,22 @@
+{
+  "title": "Identity & Operational Verification",
+  "subtitle": "Submit government and agricultural credentials to unlock direct marketplace trade",
+  "status_card_title": "Verification Status",
+  "status_unverified_desc": "Identity and operating credentials not yet submitted. Verification is required before publishing produce listings or entering trade negotiations.",
+  "status_pending_desc": "Verification documents are under administrative review. Direct marketplace trade communications will be unlocked once approved.",
+  "status_verified_desc": "Account credentials have been verified by AgriDirect administrators. Full access to marketplace listings, negotiations, and trade agreements is active.",
+  "status_rejected_desc": "Previous verification submission could not be approved. Please review administrator notes on the verification page and resubmit updated documents.",
+  "guidelines_title": "Document Verification Guidelines",
+  "guidelines_farmer": "Farmers must submit a valid government photo ID and a land record (7/12 extract, Patta) or Kisan Credit Card passbook.",
+  "guidelines_buyer": "Commercial buyers must provide a GSTIN certificate, Incorporation Certificate, or municipal trade license.",
+  "upload_document_title": "Upload Supporting Credential",
+  "document_type_label": "Credential Document Type",
+  "select_document_type": "Select credential category",
+  "file_label": "Document File (PDF, PNG, JPG - Max 10MB)",
+  "submit_application": "Submit for Administrative Review",
+  "submitting": "Submitting...",
+  "history_title": "Submission & Review History",
+  "admin_review_notice": "Verification submissions are reviewed within 24-48 business hours by the platform moderation team.",
+  "toast_uploaded_title": "Document Uploaded",
+  "toast_uploaded_message": "Verification document uploaded successfully."
+}

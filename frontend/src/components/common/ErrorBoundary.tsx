@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import i18n from "../../i18n";
 
 export interface ErrorBoundaryProps {
   children: ReactNode;
@@ -78,11 +79,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
             <div className="space-y-2">
               <h2 className="text-xl font-bold tracking-tight text-foreground">
-                Something went wrong
+                {i18n.t("errors:generic_title", "Something went wrong")}
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                An unexpected technical error prevented this section of the application from
-                displaying properly. Please try recovering or reloading the page.
+                {i18n.t(
+                  "errors:unexpected_error_desc",
+                  "An unexpected technical error prevented this section of the application from displaying properly. Please try recovering or reloading the page."
+                )}
               </p>
             </div>
 
@@ -100,7 +103,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground font-medium text-sm hover:bg-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
               >
                 <RefreshCw className="w-4 h-4" aria-hidden="true" />
-                <span>Try Again</span>
+                <span>{i18n.t("errors:try_again", "Try Again")}</span>
               </button>
 
               <button
@@ -108,7 +111,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 onClick={this.handleReload}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md border border-border bg-card text-foreground font-medium text-sm hover:bg-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                <span>Reload Page</span>
+                <span>{i18n.t("common:actions.reload", "Reload Page")}</span>
               </button>
 
               <a
@@ -116,7 +119,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md border border-border bg-card text-foreground font-medium text-sm hover:bg-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <Home className="w-4 h-4" aria-hidden="true" />
-                <span>Home</span>
+                <span>{i18n.t("common:navigation.home", "Home")}</span>
               </a>
             </div>
           </div>

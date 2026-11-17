@@ -1,0 +1,15 @@
+{
+  "title": "ਭੁਗਤਾਨ ਅਤੇ ਇਕਰਾਰਨਾਮੇ ਦੇ ਝਗੜੇ",
+  "subtitle": "ਜੇਕਰ ਦਰਜ ਭੁਗਤਾਨ ਟ੍ਰਾਂਸਫਰ ਤੁਹਾਡੇ ਬੈਂਕ ਖਾਤੇ ਵਿੱਚ ਜਮ੍ਹਾਂ ਨਹੀਂ ਹੁੰਦਾ ਤਾਂ ਵਿਵਾਦ ਸ਼ਿਕਾਇਤ ਦਰਜ ਕਰੋ",
+  "file_complaint_button": "ਭੁਗਤਾਨ ਵਿਵਾਦ ਦਰਜ ਕਰੋ",
+  "modal_title": "ਰਸਮੀ ਭੁਗਤਾਨ ਵਿਵਾਦ ਦਰਜ ਕਰੋ",
+  "reason_label": "ਵਿਵਾਦ ਦਾ ਕਾਰਨ",
+  "reason_placeholder": "ਸਪੱਸ਼ਟ ਦੱਸੋ ਕਿ ਇਹ ਲੈਣ-ਦੇਣ ਵਿਵਾਦਿਤ ਕਿਉਂ ਹੈ...",
+  "evidence_label": "ਬੈਂਕ ਸਟੇਟਮੈਂਟ ਸਬੂਤ (PDF, PNG)",
+  "submit_complaint": "ਨਿਪਟਾਰੇ ਲਈ ਜਮ੍ਹਾ ਕਰੋ",
+  "status_open": "ਵਿਵਾਦ ਖੁੱਲ੍ਹਾ",
+  "status_under_review": "ਪ੍ਰਸ਼ਾਸਕੀ ਸਮੀਖਿਆ ਅਧੀਨ",
+  "status_resolved": "ਵਿਵਾਦ ਹੱਲ ਹੋਇਆ",
+  "status_dismissed": "ਸ਼ਿਕਾਇਤ ਖ਼ਾਰਜ",
+  "admin_resolution_notes": "ਪ੍ਰਸ਼ਾਸਕੀ ਵਿਚੋਲਗੀ ਨੋਟ"
+}

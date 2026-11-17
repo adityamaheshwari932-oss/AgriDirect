@@ -1,0 +1,20 @@
+{
+  "arrange_title": "লট প্রেরণ ও লজিস্টিকস নির্ধারণ করুন",
+  "method_label": "পরিবহন ও রসদ পদ্ধতি",
+  "method_direct": "বিক্রেতা কর্তৃক সরাসরি সড়ক পরিবহন",
+  "method_pickup": "ক্রেতার ট্রাক পিকআপ",
+  "method_third_party": "তৃতীয় পক্ষের পরিবহন",
+  "destination_label": "ডেলিভারি ডক গন্তব্য ঠিকানা",
+  "date_label": "প্রত্যাশিত প্রেরণ / পৌঁছানোর তারিখ",
+  "notes_label": "পণ্য গ্রহণ সংক্রান্ত নির্দেশনা",
+  "confirm_dispatch": "প্রেরণ রসদ নিশ্চিত করুন",
+  "mark_completed_button": "ডেলিভারি সম্পন্ন চিহ্নিত করুন",
+  "mark_completed_desc": "পণ্য ডকে পৌঁছেছে তা প্রত্যয়িত করুন।",
+  "acknowledge_receipt_button": "ডেলিভারি প্রাপ্তি স্বীকার করুন",
+  "acknowledge_receipt_desc": "পণ্য প্রাপ্তির দ্বিপাক্ষিক স্বীকৃতি।",
+  "awaiting_ack": "অপর পক্ষের স্বীকৃতির অপেক্ষায়।",
+  "status_not_arranged": "প্রেরণ অপেক্ষমাণ",
+  "status_arranged": "ব্যবস্থাপিত ও পরিবহনে",
+  "status_completion_marked": "বিক্রেতা কর্তৃক সম্পন্ন চিহ্নিত",
+  "status_completed": "ডেলিভারকৃত ও নিশ্চিত"
+}

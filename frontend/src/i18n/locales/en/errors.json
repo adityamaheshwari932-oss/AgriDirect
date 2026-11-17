@@ -1,0 +1,18 @@
+{
+  "generic": "An unexpected error occurred while communicating with the platform. Please try again.",
+  "network": "Unable to connect to AgriDirect servers. Please verify your internet connection.",
+  "unauthorized": "Your session has expired or is invalid. Please log in again to continue.",
+  "forbidden": "You do not have permission to execute this operation.",
+  "restricted": "Your account is currently restricted. Transactional operations are disabled.",
+  "suspended": "Your account has been suspended by platform administrators.",
+  "blocked": "Your account has been blocked by platform compliance.",
+  "not_found": "The requested trade record or resource could not be found.",
+  "server_error": "AgriDirect server encountered an internal issue. Our engineering team has been alerted.",
+  "rate_limited": "Too many requests. Please wait a moment before trying again.",
+  "conflict": "The requested change conflicts with the current trade contract state.",
+  "load_failed": "Unable to load data",
+  "try_again": "Try Again",
+  "forbidden_title": "Access Restricted",
+  "forbidden_message": "You do not have sufficient permissions to access this feature or perform this operation.",
+  "return_to_dashboard": "Return to Dashboard"
+}

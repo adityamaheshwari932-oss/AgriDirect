@@ -1,0 +1,11 @@
+{
+  "title": "Produce Inventory Ledger",
+  "subtitle": "Immutable audit trail of stock adjustments, order fulfillment holds, and releases",
+  "current_stock": "Current Available Lot",
+  "allocated_stock": "Allocated to Active Orders",
+  "fulfilled_stock": "Fulfilled & Dispatched",
+  "delta_label": "Stock Change",
+  "audit_reason": "Audit Justification",
+  "empty_title": "No Inventory Changes Recorded",
+  "empty_desc": "Stock ledger records are created automatically when orders are confirmed, fulfilled, or amended."
+}

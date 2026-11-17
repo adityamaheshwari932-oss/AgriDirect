@@ -1,0 +1,12 @@
+{
+  "title": "Notifications & Alerts",
+  "unread_count": "{{count}} unread notification",
+  "unread_count_other": "{{count}} unread notifications",
+  "mark_all_read": "Mark All as Read",
+  "empty_title": "No Notifications",
+  "empty_desc": "You are completely caught up! Trade alerts and platform updates will appear here.",
+  "type_order": "Order Update",
+  "type_offer": "Offer Proposal",
+  "type_verification": "Verification Status",
+  "type_system": "System Governance"
+}

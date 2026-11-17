@@ -1,0 +1,21 @@
+{
+  "title": "प्लॅटफॉर्म-बाह्य थेट बँक व्यवहार निपटारा",
+  "subtitle": "बँक हस्तांतरणासाठी (RTGS/NEFT/UPI) द्विपक्षीय नोंदवही. AgriDirect निधी स्वतःकडे किंवा एस्क्रोमध्ये ठेवत नाही.",
+  "record_payment_button": "थेट बँक देयक नोंदवा",
+  "history_button": "देयक नोंदवही इतिहास",
+  "method_label": "थेट हस्तांतरण माध्यम",
+  "method_bank_transfer": "थेट बँक ट्रान्सफर (NEFT / RTGS / IMPS)",
+  "method_upi": "युनिफाइड पेमेंट्स इंटरफेस (UPI)",
+  "method_cash": "कॅश ऑन डिलिव्हरी / रोख निपटारा",
+  "method_other": "इतर द्विपक्षीय पद्धत",
+  "amount_label": "निपटारा रक्कम (₹)",
+  "reference_number_label": "बँक व्यवहार UTR / संदर्भ क्रमांक",
+  "reference_placeholder": "उदा. UTR1234567890",
+  "payment_date_label": "हस्तांतरण दिनांक",
+  "proof_file_label": "बँक पावती / पुरावा",
+  "summary_total_contract": "एकूण करार रक्कम:",
+  "summary_recorded": "खरेदीदाराने नोंदवलेली रक्कम:",
+  "summary_confirmed": "शेतकऱ्याने पुष्टी केलेली:",
+  "summary_outstanding": "उर्वरित बाकी:",
+  "toast_payment_recorded": "देयक नोंद सादर केली. समोरील पक्ष पावतीची पुष्टी करू शकतो."
+}
