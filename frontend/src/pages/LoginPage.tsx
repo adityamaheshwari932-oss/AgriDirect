@@ -1,5 +1,6 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Eye, EyeOff, AlertCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "../store/authStore";
 import { AuthLayout } from "../components/layout/AuthLayout";
@@ -7,6 +8,7 @@ import { ApiError } from "../api/errors";
 import { getSafeRedirectUrl } from "../utils/redirect";
 
 export const LoginPage: React.FC = () => {
+  const { t } = useTranslation(["auth", "validation"]);
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -25,13 +27,13 @@ export const LoginPage: React.FC = () => {
 
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
-      errors.email = "Email address is required.";
+      errors.email = t("validation:email_required", "Email address is required.");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      errors.email = "Please enter a valid email address.";
+      errors.email = t("validation:invalid_email", "Please enter a valid email address.");
     }
 
     if (!password) {
-      errors.password = "Password is required.";
+      errors.password = t("validation:password_required", "Password is required.");
     }
 
     setFieldErrors(errors);
@@ -60,25 +62,47 @@ export const LoginPage: React.FC = () => {
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         if (err.isRateLimited) {
-          setFormError("Too many login attempts. Please wait a moment before trying again.");
+          setFormError(
+            t(
+              "auth:login.rate_limit_error",
+              "Too many login attempts. Please wait a moment before trying again."
+            )
+          );
         } else if (err.isUnauthorized) {
-          setFormError("Invalid email or password.");
+          setFormError(t("auth:login.invalid_credentials", "Invalid email or password."));
         } else if (err.isForbidden) {
-          setFormError("This account is suspended or restricted. Please contact support.");
+          setFormError(
+            t(
+              "auth:login.forbidden_error",
+              "This account is suspended or restricted. Please contact support."
+            )
+          );
         } else if (err.isValidationError) {
-          setFormError("Validation error: please verify your input.");
+          setFormError(
+            t("auth:login.validation_error", "Validation error: please verify your input.")
+          );
           const extracted = err.fieldErrors;
           setFieldErrors({
             email: extracted.email?.[0],
             password: extracted.password?.[0],
           });
         } else if (err.isNetworkError) {
-          setFormError("Network error: Unable to connect to the server. Please check your connection.");
+          setFormError(
+            t(
+              "auth:login.network_error",
+              "Network error: Unable to connect to the server. Please check your connection."
+            )
+          );
         } else {
-          setFormError(err.message || "An unexpected error occurred during login.");
+          setFormError(
+            err.message ||
+              t("auth:login.unexpected_error", "An unexpected error occurred during login.")
+          );
         }
       } else {
-        setFormError("An unexpected error occurred. Please try again.");
+        setFormError(
+          t("auth:login.unexpected_error", "An unexpected error occurred. Please try again.")
+        );
       }
     } finally {
       setIsSubmitting(false);
@@ -87,8 +111,11 @@ export const LoginPage: React.FC = () => {
 
   return (
     <AuthLayout
-      title="Sign in to your account"
-      subtitle="Access your AgriDirect commercial dashboard and trade negotiations"
+      title={t("auth:login.heading", "Sign in to your account")}
+      subtitle={t(
+        "auth:login.subtitle",
+        "Access your AgriDirect commercial dashboard and trade negotiations"
+      )}
     >
       <form onSubmit={handleSubmit} className="space-y-6" noValidate>
         {/* Form-Level Error Alert */}
@@ -105,7 +132,7 @@ export const LoginPage: React.FC = () => {
         {/* Email Field */}
         <div>
           <label htmlFor="login-email" className="block text-sm font-medium text-foreground mb-1">
-            Email address
+            {t("auth:login.email_label", "Email address")}
           </label>
           <input
             id="login-email"
@@ -120,7 +147,7 @@ export const LoginPage: React.FC = () => {
             className={`w-full px-3.5 py-2.5 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${
               fieldErrors.email ? "border-red-400 focus:ring-red-400" : "border-border"
             }`}
-            placeholder="you@example.com"
+            placeholder={t("auth:login.email_placeholder", "you@example.com")}
             aria-invalid={Boolean(fieldErrors.email)}
             aria-describedby={fieldErrors.email ? "email-error" : undefined}
           />
@@ -135,10 +162,10 @@ export const LoginPage: React.FC = () => {
         <div>
           <div className="flex items-center justify-between mb-1">
             <label htmlFor="login-password" className="block text-sm font-medium text-foreground">
-              Password
+              {t("auth:login.password_label", "Password")}
             </label>
             <span className="text-xs text-muted-foreground">
-              Admin-managed recovery
+              {t("auth:login.admin_recovery", "Admin-managed recovery")}
             </span>
           </div>
           <div className="relative">
@@ -152,18 +179,22 @@ export const LoginPage: React.FC = () => {
                 if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: undefined }));
               }}
               disabled={isSubmitting}
-              className={`w-full px-3.5 py-2.5 pr-11 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${
+              className={`w-full px-3.5 py-2.5 pe-11 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${
                 fieldErrors.password ? "border-red-400 focus:ring-red-400" : "border-border"
               }`}
-              placeholder="••••••••"
+              placeholder={t("auth:login.password_placeholder", "••••••••")}
               aria-invalid={Boolean(fieldErrors.password)}
               aria-describedby={fieldErrors.password ? "password-error" : undefined}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 focus:outline-none focus:ring-2 focus:ring-primary rounded"
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 focus:outline-none focus:ring-2 focus:ring-primary rounded"
+              aria-label={
+                showPassword
+                  ? t("auth:login.hide_password", "Hide password")
+                  : t("auth:login.show_password", "Show password")
+              }
             >
               {showPassword ? (
                 <EyeOff className="w-4 h-4" aria-hidden="true" />
@@ -188,24 +219,24 @@ export const LoginPage: React.FC = () => {
           {isSubmitting ? (
             <>
               <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-              <span>Signing in...</span>
+              <span>{t("auth:login.submitting", "Signing in...")}</span>
             </>
           ) : (
             <>
-              <span>Sign in</span>
-              <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              <span>{t("auth:login.submit", "Sign in")}</span>
+              <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden="true" />
             </>
           )}
         </button>
 
         {/* Register Navigation Link */}
         <div className="pt-4 border-t border-border text-center text-xs text-muted-foreground">
-          Don&apos;t have an account yet?{" "}
+          {t("auth:login.no_account", "Don't have an account yet?")}{" "}
           <Link
             to="/register"
             className="font-semibold text-primary hover:text-primary-800 underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
           >
-            Register as a farmer or buyer
+            {t("auth:login.register_link", "Register as a farmer or buyer")}
           </Link>
         </div>
       </form>

@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Sprout, Menu, X, LogOut, User as UserIcon } from "lucide-react";
 import { useAuth } from "../../store/authStore";
 import { PageContainer } from "./PageContainer";
+import { LanguageSelector } from "../ui/LanguageSelector";
 
 export const PublicHeader: React.FC = () => {
+  const { t } = useTranslation("common");
   const { status, user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -22,7 +25,7 @@ export const PublicHeader: React.FC = () => {
       {/* Top Announcement Bar */}
       <div className="bg-primary-900 text-white text-xs py-1.5 px-4 text-center tracking-wide font-medium flex items-center justify-center gap-2">
         <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
-        <span>AgriDirect — Direct B2B Agricultural Trade Platform</span>
+        <span>{t("app.name")} — {t("app.tagline")}</span>
       </div>
 
       <PageContainer>
@@ -31,17 +34,17 @@ export const PublicHeader: React.FC = () => {
           <Link
             to="/"
             className="flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg p-1"
-            aria-label="AgriDirect Home"
+            aria-label={t("app.home_aria")}
           >
             <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground shadow-sm">
               <Sprout className="w-6 h-6" aria-hidden="true" />
             </div>
             <div>
               <span className="text-xl font-bold tracking-tight text-primary-900 block leading-tight">
-                AgriDirect
+                {t("app.name")}
               </span>
               <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold block">
-                Agricultural Marketplace
+                {t("app.subtitle")}
               </span>
             </div>
           </Link>
@@ -52,22 +55,22 @@ export const PublicHeader: React.FC = () => {
               to="/"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Overview
+              {t("nav.overview")}
             </Link>
             <Link
               to="/marketplace"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Marketplace
+              {t("nav.marketplace")}
             </Link>
 
             {isAuthenticated ? (
-              <div className="flex items-center gap-3 pl-4 border-l border-border">
+              <div className="flex items-center gap-3 ps-4 border-s border-border">
                 <Link
                   to="/dashboard"
                   className="text-xs font-semibold text-primary hover:text-primary-800 transition-colors bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-md"
                 >
-                  Dashboard
+                  {t("nav.dashboard")}
                 </Link>
                 <div className="flex items-center gap-2 text-xs text-foreground bg-secondary px-3 py-1.5 rounded-full">
                   <UserIcon className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
@@ -86,29 +89,34 @@ export const PublicHeader: React.FC = () => {
                   className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive hover:text-destructive/80 transition-colors px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-destructive"
                 >
                   <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
-                  Sign Out
+                  {t("nav.sign_out")}
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-3 pl-4 border-l border-border">
+              <div className="flex items-center gap-3 ps-4 border-s border-border">
                 <Link
                   to="/login"
                   className="text-sm font-medium text-foreground hover:text-primary transition-colors px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                  Sign In
+                  {t("nav.sign_in")}
                 </Link>
                 <Link
                   to="/register"
                   className="inline-flex items-center justify-center text-sm font-medium bg-primary text-primary-foreground hover:bg-primary-700 transition-colors px-4 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                 >
-                  Register
+                  {t("nav.register")}
                 </Link>
               </div>
             )}
+
+            <div className="ps-2 border-s border-border">
+              <LanguageSelector />
+            </div>
           </nav>
 
-          {/* Mobile Menu Button */}
-          <div className="flex md:hidden">
+          {/* Mobile Actions */}
+          <div className="flex md:hidden items-center gap-2">
+            <LanguageSelector variant="compact" />
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -133,14 +141,14 @@ export const PublicHeader: React.FC = () => {
               onClick={() => setMobileMenuOpen(false)}
               className="block text-sm font-medium text-foreground px-3 py-2 rounded-md hover:bg-secondary"
             >
-              Overview
+              {t("nav.overview")}
             </Link>
             <Link
               to="/marketplace"
               onClick={() => setMobileMenuOpen(false)}
               className="block text-sm font-medium text-foreground px-3 py-2 rounded-md hover:bg-secondary"
             >
-              Marketplace
+              {t("nav.marketplace")}
             </Link>
 
             {isAuthenticated ? (
@@ -150,7 +158,7 @@ export const PublicHeader: React.FC = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   className="block text-sm font-semibold text-primary hover:text-primary-800"
                 >
-                  Go to Dashboard
+                  {t("nav.dashboard")}
                 </Link>
                 <div className="text-xs text-muted-foreground">
                   Signed in as <strong className="text-foreground">{user.email}</strong> ({user.role})
@@ -158,10 +166,10 @@ export const PublicHeader: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="w-full text-left inline-flex items-center gap-2 text-sm font-medium text-destructive py-2"
+                  className="w-full text-start inline-flex items-center gap-2 text-sm font-medium text-destructive py-2"
                 >
                   <LogOut className="w-4 h-4" />
-                  Sign Out
+                  {t("nav.sign_out")}
                 </button>
               </div>
             ) : (
@@ -171,14 +179,14 @@ export const PublicHeader: React.FC = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   className="block text-center text-sm font-medium border border-border py-2 rounded-md hover:bg-secondary"
                 >
-                  Sign In
+                  {t("nav.sign_in")}
                 </Link>
                 <Link
                   to="/register"
                   onClick={() => setMobileMenuOpen(false)}
                   className="block text-center text-sm font-medium bg-primary text-primary-foreground py-2 rounded-md shadow-sm"
                 >
-                  Register
+                  {t("nav.register")}
                 </Link>
               </div>
             )}

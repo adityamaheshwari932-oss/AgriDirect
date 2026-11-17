@@ -1,5 +1,6 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Eye, EyeOff, AlertCircle, CheckCircle2, ArrowRight, Tractor } from "lucide-react";
 import { useAuth } from "../store/authStore";
 import { AuthLayout } from "../components/layout/AuthLayout";
@@ -7,6 +8,7 @@ import { ApiError } from "../api/errors";
 import type { FarmerRegisterRequest, User } from "../types";
 
 export const FarmerRegisterPage: React.FC = () => {
+  const { t } = useTranslation(["auth", "validation", "common"]);
   const { registerFarmer } = useAuth();
 
   // Form State
@@ -40,31 +42,31 @@ export const FarmerRegisterPage: React.FC = () => {
     const errors: Record<string, string> = {};
 
     if (!formData.full_name.trim()) {
-      errors.full_name = "Full name is required.";
+      errors.full_name = t("validation:full_name_required", "Full name is required.");
     }
 
     const trimmedEmail = formData.email.trim();
     if (!trimmedEmail) {
-      errors.email = "Email address is required.";
+      errors.email = t("validation:email_required", "Email address is required.");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      errors.email = "Please enter a valid email address.";
+      errors.email = t("validation:invalid_email", "Please enter a valid email address.");
     }
 
     if (!formData.password) {
-      errors.password = "Password is required.";
+      errors.password = t("validation:password_required", "Password is required.");
     } else if (formData.password.length < 8) {
-      errors.password = "Password must be at least 8 characters long.";
+      errors.password = t("validation:password_too_short", "Password must be at least 8 characters long.");
     }
 
     if (!formData.password_confirm) {
-      errors.password_confirm = "Please confirm your password.";
+      errors.password_confirm = t("validation:confirm_password_required", "Please confirm your password.");
     } else if (formData.password !== formData.password_confirm) {
-      errors.password_confirm = "Passwords do not match.";
+      errors.password_confirm = t("validation:passwords_dont_match", "Passwords do not match.");
     }
 
     if (formData.farm_size_acres !== undefined && formData.farm_size_acres !== null) {
       if (isNaN(Number(formData.farm_size_acres)) || Number(formData.farm_size_acres) <= 0) {
-        errors.farm_size_acres = "Farm size must be a positive number of acres.";
+        errors.farm_size_acres = t("validation:farm_size_acres_positive", "Farm size must be a positive number of acres.");
       }
     }
 
@@ -145,8 +147,8 @@ export const FarmerRegisterPage: React.FC = () => {
   if (registeredUser) {
     return (
       <AuthLayout
-        title="Account Created Successfully"
-        subtitle="Your agricultural producer registration has been recorded"
+        title={t("auth:farmer_register.account_created_success", "Account Created Successfully")}
+        subtitle={t("auth:farmer_register.success_desc", "Your agricultural producer registration has been recorded")}
       >
         <div className="text-center space-y-6 py-4">
           <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
@@ -171,8 +173,8 @@ export const FarmerRegisterPage: React.FC = () => {
               to="/login"
               className="inline-flex items-center justify-center gap-2 py-2.5 px-6 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 w-full sm:w-auto"
             >
-              <span>Sign in to your account</span>
-              <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              <span>{t("auth:farmer_register.sign_in_link", "Sign in to your account")}</span>
+              <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden="true" />
             </Link>
           </div>
         </div>
@@ -182,8 +184,8 @@ export const FarmerRegisterPage: React.FC = () => {
 
   return (
     <AuthLayout
-      title="Farmer Account Registration"
-      subtitle="Join AgriDirect to market agricultural produce directly to commercial buyers"
+      title={t("auth:farmer_register.account_title", "Farmer Account Registration")}
+      subtitle={t("auth:farmer_register.subtitle", "Join AgriDirect to market agricultural produce directly to commercial buyers")}
       maxWidth="wide"
     >
       <form onSubmit={handleSubmit} className="space-y-6" noValidate>
@@ -202,14 +204,14 @@ export const FarmerRegisterPage: React.FC = () => {
         <div className="space-y-4">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider pb-1 border-b border-border flex items-center gap-2">
             <Tractor className="w-4 h-4 text-primary" aria-hidden="true" />
-            <span>Account Credentials (Required)</span>
+            <span>{t("auth:farmer_register.credentials_section", "Account Credentials (Required)")}</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Full Name */}
             <div>
               <label htmlFor="farmer-full-name" className="block text-xs font-medium text-foreground mb-1">
-                Full Name <span className="text-red-500">*</span>
+                {t("auth:farmer_register.full_name_label", "Full Name")} <span className="text-red-500">*</span>
               </label>
               <input
                 id="farmer-full-name"
@@ -222,7 +224,7 @@ export const FarmerRegisterPage: React.FC = () => {
                 className={`w-full px-3 py-2 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
                   fieldErrors.full_name ? "border-red-400 focus:ring-red-400" : "border-border"
                 }`}
-                placeholder="e.g. Ramesh Patel"
+                placeholder={t("auth:farmer_register.full_name_placeholder", "e.g. Ramesh Patel")}
                 aria-invalid={Boolean(fieldErrors.full_name)}
                 aria-describedby={fieldErrors.full_name ? "name-error" : undefined}
               />
@@ -236,7 +238,7 @@ export const FarmerRegisterPage: React.FC = () => {
             {/* Email Address */}
             <div>
               <label htmlFor="farmer-email" className="block text-xs font-medium text-foreground mb-1">
-                Email Address <span className="text-red-500">*</span>
+                {t("auth:farmer_register.email_label", "Email Address")} <span className="text-red-500">*</span>
               </label>
               <input
                 id="farmer-email"
@@ -249,7 +251,7 @@ export const FarmerRegisterPage: React.FC = () => {
                 className={`w-full px-3 py-2 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
                   fieldErrors.email ? "border-red-400 focus:ring-red-400" : "border-border"
                 }`}
-                placeholder="farmer@example.com"
+                placeholder={t("auth:farmer_register.email_placeholder", "farmer@example.com")}
                 aria-invalid={Boolean(fieldErrors.email)}
                 aria-describedby={fieldErrors.email ? "email-error" : undefined}
               />
@@ -263,7 +265,7 @@ export const FarmerRegisterPage: React.FC = () => {
             {/* Password */}
             <div>
               <label htmlFor="farmer-password" className="block text-xs font-medium text-foreground mb-1">
-                Password <span className="text-red-500">*</span>
+                {t("auth:farmer_register.password_label", "Password")} <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -274,7 +276,7 @@ export const FarmerRegisterPage: React.FC = () => {
                   value={formData.password}
                   onChange={handleChange}
                   disabled={isSubmitting}
-                  className={`w-full px-3 py-2 pr-10 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
+                  className={`w-full px-3 py-2 pe-10 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
                     fieldErrors.password ? "border-red-400 focus:ring-red-400" : "border-border"
                   }`}
                   placeholder="Min. 8 characters"
@@ -284,8 +286,8 @@ export const FarmerRegisterPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 focus:outline-none focus:ring-2 focus:ring-primary rounded"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute end-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                  aria-label={showPassword ? t("auth:login.hide_password", "Hide password") : t("auth:login.show_password", "Show password")}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -300,7 +302,7 @@ export const FarmerRegisterPage: React.FC = () => {
             {/* Confirm Password */}
             <div>
               <label htmlFor="farmer-password-confirm" className="block text-xs font-medium text-foreground mb-1">
-                Confirm Password <span className="text-red-500">*</span>
+                {t("auth:farmer_register.confirm_password_label", "Confirm Password")} <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -311,7 +313,7 @@ export const FarmerRegisterPage: React.FC = () => {
                   value={formData.password_confirm}
                   onChange={handleChange}
                   disabled={isSubmitting}
-                  className={`w-full px-3 py-2 pr-10 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
+                  className={`w-full px-3 py-2 pe-10 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
                     fieldErrors.password_confirm ? "border-red-400 focus:ring-red-400" : "border-border"
                   }`}
                   placeholder="Re-enter password"
@@ -321,7 +323,7 @@ export const FarmerRegisterPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                  className="absolute end-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 focus:outline-none focus:ring-2 focus:ring-primary rounded"
                   aria-label={showConfirmPassword ? "Hide confirmation password" : "Show confirmation password"}
                 >
                   {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -339,7 +341,7 @@ export const FarmerRegisterPage: React.FC = () => {
         {/* Section 2: Farm & Location Profile Details (Optional) */}
         <div className="space-y-4 pt-2">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider pb-1 border-b border-border flex items-center justify-between">
-            <span>Farm Details & Location (Optional)</span>
+            <span>{t("auth:farmer_register.farm_details_section", "Farm Details & Location (Optional)")}</span>
             <span className="text-[11px] font-normal lowercase text-muted-foreground">can be updated later</span>
           </h2>
 
@@ -347,7 +349,7 @@ export const FarmerRegisterPage: React.FC = () => {
             {/* Farm Name */}
             <div>
               <label htmlFor="farmer-farm-name" className="block text-xs font-medium text-foreground mb-1">
-                Farm or Enterprise Name
+                {t("auth:farmer_register.farm_name_label", "Farm or Enterprise Name")}
               </label>
               <input
                 id="farmer-farm-name"
@@ -357,14 +359,14 @@ export const FarmerRegisterPage: React.FC = () => {
                 onChange={handleChange}
                 disabled={isSubmitting}
                 className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="e.g. Patel Organic Farms"
+                placeholder={t("auth:farmer_register.farm_name_placeholder", "e.g. Patel Organic Farms")}
               />
             </div>
 
             {/* Phone Number */}
             <div>
               <label htmlFor="farmer-phone" className="block text-xs font-medium text-foreground mb-1">
-                Phone Number
+                {t("auth:farmer_register.phone_label", "Phone Number")}
               </label>
               <input
                 id="farmer-phone"
@@ -377,7 +379,7 @@ export const FarmerRegisterPage: React.FC = () => {
                 className={`w-full px-3 py-2 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
                   fieldErrors.phone_number ? "border-red-400 focus:ring-red-400" : "border-border"
                 }`}
-                placeholder="+91 98765 43210"
+                placeholder={t("auth:farmer_register.phone_placeholder", "+91 98765 43210")}
                 aria-invalid={Boolean(fieldErrors.phone_number)}
                 aria-describedby={fieldErrors.phone_number ? "farmer-phone-error" : undefined}
               />
@@ -391,7 +393,7 @@ export const FarmerRegisterPage: React.FC = () => {
             {/* Farm Location Address */}
             <div className="sm:col-span-2">
               <label htmlFor="farmer-address" className="block text-xs font-medium text-foreground mb-1">
-                Farm Physical Address
+                {t("auth:farmer_register.farm_address_label", "Farm Physical Address")}
               </label>
               <input
                 id="farmer-address"
@@ -408,7 +410,7 @@ export const FarmerRegisterPage: React.FC = () => {
             {/* City / Town */}
             <div>
               <label htmlFor="farmer-city" className="block text-xs font-medium text-foreground mb-1">
-                City / Nearest Town
+                {t("auth:farmer_register.city_label", "City / Nearest Town")}
               </label>
               <input
                 id="farmer-city"
@@ -425,7 +427,7 @@ export const FarmerRegisterPage: React.FC = () => {
             {/* State */}
             <div>
               <label htmlFor="farmer-state" className="block text-xs font-medium text-foreground mb-1">
-                State / Province
+                {t("auth:farmer_register.state_label", "State / Province")}
               </label>
               <input
                 id="farmer-state"
@@ -442,7 +444,7 @@ export const FarmerRegisterPage: React.FC = () => {
             {/* Postal Code */}
             <div>
               <label htmlFor="farmer-postal-code" className="block text-xs font-medium text-foreground mb-1">
-                Postal Code
+                {t("auth:farmer_register.postal_code_label", "Postal Code")}
               </label>
               <input
                 id="farmer-postal-code"
@@ -459,7 +461,7 @@ export const FarmerRegisterPage: React.FC = () => {
             {/* Farm Size Acres */}
             <div>
               <label htmlFor="farmer-size" className="block text-xs font-medium text-foreground mb-1">
-                Total Land Size (Acres)
+                {t("auth:farmer_register.land_size_label", "Total Land Size (Acres)")}
               </label>
               <input
                 id="farmer-size"
@@ -487,7 +489,7 @@ export const FarmerRegisterPage: React.FC = () => {
             {/* Farming Practices */}
             <div>
               <label htmlFor="farmer-practices" className="block text-xs font-medium text-foreground mb-1">
-                Farming Practices
+                {t("auth:farmer_register.farming_practices_label", "Farming Practices")}
               </label>
               <select
                 id="farmer-practices"
@@ -508,7 +510,7 @@ export const FarmerRegisterPage: React.FC = () => {
             {/* Primary Crops */}
             <div>
               <label htmlFor="farmer-crops" className="block text-xs font-medium text-foreground mb-1">
-                Primary Crops
+                {t("auth:farmer_register.primary_crops_label", "Primary Crops")}
               </label>
               <input
                 id="farmer-crops"
@@ -534,12 +536,12 @@ export const FarmerRegisterPage: React.FC = () => {
             {isSubmitting ? (
               <>
                 <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                <span>Creating Farmer Account...</span>
+                <span>{t("auth:farmer_register.submitting", "Creating Farmer Account...")}</span>
               </>
             ) : (
               <>
-                <span>Complete Farmer Registration</span>
-                <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                <span>{t("auth:farmer_register.submit", "Complete Farmer Registration")}</span>
+                <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden="true" />
               </>
             )}
           </button>
@@ -547,12 +549,12 @@ export const FarmerRegisterPage: React.FC = () => {
 
         {/* Existing Account Footer Link */}
         <div className="pt-4 border-t border-border text-center text-xs text-muted-foreground">
-          Already have an account?{" "}
+          {t("auth:register.already_registered", "Already have an account?")}{" "}
           <Link
             to="/login"
             className="font-semibold text-primary hover:text-primary-800 underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
           >
-            Sign in
+            {t("auth:login.submit", "Sign in")}
           </Link>
         </div>
       </form>

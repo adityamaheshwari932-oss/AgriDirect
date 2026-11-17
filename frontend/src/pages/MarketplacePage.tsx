@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Search,
   Tractor,
@@ -29,6 +30,7 @@ import type {
 } from "../types";
 
 export const MarketplacePage: React.FC = () => {
+  const { t } = useTranslation(["marketplace", "common"]);
   const [activeTab, setActiveTab] = useState<"produce" | "buyers">("produce");
   const [categories, setCategories] = useState<ProduceCategory[]>([]);
 
@@ -255,14 +257,17 @@ export const MarketplacePage: React.FC = () => {
             <div className="flex items-center gap-2 mb-1">
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-primary/10 text-primary border border-primary/20">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                Verified B2B Direct Trade
+                {t("marketplace:badge_verified", "Verified B2B Direct Trade")}
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-              AgriDirect Wholesale Marketplace
+              {t("marketplace:wholesale_title", "AgriDirect Wholesale Marketplace")}
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Discover verified farm produce lots and commercial procurement requirements across India
+              {t(
+                "marketplace:subtitle",
+                "Discover verified farm produce lots and commercial procurement requirements across India"
+              )}
             </p>
           </div>
 
@@ -280,7 +285,7 @@ export const MarketplacePage: React.FC = () => {
               }`}
             >
               <Tractor className="w-4 h-4" aria-hidden="true" />
-              <span>Find Produce (Supply)</span>
+              <span>{t("marketplace:tab_find_produce", "Find Produce (Supply)")}</span>
             </button>
 
             <button
@@ -295,7 +300,7 @@ export const MarketplacePage: React.FC = () => {
               }`}
             >
               <Store className="w-4 h-4" aria-hidden="true" />
-              <span>Find Buyers (Demand)</span>
+              <span>{t("marketplace:tab_find_buyers", "Find Buyers (Demand)")}</span>
             </button>
           </div>
         </div>
@@ -315,7 +320,7 @@ export const MarketplacePage: React.FC = () => {
                   : "bg-card text-muted-foreground border-border hover:bg-secondary hover:text-foreground"
               }`}
             >
-              All Commodities
+              {t("marketplace:all_commodities", "All Commodities")}
             </button>
             {categories.map((c) => (
               <button
@@ -343,7 +348,7 @@ export const MarketplacePage: React.FC = () => {
         {/* Search Bar & Quick Controls */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-3" aria-hidden="true" />
+            <Search className="w-4 h-4 text-muted-foreground absolute start-3.5 top-3" aria-hidden="true" />
             <input
               type="text"
               value={searchQuery}
@@ -356,7 +361,7 @@ export const MarketplacePage: React.FC = () => {
                   ? "Search produce lots (e.g. Sharbati Wheat, Alphonso Mango, Potatoes)..."
                   : "Search buyer procurement demands (e.g. Basmati Rice, Food-Grade Soy)..."
               }
-              className="w-full pl-10 pr-9 py-2 text-sm rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-2xs"
+              className="w-full ps-10 pe-9 py-2 text-sm rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-2xs"
             />
             {searchQuery && (
               <button
@@ -365,7 +370,7 @@ export const MarketplacePage: React.FC = () => {
                   setSearchQuery("");
                   setPage(1);
                 }}
-                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground p-0.5 rounded-full"
+                className="absolute end-3 top-2.5 text-muted-foreground hover:text-foreground p-0.5 rounded-full"
                 aria-label="Clear search input"
               >
                 <X className="w-3.5 h-3.5" />
@@ -594,7 +599,7 @@ export const MarketplacePage: React.FC = () => {
         {/* Active Filters Tag Bar */}
         {activeFilters.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-border text-xs">
-            <span className="text-muted-foreground font-medium text-[11px] uppercase tracking-wider mr-1">
+            <span className="text-muted-foreground font-medium text-[11px] uppercase tracking-wider me-1">
               Active Filters:
             </span>
             {activeFilters.map((f, i) => (
@@ -616,7 +621,7 @@ export const MarketplacePage: React.FC = () => {
             <button
               type="button"
               onClick={handleResetFilters}
-              className="text-xs font-semibold text-primary hover:text-primary-800 ml-2"
+              className="text-xs font-semibold text-primary hover:text-primary-800 ms-2"
             >
               Reset All Filters
             </button>
@@ -683,9 +688,12 @@ export const MarketplacePage: React.FC = () => {
       ) : activeTab === "produce" ? (
         produceListings.length === 0 ? (
           <EmptyState
-            title="No produce lots found"
-            description="No active produce listings match your specified filters or search term."
-            actionLabel="Reset Filters"
+            title={t("marketplace:empty_title", "No produce lots found")}
+            description={t(
+              "marketplace:empty_desc",
+              "No active produce listings match your specified filters or search term."
+            )}
+            actionLabel={t("common:actions.reset_filters", "Reset Filters")}
             onAction={handleResetFilters}
           />
         ) : (
@@ -707,9 +715,12 @@ export const MarketplacePage: React.FC = () => {
         )
       ) : buyerRequirements.length === 0 ? (
         <EmptyState
-          title="No procurement requirements found"
-          description="No active buyer procurement demands match your specified filters or search term."
-          actionLabel="Reset Filters"
+          title={t("marketplace:empty_requirements_title", "No procurement requirements found")}
+          description={t(
+            "marketplace:empty_requirements_desc",
+            "No active buyer procurement demands match your specified filters or search term."
+          )}
+          actionLabel={t("common:actions.reset_filters", "Reset Filters")}
           onAction={handleResetFilters}
         />
       ) : (
@@ -734,7 +745,11 @@ export const MarketplacePage: React.FC = () => {
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-6 border-t border-border text-xs text-muted-foreground">
           <span>
-            Page {page} of {totalPages} ({totalCount} total listings)
+            {t("common:pagination.showing_page", "Page {{page}} of {{totalPages}}", {
+              page,
+              totalPages,
+            })}{" "}
+            ({totalCount} total listings)
           </span>
           <div className="flex items-center gap-2">
             <button
@@ -743,8 +758,8 @@ export const MarketplacePage: React.FC = () => {
               disabled={page <= 1}
               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-secondary disabled:opacity-50 transition-colors"
             >
-              <ChevronLeft className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>Previous</span>
+              <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
+              <span>{t("common:pagination.previous", "Previous")}</span>
             </button>
             <span className="font-semibold text-foreground px-2">
               {page} / {totalPages}
@@ -755,8 +770,8 @@ export const MarketplacePage: React.FC = () => {
               disabled={page >= totalPages}
               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-secondary disabled:opacity-50 transition-colors"
             >
-              <span>Next</span>
-              <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>{t("common:pagination.next", "Next")}</span>
+              <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
             </button>
           </div>
         </div>

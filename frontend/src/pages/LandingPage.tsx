@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Sprout,
   ShieldCheck,
@@ -18,6 +19,7 @@ import { useAuth } from "../store/authStore";
 import { PageContainer } from "../components/layout/PageContainer";
 
 export const LandingPage: React.FC = () => {
+  const { t } = useTranslation(["dashboard", "common"]);
   const { status, user } = useAuth();
   const navigate = useNavigate();
   const isAuthenticated = status === "authenticated" && user !== null;
@@ -55,7 +57,8 @@ export const LandingPage: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-semibold text-foreground">
-                    Welcome back, <strong className="font-bold text-foreground">{user.email}</strong>
+                    {t("dashboard:landing.welcome_back", "Welcome back,")}{" "}
+                    <strong className="font-bold text-foreground">{user.email}</strong>
                   </span>
                   <span className="capitalize px-2.5 py-0.5 rounded-full bg-primary/15 text-primary text-xs font-bold border border-primary/25">
                     {user.role}
@@ -65,7 +68,10 @@ export const LandingPage: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Your active authenticated B2B session is live. Access your trading workspace, orders, and messages.
+                  {t(
+                    "dashboard:landing.session_desc",
+                    "Your active authenticated B2B session is live. Access your trading workspace, orders, and messages."
+                  )}
                 </p>
               </div>
             </div>
@@ -74,8 +80,12 @@ export const LandingPage: React.FC = () => {
                 to={user.role === "admin" ? "/admin/analytics" : user.role === "farmer" ? "/dashboard/farmer" : "/dashboard/buyer"}
                 className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-semibold text-xs hover:bg-primary-700 transition-colors shadow-xs"
               >
-                <span>Go to {user.role === "admin" ? "Admin Console" : "Dashboard"}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <span>
+                  {user.role === "admin"
+                    ? t("dashboard:layout.admin_badge", "Admin Console")
+                    : t("dashboard:layout.dashboard", "Dashboard")}
+                </span>
+                <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
               </Link>
             </div>
           </div>
@@ -85,16 +95,18 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-4xl mx-auto text-center mb-12 sm:mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-50 text-primary-800 text-xs font-bold uppercase tracking-wider mb-5 border border-primary-200/80 shadow-2xs">
             <ShieldCheck className="w-4 h-4 text-primary-700" />
-            Verified B2B Agricultural Trade Engine
+            {t("dashboard:landing.hero_badge", "Verified B2B Agricultural Trade Engine")}
           </div>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-foreground tracking-tight sm:leading-tight">
-            Connecting Farmers Directly with Commercial Buyers
+            {t("dashboard:landing.hero_title", "Connecting Farmers Directly with Commercial Buyers")}
           </h1>
 
           <p className="mt-5 text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            A transparent agricultural marketplace facilitating direct transactions,
-            fair price discovery, and verified commercial relationships without intermediaries.
+            {t(
+              "dashboard:landing.hero_desc",
+              "A transparent agricultural marketplace facilitating direct transactions, fair price discovery, and verified commercial relationships without intermediaries."
+            )}
           </p>
 
           {/* Action CTAs */}
@@ -105,15 +117,15 @@ export const LandingPage: React.FC = () => {
                   to={user.role === "admin" ? "/admin/analytics" : user.role === "farmer" ? "/dashboard/farmer" : "/dashboard/buyer"}
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary-700 transition-all shadow-sm hover:shadow"
                 >
-                  <span>Open Active Workspace</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>{t("dashboard:landing.open_workspace", "Open Active Workspace")}</span>
+                  <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                 </Link>
                 <Link
                   to="/marketplace"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-border bg-card text-foreground font-bold text-sm hover:bg-secondary/70 transition-colors"
                 >
                   <ShoppingBag className="w-4 h-4 text-primary" />
-                  <span>Browse Marketplace</span>
+                  <span>{t("dashboard:landing.browse_marketplace", "Browse Marketplace")}</span>
                 </Link>
               </div>
             ) : (
@@ -122,14 +134,14 @@ export const LandingPage: React.FC = () => {
                   to="/register"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary-700 transition-all shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                 >
-                  <span>Create Account</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>{t("dashboard:landing.create_account", "Create Account")}</span>
+                  <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                 </Link>
                 <Link
                   to="/login"
                   className="w-full sm:w-auto inline-flex items-center justify-center px-7 py-3 rounded-xl border border-border bg-card text-foreground font-bold text-sm hover:bg-secondary/80 transition-colors shadow-2xs focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                  Sign In
+                  {t("common:actions.sign_in", "Sign In")}
                 </Link>
               </>
             )}
@@ -141,10 +153,10 @@ export const LandingPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-3 border-b border-border/80 text-xs">
             <div className="flex items-center gap-2 text-foreground font-bold uppercase tracking-wider text-[11px]">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Live Mandi Indicative Benchmarks</span>
+              <span>{t("dashboard:landing.ticker_title", "Live Mandi Indicative Benchmarks")}</span>
             </div>
             <span className="text-[11px] text-muted-foreground">
-              Market rates aggregated across audited APMC Mandi terminals
+              {t("dashboard:landing.ticker_desc", "Market rates aggregated across audited APMC Mandi terminals")}
             </span>
           </div>
 
@@ -180,12 +192,17 @@ export const LandingPage: React.FC = () => {
         {/* Interactive B2B Role Segmenter */}
         <div className="mb-16 rounded-3xl bg-card border border-border p-6 sm:p-10 shadow-xs">
           <div className="max-w-2xl mx-auto text-center mb-8">
-            <span className="text-xs font-bold uppercase tracking-wider text-primary">Tailored Trade Architecture</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-primary">
+              {t("dashboard:landing.tailored_architecture", "Tailored Trade Architecture")}
+            </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground mt-1">
-              Engineered for Both Sides of Agricultural Commerce
+              {t("dashboard:landing.tailored_title", "Engineered for Both Sides of Agricultural Commerce")}
             </h2>
             <p className="text-xs sm:text-sm text-muted-foreground mt-2">
-              Whether you harvest 500 quintals of grain or procure wholesale commodities for food processing plants, AgriDirect provides structured contracts with zero commission deductions.
+              {t(
+                "dashboard:landing.tailored_desc",
+                "Whether you harvest 500 quintals of grain or procure wholesale commodities for food processing plants, AgriDirect provides structured contracts with zero commission deductions."
+              )}
             </p>
 
             {/* Toggle Switch */}
@@ -199,7 +216,7 @@ export const LandingPage: React.FC = () => {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                For Agricultural Producers
+                {t("dashboard:landing.tab_farmer", "For Agricultural Producers")}
               </button>
               <button
                 type="button"
@@ -210,7 +227,7 @@ export const LandingPage: React.FC = () => {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                For Commercial Buyers
+                {t("dashboard:landing.tab_buyer", "For Commercial Buyers")}
               </button>
             </div>
           </div>
@@ -222,9 +239,14 @@ export const LandingPage: React.FC = () => {
                 <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
                   1
                 </div>
-                <h3 className="text-sm font-bold text-foreground">Direct Price Sovereignty</h3>
+                <h3 className="text-sm font-bold text-foreground">
+                  {t("dashboard:landing.farmer_p1_title", "Direct Price Sovereignty")}
+                </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  List your produce with your own minimum lot sizes and target wholesale prices. Reject lowball offers with formal counter-offers.
+                  {t(
+                    "dashboard:landing.farmer_p1_desc",
+                    "List your produce with your own minimum lot sizes and target wholesale prices. Reject lowball offers with formal counter-offers."
+                  )}
                 </p>
               </div>
 
@@ -232,9 +254,14 @@ export const LandingPage: React.FC = () => {
                 <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
                   2
                 </div>
-                <h3 className="text-sm font-bold text-foreground">Guaranteed Buyer Verification</h3>
+                <h3 className="text-sm font-bold text-foreground">
+                  {t("dashboard:landing.farmer_p2_title", "Guaranteed Buyer Verification")}
+                </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Only verified institutional buyers with verified GST, PAN, and trade registrations can place binding purchase offers.
+                  {t(
+                    "dashboard:landing.farmer_p2_desc",
+                    "Only verified institutional buyers with verified GST, PAN, and trade registrations can place binding purchase offers."
+                  )}
                 </p>
               </div>
 
@@ -242,9 +269,14 @@ export const LandingPage: React.FC = () => {
                 <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
                   3
                 </div>
-                <h3 className="text-sm font-bold text-foreground">Zero Commission Fees</h3>
+                <h3 className="text-sm font-bold text-foreground">
+                  {t("dashboard:landing.farmer_p3_title", "Zero Commission Fees")}
+                </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  AgriDirect is a pure trade facilitation engine. We never deduct commission percentages from your hard-earned harvest sales.
+                  {t(
+                    "dashboard:landing.farmer_p3_desc",
+                    "AgriDirect is a pure trade facilitation engine. We never deduct commission percentages from your hard-earned harvest sales."
+                  )}
                 </p>
               </div>
             </div>
@@ -254,9 +286,14 @@ export const LandingPage: React.FC = () => {
                 <div className="w-9 h-9 rounded-xl bg-harvest-500/10 text-harvest-700 flex items-center justify-center font-bold">
                   1
                 </div>
-                <h3 className="text-sm font-bold text-foreground">Farm-Origin Traceability</h3>
+                <h3 className="text-sm font-bold text-foreground">
+                  {t("dashboard:landing.buyer_p1_title", "Farm-Origin Traceability")}
+                </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Source directly from audited farm origins with complete transparency into harvest dates, variety seeds, and verified quality grades.
+                  {t(
+                    "dashboard:landing.buyer_p1_desc",
+                    "Source directly from audited farm origins with complete transparency into harvest dates, variety seeds, and verified quality grades."
+                  )}
                 </p>
               </div>
 
@@ -264,9 +301,14 @@ export const LandingPage: React.FC = () => {
                 <div className="w-9 h-9 rounded-xl bg-harvest-500/10 text-harvest-700 flex items-center justify-center font-bold">
                   2
                 </div>
-                <h3 className="text-sm font-bold text-foreground">Target Procurement Demands</h3>
+                <h3 className="text-sm font-bold text-foreground">
+                  {t("dashboard:landing.buyer_p2_title", "Target Procurement Demands")}
+                </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Post detailed procurement requirements specifying required volumes, maximum price ceilings, delivery timelines, and receiving hubs.
+                  {t(
+                    "dashboard:landing.buyer_p2_desc",
+                    "Post detailed procurement requirements specifying required volumes, maximum price ceilings, delivery timelines, and receiving hubs."
+                  )}
                 </p>
               </div>
 
@@ -274,9 +316,14 @@ export const LandingPage: React.FC = () => {
                 <div className="w-9 h-9 rounded-xl bg-harvest-500/10 text-harvest-700 flex items-center justify-center font-bold">
                   3
                 </div>
-                <h3 className="text-sm font-bold text-foreground">Contractual Predictability</h3>
+                <h3 className="text-sm font-bold text-foreground">
+                  {t("dashboard:landing.buyer_p3_title", "Contractual Predictability")}
+                </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Binding offer acceptances generate traceable orders with recorded amendment history, delivery acknowledgments, and dispute mediation.
+                  {t(
+                    "dashboard:landing.buyer_p3_desc",
+                    "Binding offer acceptances generate traceable orders with recorded amendment history, delivery acknowledgments, and dispute mediation."
+                  )}
                 </p>
               </div>
             </div>
@@ -290,23 +337,42 @@ export const LandingPage: React.FC = () => {
             <div className="w-12 h-12 rounded-xl bg-primary-50 text-primary-700 flex items-center justify-center mb-6">
               <Tractor className="w-6 h-6" />
             </div>
-            <h2 className="text-xl font-bold text-foreground mb-3">Verified Farmers</h2>
+            <h2 className="text-xl font-bold text-foreground mb-3">
+              {t("dashboard:landing.pillar_farmer_title", "Verified Farmers")}
+            </h2>
             <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-              Direct market access for agricultural producers. Set your own prices, manage harvest listings,
-              and maintain full control over inventory deductions.
+              {t(
+                "dashboard:landing.pillar_farmer_desc",
+                "Direct market access for agricultural producers. Set your own prices, manage harvest listings, and maintain full control over inventory deductions."
+              )}
             </p>
             <ul className="text-xs text-muted-foreground space-y-2.5">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-primary-600 flex-shrink-0" />
-                <span>Verified identity & land documentation</span>
+                <span>
+                  {t(
+                    "dashboard:landing.pillar_farmer_feat_1",
+                    "Verified identity & land documentation"
+                  )}
+                </span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-primary-600 flex-shrink-0" />
-                <span>Farmer-approved inventory workflows</span>
+                <span>
+                  {t(
+                    "dashboard:landing.pillar_farmer_feat_2",
+                    "Farmer-approved inventory workflows"
+                  )}
+                </span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-primary-600 flex-shrink-0" />
-                <span>Direct structured offers from verified buyers</span>
+                <span>
+                  {t(
+                    "dashboard:landing.pillar_farmer_feat_3",
+                    "Direct structured offers from verified buyers"
+                  )}
+                </span>
               </li>
             </ul>
           </div>
@@ -316,23 +382,42 @@ export const LandingPage: React.FC = () => {
             <div className="w-12 h-12 rounded-xl bg-harvest-50 text-harvest-700 flex items-center justify-center mb-6">
               <Store className="w-6 h-6" />
             </div>
-            <h2 className="text-xl font-bold text-foreground mb-3">Commercial Buyers</h2>
+            <h2 className="text-xl font-bold text-foreground mb-3">
+              {t("dashboard:landing.pillar_buyer_title", "Commercial Buyers")}
+            </h2>
             <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-              Wholesalers, retailers, food processors, restaurants, and hotels procuring bulk produce
-              directly from verified origins.
+              {t(
+                "dashboard:landing.pillar_buyer_desc",
+                "Wholesalers, retailers, food processors, restaurants, and hotels procuring bulk produce directly from verified origins."
+              )}
             </p>
             <ul className="text-xs text-muted-foreground space-y-2.5">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-harvest-600 flex-shrink-0" />
-                <span>Post specific procurement requirements</span>
+                <span>
+                  {t(
+                    "dashboard:landing.pillar_buyer_feat_1",
+                    "Post specific procurement requirements"
+                  )}
+                </span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-harvest-600 flex-shrink-0" />
-                <span>Verified commercial entity registration</span>
+                <span>
+                  {t(
+                    "dashboard:landing.pillar_buyer_feat_2",
+                    "Verified commercial entity registration"
+                  )}
+                </span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-harvest-600 flex-shrink-0" />
-                <span>Transparent supply chain traceability</span>
+                <span>
+                  {t(
+                    "dashboard:landing.pillar_buyer_feat_3",
+                    "Transparent supply chain traceability"
+                  )}
+                </span>
               </li>
             </ul>
           </div>
@@ -342,23 +427,42 @@ export const LandingPage: React.FC = () => {
             <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center mb-6">
               <Scale className="w-6 h-6" />
             </div>
-            <h2 className="text-xl font-bold text-foreground mb-3">Structured Trade</h2>
+            <h2 className="text-xl font-bold text-foreground mb-3">
+              {t("dashboard:landing.pillar_integrity_title", "Structured Trade")}
+            </h2>
             <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-              Binding counter-offers, recorded order amendments, and mutual delivery confirmations
-              ensuring commercial predictability.
+              {t(
+                "dashboard:landing.pillar_integrity_desc",
+                "Binding counter-offers, recorded order amendments, and mutual delivery confirmations ensuring commercial predictability."
+              )}
             </p>
             <ul className="text-xs text-muted-foreground space-y-2.5">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                <span>Immutable order records & amendment logs</span>
+                <span>
+                  {t(
+                    "dashboard:landing.pillar_integrity_feat_1",
+                    "Immutable order records & amendment logs"
+                  )}
+                </span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                <span>Mutual delivery verification confirmations</span>
+                <span>
+                  {t(
+                    "dashboard:landing.pillar_integrity_feat_2",
+                    "Mutual delivery verification confirmations"
+                  )}
+                </span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                <span>Zero hidden fees or silent deductions</span>
+                <span>
+                  {t(
+                    "dashboard:landing.pillar_integrity_feat_3",
+                    "Zero hidden fees or silent deductions"
+                  )}
+                </span>
               </li>
             </ul>
           </div>
@@ -368,17 +472,22 @@ export const LandingPage: React.FC = () => {
         <div className="mb-16">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
             <div>
-              <h2 className="text-xl font-bold text-foreground">Explore High-Volume Commodity Sectors</h2>
+              <h2 className="text-xl font-bold text-foreground">
+                {t("dashboard:landing.categories_title", "Explore High-Volume Commodity Sectors")}
+              </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Bulk agricultural lots sourced directly from verified farming clusters
+                {t(
+                  "dashboard:landing.categories_desc",
+                  "Bulk agricultural lots sourced directly from verified farming clusters"
+                )}
               </p>
             </div>
             <Link
               to="/marketplace"
               className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary-800 transition-colors"
             >
-              <span>View Full Marketplace Catalog</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <span>{t("dashboard:landing.view_catalog", "View Full Marketplace Catalog")}</span>
+              <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
             </Link>
           </div>
 
@@ -419,11 +528,13 @@ export const LandingPage: React.FC = () => {
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">
-                AgriDirect Trade Facilitation
+                {t("dashboard:landing.facilitation_title", "AgriDirect Trade Facilitation")}
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5 max-w-3xl leading-relaxed">
-                Our platform provides direct agricultural trade connections and legally-binding agreement record-keeping.
-                We do not hold produce inventory, process financial transactions, or operate physical logistics.
+                {t(
+                  "dashboard:landing.facilitation_desc",
+                  "Our platform provides direct agricultural trade connections and legally-binding agreement record-keeping. We do not hold produce inventory, process financial transactions, or operate physical logistics."
+                )}
               </p>
             </div>
           </div>
@@ -432,7 +543,7 @@ export const LandingPage: React.FC = () => {
               to="/register"
               className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary-700 transition-colors whitespace-nowrap shadow-2xs"
             >
-              Get Started →
+              {t("dashboard:landing.get_started", "Get Started →")}
             </Link>
           )}
         </div>
@@ -440,3 +551,4 @@ export const LandingPage: React.FC = () => {
     </div>
   );
 };
+

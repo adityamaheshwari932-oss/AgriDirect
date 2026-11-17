@@ -10,11 +10,13 @@ import {
   Handshake,
   MessageSquare,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { listingsApi } from "../../api/listings";
 import { chatApi } from "../../api/chat";
 import type { ProduceListingDetail } from "../../types/listings";
 import { useAuth } from "../../store/authStore";
 import { OfferCreateModal } from "../offers/OfferCreateModal";
+import { formatNumber, formatDate } from "../../utils/formatters";
 
 interface ProduceDetailModalProps {
   listingId: string | null;
@@ -25,6 +27,7 @@ export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
   listingId,
   onClose,
 }) => {
+  const { t } = useTranslation(["marketplace", "common"]);
   const { user } = useAuth();
   const navigate = useNavigate();
   const [detail, setDetail] = useState<ProduceListingDetail | null>(null);
@@ -94,17 +97,20 @@ export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
         <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-secondary/40">
           <div>
             <h2 id="modal-produce-detail-title" className="text-lg font-bold text-foreground">
-              Produce Lot Specifications
+              {t("marketplace:produce_detail.title", "Produce Lot Specifications")}
             </h2>
             <p className="text-xs text-muted-foreground">
-              Official catalog listing published by verified agricultural producer
+              {t(
+                "marketplace:produce_detail.subtitle",
+                "Official catalog listing published by verified agricultural producer"
+              )}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Close dialog"
+            aria-label={t("common:actions.close", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -115,13 +121,20 @@ export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
           {isLoading ? (
             <div className="py-12 flex flex-col items-center justify-center text-muted-foreground gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-primary" aria-hidden="true" />
-              <p className="text-sm">Retrieving lot specifications and verified farm credentials...</p>
+              <p className="text-sm">
+                {t(
+                  "marketplace:produce_detail.loading",
+                  "Retrieving lot specifications and verified farm credentials..."
+                )}
+              </p>
             </div>
           ) : error ? (
             <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-3">
               <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div>
-                <p className="font-semibold">Unable to Load Details</p>
+                <p className="font-semibold">
+                  {t("marketplace:produce_detail.error_title", "Unable to Load Details")}
+                </p>
                 <p className="text-xs">{error}</p>
               </div>
             </div>
@@ -137,8 +150,8 @@ export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
                       className="w-full h-full object-cover"
                     />
                     {detail.images[activeImageIndex].is_primary && (
-                      <span className="absolute top-3 left-3 px-2 py-0.5 rounded-md bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider shadow-xs">
-                        Catalog Primary Photo
+                      <span className="absolute top-3 start-3 px-2 py-0.5 rounded-md bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider shadow-xs">
+                        {t("marketplace:catalog_primary_photo", "Catalog Primary Photo")}
                       </span>
                     )}
                   </div>
@@ -156,7 +169,7 @@ export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
                         >
                           <img
                             src={listingsApi.getImageUrl(detail.id, img.id)}
-                            alt={`Thumbnail ${idx + 1}`}
+                            alt={t("marketplace:thumbnail_n", "Thumbnail {{n}}", { n: idx + 1 })}
                             className="w-full h-full object-cover"
                           />
                         </button>
@@ -171,7 +184,7 @@ export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" aria-hidden="true" />
-                    Verified Agricultural Producer
+                    {t("marketplace:verified_producer", "Verified Agricultural Producer")}
                   </span>
 
                   {detail.category?.name && (
@@ -198,7 +211,7 @@ export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
               {detail.description && (
                 <div className="space-y-1 p-4 rounded-xl bg-secondary/30 border border-border">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Produce Lot Description & Storage
+                    {t("marketplace:produce_description_heading", "Produce Lot Description & Storage")}
                   </h4>
                   <p className="text-xs text-foreground leading-relaxed whitespace-pre-line">
                     {detail.description}
@@ -209,27 +222,27 @@ export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
               {/* Lot Specifications Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-secondary/40 border border-border text-xs">
                 <div>
-                  <span className="text-muted-foreground block text-[11px]">Available Volume</span>
+                  <span className="text-muted-foreground block text-[11px]">{t("marketplace:available_volume", "Available Volume")}</span>
                   <span className="text-base font-bold text-primary">
-                    {detail.available_quantity} {detail.unit}
+                    {formatNumber(detail.available_quantity)} {detail.unit}
                   </span>
                 </div>
 
                 <div>
-                  <span className="text-muted-foreground block text-[11px]">Wholesale Unit Price</span>
+                  <span className="text-muted-foreground block text-[11px]">{t("marketplace:wholesale_unit_price", "Wholesale Unit Price")}</span>
                   <span className="text-base font-bold text-foreground">
-                    ₹{Number(detail.price_per_unit).toLocaleString()}
+                    ₹{formatNumber(Number(detail.price_per_unit))}
                   </span>
                 </div>
 
                 <div>
-                  <span className="text-muted-foreground block text-[11px]">Dispatch Available From</span>
-                  <span className="font-semibold text-foreground">{detail.available_from}</span>
+                  <span className="text-muted-foreground block text-[11px]">{t("marketplace:dispatch_available_from", "Dispatch Available From")}</span>
+                  <span className="font-semibold text-foreground">{formatDate(detail.available_from)}</span>
                 </div>
 
                 <div>
-                  <span className="text-muted-foreground block text-[11px]">Harvest Date</span>
-                  <span className="font-semibold text-foreground">{detail.harvest_date || "—"}</span>
+                  <span className="text-muted-foreground block text-[11px]">{t("marketplace:harvest_date", "Harvest Date")}</span>
+                  <span className="font-semibold text-foreground">{detail.harvest_date ? formatDate(detail.harvest_date) : "—"}</span>
                 </div>
               </div>
 
@@ -238,19 +251,19 @@ export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
                 <div className="p-4 rounded-xl border border-border bg-card space-y-2">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                     <Tractor className="w-4 h-4 text-primary" aria-hidden="true" />
-                    <span>Originating Farm & Producer</span>
+                    <span>{t("marketplace:originating_farm_producer", "Originating Farm & Producer")}</span>
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                     <div>
-                      <span className="text-muted-foreground">Producer Name:</span>{" "}
+                      <span className="text-muted-foreground">{t("marketplace:producer_name", "Producer Name:")}</span>{" "}
                       <span className="font-semibold text-foreground">{detail.farmer.full_name}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Farm Operation:</span>{" "}
+                      <span className="text-muted-foreground">{t("marketplace:farm_operation", "Farm Operation:")}</span>{" "}
                       <span className="font-semibold text-foreground">{detail.farmer.farm_name}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Location:</span>{" "}
+                      <span className="text-muted-foreground">{t("marketplace:location", "Location:")}</span>{" "}
                       <span className="font-semibold text-foreground">
                         {detail.farmer.city}, {detail.farmer.state}
                       </span>
@@ -265,7 +278,7 @@ export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
         {/* Footer */}
         <div className="px-6 py-3 border-t border-border flex items-center justify-between bg-secondary/20">
           <span className="text-[11px] text-muted-foreground">
-            Direct B2B Agricultural Trade — No Middlemen Markups
+            {t("marketplace:direct_trade_footer", "Direct B2B Agricultural Trade — No Middlemen Markups")}
           </span>
           <div className="flex items-center gap-2">
             <button
@@ -273,7 +286,7 @@ export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors"
             >
-              Close
+              {t("common:close", "Close")}
             </button>
             {canMessageFarmer && (
               <button
@@ -287,7 +300,7 @@ export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
                 ) : (
                   <MessageSquare className="w-3.5 h-3.5 text-primary" />
                 )}
-                <span>Message Farmer</span>
+                <span>{t("marketplace:message_farmer", "Message Farmer")}</span>
               </button>
             )}
             {canMakeOffer && (
@@ -297,7 +310,7 @@ export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
                 className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5"
               >
                 <Handshake className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Make Purchase Offer</span>
+                <span>{t("marketplace:make_purchase_offer", "Make Purchase Offer")}</span>
               </button>
             )}
           </div>
