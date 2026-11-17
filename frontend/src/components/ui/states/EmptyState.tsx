@@ -1,9 +1,10 @@
 import React from "react";
 import { Inbox } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface EmptyStateProps {
   icon?: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
-  title: string;
+  title?: string;
   description?: string;
   actionLabel?: string;
   onAction?: () => void;
@@ -18,6 +19,9 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   onAction,
   className = "",
 }) => {
+  const { t } = useTranslation("common");
+  const resolvedTitle = title || t("labels.no_results");
+
   return (
     <div
       className={`flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[220px] rounded-lg border border-dashed border-border bg-card/50 ${className}`}
@@ -25,7 +29,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-muted-foreground mb-3">
         <Icon className="w-6 h-6" aria-hidden="true" />
       </div>
-      <h3 className="text-sm font-semibold text-foreground tracking-tight">{title}</h3>
+      <h3 className="text-sm font-semibold text-foreground tracking-tight">{resolvedTitle}</h3>
       {description && (
         <p className="text-xs text-muted-foreground mt-1 max-w-sm leading-relaxed">
           {description}
@@ -43,4 +47,3 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     </div>
   );
 };
-

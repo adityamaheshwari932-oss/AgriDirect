@@ -1,0 +1,21 @@
+{
+  "title": "પ્લેટફોર્મ-બહાર સીધી બેંક પતાવટ",
+  "subtitle": "બેંક ટ્રાન્સફર (RTGS/NEFT/UPI) માટે દ્વિપક્ષીય રેકોર્ડ-કીપિંગ. AgriDirect ભંડોળને પોતાની પાસે કે એસ્ક્રોમાં રાખતું નથી.",
+  "record_payment_button": "સીધી બેંક ચુકવણી નોંધો",
+  "history_button": "ચુકવણી ઇતિહાસ",
+  "method_label": "ટ્રાન્સફર માધ્યમ",
+  "method_bank_transfer": "બેંક ટ્રાન્સફર (NEFT / RTGS / IMPS)",
+  "method_upi": "યુપીઆઈ (UPI)",
+  "method_cash": "કેશ ઓન ડિલિવરી / રોકડ",
+  "method_other": "અન્ય પદ્ધતિ",
+  "amount_label": "ચૂકવેલ રકમ (₹)",
+  "reference_number_label": "ટ્રાન્ઝેક્શન UTR / સંદર્ભ નંબર",
+  "reference_placeholder": "દા.ત. UTR1234567890",
+  "payment_date_label": "ચુકવણી તારીખ",
+  "proof_file_label": "ચુકવણી રસીદ પુરાવો",
+  "summary_total_contract": "કુલ કરાર રકમ:",
+  "summary_recorded": "ખરીદદાર દ્વારા નોંધાયેલ:",
+  "summary_confirmed": "ઉત્પાદક દ્વારા પુષ્ટિ થયેલ:",
+  "summary_outstanding": "બાકી રકમ:",
+  "toast_payment_recorded": "ચુકવણી રેકોર્ડ સબમિટ થયો."
+}

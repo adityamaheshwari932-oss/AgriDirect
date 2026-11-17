@@ -1,0 +1,15 @@
+{
+  "title": "Payment & Contract Disputes",
+  "subtitle": "File a dispute complaint if a recorded payment transfer does not reflect in your account",
+  "file_complaint_button": "Dispute Payment Record",
+  "modal_title": "File Formal Payment Dispute",
+  "reason_label": "Dispute Justification & Reason",
+  "reason_placeholder": "State clearly why this transfer is disputed (e.g. UTR not found in bank statement, amount mismatch)...",
+  "evidence_label": "Upload Bank Statement Evidence (PDF, PNG)",
+  "submit_complaint": "Submit Dispute for Platform Moderation",
+  "status_open": "Dispute Open",
+  "status_under_review": "Under Review by Admin",
+  "status_resolved": "Dispute Resolved",
+  "status_dismissed": "Complaint Dismissed",
+  "admin_resolution_notes": "Administrator Mediation Notes"
+}

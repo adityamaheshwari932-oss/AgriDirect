@@ -1,0 +1,20 @@
+{
+  "arrange_title": "Schedule Lot Dispatch & Logistics",
+  "method_label": "Logistics & Transport Method",
+  "method_direct": "Seller Arranged Direct Road Transport",
+  "method_pickup": "Buyer Receiving Truck Pickup",
+  "method_third_party": "Third-Party Logistics / Carrier",
+  "destination_label": "Receiving Dock Destination Address",
+  "date_label": "Expected Dispatch / Arrival Date",
+  "notes_label": "Handling & Dock Receiving Instructions",
+  "confirm_dispatch": "Confirm Dispatch Logistics",
+  "mark_completed_button": "Mark Delivery Completed",
+  "mark_completed_desc": "Certify that goods have arrived at the designated receiving dock.",
+  "acknowledge_receipt_button": "Acknowledge Delivery Receipt",
+  "acknowledge_receipt_desc": "Counterparty bilateral acknowledgement of lot delivery at dock.",
+  "awaiting_ack": "Awaiting counterparty delivery receipt acknowledgement.",
+  "status_not_arranged": "Pending Dispatch",
+  "status_arranged": "Arranged & In Transit",
+  "status_completion_marked": "Completion Marked by Seller",
+  "status_completed": "Delivered & Bilaterally Confirmed"
+}

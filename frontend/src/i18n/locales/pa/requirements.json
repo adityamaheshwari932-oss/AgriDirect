@@ -1,0 +1,17 @@
+{
+  "title": "ਖਰੀਦਦਾਰ ਖਰੀਦ ਲੋੜਾਂ",
+  "subtitle": "ਪ੍ਰਮਾਣਿਤ ਵਪਾਰਕ ਖਰੀਦਦਾਰਾਂ ਦੁਆਰਾ ਪੋਸਟ ਕੀਤੇ ਸਿੱਧੇ ਖਰੀਦ ਵੇਰਵੇ",
+  "post_new": "ਨਵੀਂ ਖਰੀਦ ਲੋੜ ਪੋਸਟ ਕਰੋ",
+  "edit_requirement": "ਲੋੜ ਸੋਧੋ",
+  "delete_requirement": "ਲੋੜ ਮਿਟਾਓ",
+  "target_quantity": "ਲੋੜੀਂਦੀ ਮਾਤਰਾ",
+  "max_price": "ਪ੍ਰਤੀ ਇਕਾਈ ਨਿਸ਼ਾਨਾ ਕੀਮਤ",
+  "procurement_deadline": "ਖਰੀਦ ਦੀ ਆਖ਼ਰੀ ਮਿਤੀ",
+  "delivery_location": "ਡਿਲੀਵਰੀ ਟਿਕਾਣਾ",
+  "quality_grade": "ਗੁਣਵੱਤਾ ਗ੍ਰੇਡ ਦੀ ਲੋੜ",
+  "fulfillment_approval": "ਸਪਲਾਈ ਪ੍ਰਵਾਨਗੀ",
+  "empty_title": "ਕੋਈ ਖਰੀਦਦਾਰ ਲੋੜਾਂ ਨਹੀਂ ਮਿਲੀਆਂ",
+  "empty_desc": "ਇਸ ਵੇਲੇ ਤੁਹਾਡੇ ਫਿਲਟਰਾਂ ਨਾਲ ਮੇਲ ਖਾਂਦੀਆਂ ਕੋਈ ਵੀ ਖਰੀਦ ਲੋੜਾਂ ਨਹੀਂ ਹਨ।",
+  "card_deadline": "ਨਿਸ਼ਾਨਾ ਡਿਲੀਵਰੀ: {{date}}",
+  "card_make_offer": "ਇਸ ਲੋੜ ਲਈ ਸਪਲਾਈ ਕਰੋ"
+}

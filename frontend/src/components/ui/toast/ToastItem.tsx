@@ -1,5 +1,6 @@
 import React from "react";
 import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export type ToastVariant = "success" | "error" | "warning" | "info";
 
@@ -62,6 +63,7 @@ const VARIANT_CONFIG: Record<
 };
 
 export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss }) => {
+  const { t } = useTranslation(["common"]);
   const config = VARIANT_CONFIG[toast.variant] || VARIANT_CONFIG.info;
   const Icon = config.icon;
 
@@ -87,7 +89,7 @@ export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss }) => {
         type="button"
         onClick={() => onDismiss(toast.id)}
         className="shrink-0 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
-        aria-label="Dismiss notification"
+        aria-label={t("common:actions.dismiss", "Dismiss notification")}
       >
         <X className="w-3.5 h-3.5" aria-hidden="true" />
       </button>

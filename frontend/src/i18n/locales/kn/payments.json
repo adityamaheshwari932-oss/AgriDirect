@@ -1,0 +1,21 @@
+{
+  "title": "ಪ್ಲಾಟ್‌ಫಾರ್ಮ್-ಹೊರಗಿನ ನೇರ ಬ್ಯಾಂಕ್ ಇತ್ಯರ್ಥ",
+  "subtitle": "ಬ್ಯಾಂಕ್ ವರ್ಗಾವಣೆಗಳಿಗಾಗಿ (RTGS/NEFT/UPI) ದ್ವಿಪಕ್ಷೀಯ ದಾಖಲೆ ನಿರ್ವಹಣೆ. AgriDirect ನಿಧಿಗಳನ್ನು ತನ್ನಲ್ಲಿ ಇರಿಸಿಕೊಳ್ಳುವುದಿಲ್ಲ ಅಥವಾ ಎಸ್ಕ್ರೋ ಮಾಡುವುದಿಲ್ಲ.",
+  "record_payment_button": "ನೇರ ಬ್ಯಾಂಕ್ ಪಾವತಿಯನ್ನು ದಾಖಲಿಸಿ",
+  "history_button": "ಪಾವತಿ ಇತಿಹಾಸ",
+  "method_label": "ವರ್ಗಾವಣೆ ವಿಧಾನ",
+  "method_bank_transfer": "ಬ್ಯಾಂಕ್ ವರ್ಗಾವಣೆ (NEFT / RTGS / IMPS)",
+  "method_upi": "UPI ವಿಧಾನ",
+  "method_cash": "ಕ್ಯಾಶ್ ಆನ್ ಡೆಲಿವರಿ / ನಗದು",
+  "method_other": "ಇತರ ವಿಧಾನ",
+  "amount_label": "ಇತ್ಯರ್ಥಗೊಂಡ ಮೊತ್ತ (₹)",
+  "reference_number_label": "ವಹಿವಾಟು UTR / ಸಂಖ್ಯೆ",
+  "reference_placeholder": "ಉದಾ. UTR1234567890",
+  "payment_date_label": "ವರ್ಗಾವಣೆ ದಿನಾಂಕ",
+  "proof_file_label": "ಪಾವತಿ ರಶೀದಿ ಪುರಾವೆ",
+  "summary_total_contract": "ಒಟ್ಟು ಒಪ್ಪಂದ ಮೊತ್ತ:",
+  "summary_recorded": "ಖರೀದಿದಾರರು ದಾಖಲಿಸಿದ ಮೊತ್ತ:",
+  "summary_confirmed": "ರೈತರು ದೃಢೀಕರಿಸಿದ ಮೊತ್ತ:",
+  "summary_outstanding": "ಉಳಿದ ಬಾಕಿ:",
+  "toast_payment_recorded": "ಪಾವತಿ ದಾಖಲೆ ಸಲ್ಲಿಸಲಾಗಿದೆ."
+}

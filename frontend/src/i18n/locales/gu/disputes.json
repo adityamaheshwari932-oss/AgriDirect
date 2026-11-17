@@ -1,0 +1,15 @@
+{
+  "title": "ચૂકવણી અને કરાર વિવાદો",
+  "subtitle": "જો નોંધાયેલ ચુકવણી ટ્રાન્સફર તમારા ખાતામાં જમા ન થાય તો વિવાદ ફરિયાદ નોંધાવો",
+  "file_complaint_button": "ચુકવણી વિવાદ નોંધાવો",
+  "modal_title": "ચુકવણી વિવાદ ફરિયાદ દાખલ કરો",
+  "reason_label": "વિવાદનું કારણ",
+  "reason_placeholder": "સ્પષ્ટપણે જણાવો કે શા માટે આ ચુકવણી વિવાદિત છે...",
+  "evidence_label": "બેંક સ્ટેટમેન્ટ પુરાવો અપલોડ કરો (PDF, PNG)",
+  "submit_complaint": "સમીક્ષા માટે સબમિટ કરો",
+  "status_open": "વિવાદ ખુલ્લો",
+  "status_under_review": "સમીક્ષા હેઠળ",
+  "status_resolved": "વિવાદ ઉકેલાયો",
+  "status_dismissed": "ફરિયાદ રદ",
+  "admin_resolution_notes": "એડમિન મધ્યસ્થતા નોંધો"
+}

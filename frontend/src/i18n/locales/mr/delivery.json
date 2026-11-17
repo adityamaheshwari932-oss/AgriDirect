@@ -1,0 +1,20 @@
+{
+  "arrange_title": "लॉट पाठवणी व लॉजिस्टिक्स नियोजन करा",
+  "method_label": "वाहतूक आणि रसद पद्धत",
+  "method_direct": "विक्रेत्याद्वारे थेट रस्ते वाहतूक",
+  "method_pickup": "खरेदीदाराचा ट्रक पिकअप",
+  "method_third_party": "तृतीय-पक्ष वाहतूकदार",
+  "destination_label": "डिलिव्हरी डॉक पत्ता",
+  "date_label": "अपेक्षित पाठवणी / आगमन दिनांक",
+  "notes_label": "हाताळणी आणि सूचना",
+  "confirm_dispatch": "वाहतूक नियोजन निश्चित करा",
+  "mark_completed_button": "डिलिव्हरी पूर्ण चिन्हांकित करा",
+  "mark_completed_desc": "माल डॉकवर पोहोचल्याचे प्रमाणित करा.",
+  "acknowledge_receipt_button": "डिलिव्हरी पावती स्वीकारा",
+  "acknowledge_receipt_desc": "माल मिळाल्याची परस्पर पावती.",
+  "awaiting_ack": "समोरील पक्षाच्या पावतीच्या प्रतीक्षेत आहे.",
+  "status_not_arranged": "पाठवणे प्रलंबित",
+  "status_arranged": "नियोजित आणि वाहतुकीत",
+  "status_completion_marked": "विक्रेत्याने पूर्ण चिन्हांकित केले",
+  "status_completed": "वितरित आणि दोन्ही बाजूंकडून पुष्टी"
+}

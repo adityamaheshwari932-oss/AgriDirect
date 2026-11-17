@@ -11,8 +11,8 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
-    strictPort: true, // Fail if port 5173 is occupied rather than silently switching
+    port: 5174,
+    strictPort: true, // Fail if port 5174 is occupied rather than silently switching
     proxy: {
       "/api/v1": {
         target: "http://127.0.0.1:8000",

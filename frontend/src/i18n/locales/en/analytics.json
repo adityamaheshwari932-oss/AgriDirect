@@ -1,0 +1,11 @@
+{
+  "title": "Market Analytics & Price Trends",
+  "subtitle": "Descriptive market statistics derived from completed bilateral trade contracts",
+  "total_volume_label": "30-Day Traded Volume",
+  "avg_price_label": "Weighted Average Price",
+  "active_lots_label": "Active Mandi Lots",
+  "top_commodities": "Top Traded Commodities",
+  "privacy_suppressed": "Data Suppressed for Commercial Anonymity",
+  "privacy_suppressed_desc": "In compliance with platform k-anonymity privacy safeguards, price aggregation is suppressed when fewer than 3 independent market participants have traded in this category.",
+  "no_forecasting_notice": "AgriDirect provides strictly descriptive historical trade data. The platform does not generate speculative machine learning price predictions."
+}

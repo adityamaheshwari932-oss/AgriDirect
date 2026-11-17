@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Status and role presentation helpers, labels, style mappings,
  * and profile completion percentage calculators.
  */
@@ -10,6 +10,8 @@ export interface VerificationPresentation {
   description: string;
   badgeClass: string;
   dotClass: string;
+  translationKey: string;
+  descriptionKey: string;
 }
 
 export const VERIFICATION_STATUS_CONFIG: Record<
@@ -22,6 +24,8 @@ export const VERIFICATION_STATUS_CONFIG: Record<
       "Identity and operating credentials not yet submitted. Verification is required before publishing produce listings or entering trade negotiations.",
     badgeClass: "bg-amber-50 text-amber-800 border-amber-300",
     dotClass: "bg-amber-500",
+    translationKey: "common:status.unverified",
+    descriptionKey: "verification:status_unverified_desc",
   },
   pending: {
     label: "Pending Review",
@@ -29,6 +33,8 @@ export const VERIFICATION_STATUS_CONFIG: Record<
       "Verification documents are under administrative review. Direct marketplace trade communications will be unlocked once approved.",
     badgeClass: "bg-blue-50 text-blue-800 border-blue-300",
     dotClass: "bg-blue-500",
+    translationKey: "common:status.pending_review",
+    descriptionKey: "verification:status_pending_desc",
   },
   verified: {
     label: "Verified",
@@ -36,6 +42,8 @@ export const VERIFICATION_STATUS_CONFIG: Record<
       "Account credentials have been verified by AgriDirect administrators. Full access to marketplace listings, negotiations, and trade agreements is active.",
     badgeClass: "bg-emerald-50 text-emerald-800 border-emerald-300",
     dotClass: "bg-emerald-500",
+    translationKey: "common:status.verified",
+    descriptionKey: "verification:status_verified_desc",
   },
   rejected: {
     label: "Rejected",
@@ -43,6 +51,8 @@ export const VERIFICATION_STATUS_CONFIG: Record<
       "Previous verification submission could not be approved. Please review administrator notes on the verification page and resubmit updated documents.",
     badgeClass: "bg-red-50 text-red-800 border-red-300",
     dotClass: "bg-red-500",
+    translationKey: "common:status.rejected",
+    descriptionKey: "verification:status_rejected_desc",
   },
 };
 
@@ -227,8 +237,39 @@ export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   other: "Other Supporting Evidence",
 };
 
-export function getDocumentTypeLabel(type: string): string {
+export function getDocumentTypeLabel(type: string, t?: (key: string) => string): string {
+  if (t) {
+    const translated = t(`verification:doc_types.${type}`);
+    if (translated && !translated.startsWith("verification:doc_types.")) {
+      return translated;
+    }
+  }
   return DOCUMENT_TYPE_LABELS[type] || type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export function getLocalizedVerificationStatus(
+  status: VerificationStatus,
+  t?: (key: string) => string
+): VerificationPresentation {
+  const config = VERIFICATION_STATUS_CONFIG[status] || VERIFICATION_STATUS_CONFIG.unverified;
+  if (!t) return config;
+  return {
+    ...config,
+    label: t(config.translationKey) || config.label,
+    description: t(config.descriptionKey) || config.description,
+  };
+}
+
+export function getLocalizedAccountStatus(
+  status: AccountStatus,
+  t?: (key: string) => string
+): { label: string; badgeClass: string } {
+  const config = ACCOUNT_STATUS_CONFIG[status] || ACCOUNT_STATUS_CONFIG.active;
+  if (!t) return config;
+  return {
+    ...config,
+    label: t(`common:status.${status}`) || config.label,
+  };
 }
 
 export function formatFileSize(bytes: number): string {

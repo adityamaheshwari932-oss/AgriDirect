@@ -1,0 +1,22 @@
+{
+  "portal_title": "ਪਲੇਟਫਾਰਮ ਸ਼ਾਸਨ ਅਤੇ ਪਾਲਣਾ ਪੋਰਟਲ",
+  "portal_subtitle": "ਪ੍ਰਬੰਧਕੀ ਨਿਯੰਤਰਣ, ਤਸਦੀਕ ਕਤਾਰਾਂ, ਸਮੱਗਰੀ ਨਿਯੰਤਰਣ ਅਤੇ ਆਡਿਟ ਲੇਖੇ",
+  "users_title": "ਉਪਭੋਗਤਾ ਖਾਤਾ ਪ੍ਰਬੰਧਨ",
+  "users_subtitle": "ਤਸਦੀਕ ਅਤੇ ਵਪਾਰਕ ਪਾਬੰਦੀਆਂ ਦਾ ਪ੍ਰਬੰਧਨ ਕਰੋ",
+  "content_title": "ਸਮੱਗਰੀ ਅਤੇ ਲੈਣ-ਦੇਣ ਪ੍ਰਬੰਧਨ",
+  "content_subtitle": "ਫਲੈਗ ਕੀਤੀਆਂ ਸੂਚੀਆਂ ਅਤੇ ਸ਼ਿਕਾਇਤਾਂ ਦੀ ਸਮੀਖਿਆ ਕਰੋ",
+  "verification_title": "ਤਸਦੀਕ ਕਤਾਰ",
+  "verification_subtitle": "ਦਸਤਾਵੇਜ਼ ਮਨਜ਼ੂਰ ਜਾਂ ਰੱਦ ਕਰੋ",
+  "audit_title": "ਆਡਿਟ ਲੌਗ",
+  "audit_subtitle": "ਸਾਰੀਆਂ ਪ੍ਰਸ਼ਾਸਕੀ ਕਾਰਵਾਈਆਂ ਦਾ ਰਿਕਾਰਡ",
+  "analytics_title": "ਪਲੇਟਫਾਰਮ ਵਿਸ਼ਲੇਸ਼ਣ",
+  "analytics_subtitle": "ਵਪਾਰਕ ਗਤੀਵਿਧੀਆਂ ਅਤੇ ਸਪਲਾਈ ਦਰ",
+  "btn_approve": "ਮਨਜ਼ੂਰ ਕਰੋ",
+  "btn_reject": "ਰੱਦ ਕਰੋ",
+  "btn_suspend": "ਖਾਤਾ ਮੁਅੱਤਲ ਕਰੋ",
+  "btn_reinstate": "ਖਾਤਾ ਬਹਾਲ ਕਰੋ",
+  "btn_dismiss": "ਸ਼ਿਕਾਇਤ ਖ਼ਾਰਜ ਕਰੋ",
+  "btn_resolve": "ਹੱਲ ਵਜੋਂ ਚਿੰਨ੍ਹਿਤ ਕਰੋ",
+  "reason_placeholder": "ਪ੍ਰਸ਼ਾਸਕੀ ਕਾਰਨ ਦਰਜ ਕਰੋ...",
+  "audit_immutable_notice": "ਆਡਿਟ ਲੌਗ ਮਿਟਾਏ ਜਾਂ ਸੋਧੇ ਨਹੀਂ ਜਾ ਸਕਦੇ।"
+}

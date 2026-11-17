@@ -1,0 +1,21 @@
+{
+  "title": "ప్లాట్‌ఫారమ్ వెలుపలి ప్రత్యక్ష బ్యాంక్ సెటిల్‌మెంట్",
+  "subtitle": "బ్యాంక్ బదిలీల (RTGS/NEFT/UPI) కొరకు ద్వైపాక్షిక రికార్డు నిర్వహణ. AgriDirect నిధులను నిల్వ చేయదు లేదా ఎస్క్రో చేయదు.",
+  "record_payment_button": "ప్రత్యక్ష బ్యాంక్ చెల్లింపును నమోదు చేయండి",
+  "history_button": "చెల్లింపుల చరిత్ర",
+  "method_label": "బదిలీ ఛానెల్",
+  "method_bank_transfer": "బ్యాంక్ బదిలీ (NEFT / RTGS / IMPS)",
+  "method_upi": "UPI విధానం",
+  "method_cash": "క్యాష్ ఆన్ డెలివరీ / నగదు",
+  "method_other": "ఇతర పద్ధతి",
+  "amount_label": "చెల్లించిన మొత్తం (₹)",
+  "reference_number_label": "లావాదేవీ UTR / రిఫరెన్స్ సంఖ్య",
+  "reference_placeholder": "ఉదా. UTR1234567890",
+  "payment_date_label": "బదిలీ తేదీ",
+  "proof_file_label": "రసీదు రుజువు",
+  "summary_total_contract": "ఒప్పందం మొత్తం:",
+  "summary_recorded": "కొనుగోలుదారు నమోదు చేసినది:",
+  "summary_confirmed": "రైతు నిర్ధారించినది:",
+  "summary_outstanding": "మిగిలిన బకాయి:",
+  "toast_payment_recorded": "చెల్లింపు రికార్డు సమర్పించబడింది."
+}

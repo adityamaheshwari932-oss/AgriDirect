@@ -1,0 +1,21 @@
+{
+  "title": "ਪਲੇਟਫਾਰਮ ਤੋਂ ਬਾਹਰ ਸਿੱਧਾ ਬੈਂਕ ਨਿਪਟਾਰਾ",
+  "subtitle": "ਬੈਂਕ ਟ੍ਰਾਂਸਫਰਾਂ (RTGS/NEFT/UPI) ਲਈ ਦੁਵੱਲਾ ਰਿਕਾਰਡ ਰੱਖਣਾ। AgriDirect ਫੰਡਾਂ ਨੂੰ ਆਪਣੇ ਕੋਲ ਜਾਂ ਐਸਕਰੋ ਵਿੱਚ ਨਹੀਂ ਰੱਖਦਾ।",
+  "record_payment_button": "ਸਿੱਧਾ ਬੈਂਕ ਭੁਗਤਾਨ ਦਰਜ ਕਰੋ",
+  "history_button": "ਭੁਗਤਾਨ ਇਤਿਹਾਸ",
+  "method_label": "ਸਿੱਧਾ ਬੈਂਕ ਚੈਨਲ",
+  "method_bank_transfer": "ਸਿੱਧਾ ਬੈਂਕ ਟ੍ਰਾਂਸਫਰ (NEFT / RTGS / IMPS)",
+  "method_upi": "UPI ਇੰਟਰਫੇਸ",
+  "method_cash": "ਕੈਸ਼ ਆਨ ਡਿਲੀਵਰੀ / ਨਕਦ",
+  "method_other": "ਹੋਰ ਤਰੀਕਾ",
+  "amount_label": "ਨਿਪਟਾਈ ਰਕਮ (₹)",
+  "reference_number_label": "ਲੈਣ-ਦੇਣ UTR / ਰੈਫਰੈਂਸ ਨੰਬਰ",
+  "reference_placeholder": "ਉਦਾ. UTR1234567890",
+  "payment_date_label": "ਟ੍ਰਾਂਸਫਰ ਮਿਤੀ",
+  "proof_file_label": "ਬੈਂਕ ਰਸੀਦ ਦਾ ਸਬੂਤ",
+  "summary_total_contract": "ਤੈਅ ਇਕਰਾਰਨਾਮਾ ਕੁੱਲ:",
+  "summary_recorded": "ਖਰੀਦਦਾਰ ਵੱਲੋਂ ਦਰਜ:",
+  "summary_confirmed": "ਕਿਸਾਨ ਵੱਲੋਂ ਪੁਸ਼ਟੀ ਕੀਤੀ:",
+  "summary_outstanding": "ਬਾਕੀ ਰਕਮ:",
+  "toast_payment_recorded": "ਭੁਗਤਾਨ ਰਿਕਾਰਡ ਜਮ੍ਹਾ ਹੋਇਆ।"
+}

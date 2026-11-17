@@ -1,0 +1,19 @@
+{
+  "title": "Account & Commercial Profile",
+  "subtitle": "Manage your entity particulars, location specifications, and trade biography",
+  "tab_overview": "Profile Overview",
+  "tab_edit": "Edit Details",
+  "save_profile": "Save Profile Changes",
+  "saving": "Saving...",
+  "completion_title": "Profile Completion",
+  "completion_tip": "Complete your operating profile to build credibility with trading counterparties.",
+  "missing_fields": "Missing Information",
+  "personal_info": "Personal & Identity Particulars",
+  "farm_details": "Farm & Agricultural Operations",
+  "business_details": "Commercial & Enterprise Specifications",
+  "location_details": "Location & Receiving Dock",
+  "bio_label": "Operating Biography & Capabilities",
+  "bio_placeholder": "Describe your produce varieties, typical harvest schedule, quality standards, or procurement volumes...",
+  "toast_updated_title": "Profile Updated",
+  "toast_updated_message": "Your profile information has been saved successfully."
+}

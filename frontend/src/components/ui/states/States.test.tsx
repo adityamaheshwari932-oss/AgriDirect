@@ -49,6 +49,11 @@ describe("Consistent Application State Components", () => {
 
       expect(handleAction).toHaveBeenCalledTimes(1);
     });
+
+    it("renders default localized title when no title is provided", () => {
+      render(<EmptyState />);
+      expect(screen.getByText("No results found")).toBeInTheDocument();
+    });
   });
 
   describe("ErrorState", () => {

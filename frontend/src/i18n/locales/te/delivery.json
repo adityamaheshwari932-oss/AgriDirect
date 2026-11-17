@@ -1,0 +1,20 @@
+{
+  "arrange_title": "లాట్ పంపకం & లాజిస్టిక్స్ షెడ్యూల్ చేయండి",
+  "method_label": "రవాణా మరియు లాజిస్టిక్స్ పద్ధతి",
+  "method_direct": "విక్రేత ప్రత్యక్ష రోడ్డు రవాణా",
+  "method_pickup": "కొనుగోలుదారు ట్రక్ పికప్",
+  "method_third_party": "థర్డ్ పార్టీ లాజిస్టిక్స్",
+  "destination_label": "డెలివరీ డాక్ చిరునామా",
+  "date_label": "ఆశించిన పంపకం / చేరిక తేదీ",
+  "notes_label": "నిర్వహణ సూచనలు",
+  "confirm_dispatch": "రవాణాను నిర్ధారించండి",
+  "mark_completed_button": "డెలివరీ పూర్తయినట్లు గుర్తించండి",
+  "mark_completed_desc": "సరుకులు చేరినట్లు ధృవీకరించండి.",
+  "acknowledge_receipt_button": "డెలివరీ రసీదును ఆమోదించండి",
+  "acknowledge_receipt_desc": "సరుకు అందినట్లు ద్వైపాక్షిక రసీదు.",
+  "awaiting_ack": "భాగస్వామి ఆమోదం కోసం వేచి ఉంది.",
+  "status_not_arranged": "పంపకం పెండింగ్‌లో ఉంది",
+  "status_arranged": "ఏర్పాటు చేయబడింది & రవాణాలో",
+  "status_completion_marked": "విక్రేత ద్వారా పూర్తయినట్లు గుర్తించబడింది",
+  "status_completed": "డెలివరీ చేయబడింది & నిర్ధారించబడింది"
+}
