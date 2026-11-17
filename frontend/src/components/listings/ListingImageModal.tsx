@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   ImageIcon,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { listingsApi } from "../../api/listings";
 import { ApiError } from "../../api/errors";
 import type { ListingImage, ProduceListingDetail } from "../../types/listings";
@@ -30,6 +31,7 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
   onClose,
   onImagesUpdated,
 }) => {
+  const { t } = useTranslation(["dashboard", "errors", "common"]);
   const [images, setImages] = useState<ListingImage[]>(listing.images || []);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isPrimary, setIsPrimary] = useState(images.length === 0);
@@ -55,7 +57,9 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
     const file = files[0];
 
     if (file.size > MAX_IMAGE_SIZE_BYTES) {
-      setError(`Image size exceeds the 5 MB limit (${(file.size / (1024 * 1024)).toFixed(2)} MB).`);
+      setError(
+        t("errors:image_size_exceeded", `Image size exceeds the 5 MB limit (${(file.size / (1024 * 1024)).toFixed(2)} MB).`)
+      );
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
@@ -66,7 +70,9 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
     const hasValidMime = ALLOWED_MIME_TYPES.includes(file.type);
 
     if (!hasValidExt || !hasValidMime) {
-      setError("Unsupported image format. Please select a JPEG, PNG, or WebP photo.");
+      setError(
+        t("errors:unsupported_image_format", "Unsupported image format. Please select a JPEG, PNG, or WebP photo.")
+      );
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
@@ -78,12 +84,12 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile) {
-      setError("Please select an image file to upload.");
+      setError(t("errors:select_image_first", "Please select an image file to upload."));
       return;
     }
 
     if (images.length >= 5) {
-      setError("Maximum limit of 5 images per listing has been reached.");
+      setError(t("errors:image_limit_reached", "Maximum limit of 5 images per listing has been reached."));
       return;
     }
 
@@ -106,12 +112,12 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
 
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
-      setSuccess("Image uploaded successfully.");
+      setSuccess(t("dashboard:image_uploaded_success", "Image uploaded successfully."));
     } catch (err: unknown) {
       if (err instanceof ApiError) {
-        setError(err.message || "Failed to upload image. Please try again.");
+        setError(err.message || t("errors:upload_failed", "Failed to upload image. Please try again."));
       } else {
-        setError("An unexpected network error occurred while uploading the photo.");
+        setError(t("errors:network_error_upload", "An unexpected network error occurred while uploading the photo."));
       }
     } finally {
       setIsUploading(false);
@@ -119,7 +125,7 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
   };
 
   const handleDeleteImage = async (imageId: string) => {
-    if (!window.confirm("Are you sure you want to delete this photo from the listing?")) {
+    if (!window.confirm(t("dashboard:confirm_delete_photo", "Are you sure you want to delete this photo from the listing?"))) {
       return;
     }
 
@@ -132,12 +138,12 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
       const updated = images.filter((img) => img.id !== imageId);
       setImages(updated);
       onImagesUpdated(updated);
-      setSuccess("Image deleted successfully.");
+      setSuccess(t("dashboard:image_deleted_success", "Image deleted successfully."));
     } catch (err: unknown) {
       if (err instanceof ApiError) {
-        setError(err.message || "Failed to delete image.");
+        setError(err.message || t("errors:delete_failed", "Failed to delete image."));
       } else {
-        setError("Network error while deleting image.");
+        setError(t("errors:network_error", "Network error while deleting image."));
       }
     } finally {
       setActionLoadingId(null);
@@ -157,12 +163,12 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
       }));
       setImages(updated);
       onImagesUpdated(updated);
-      setSuccess("Primary catalog thumbnail updated.");
+      setSuccess(t("dashboard:primary_thumbnail_updated", "Primary catalog thumbnail updated."));
     } catch (err: unknown) {
       if (err instanceof ApiError) {
-        setError(err.message || "Failed to designate primary image.");
+        setError(err.message || t("errors:primary_failed", "Failed to designate primary image."));
       } else {
-        setError("Network error while updating primary image.");
+        setError(t("errors:network_error", "Network error while updating primary image."));
       }
     } finally {
       setActionLoadingId(null);
@@ -181,17 +187,17 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
         <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-secondary/40">
           <div>
             <h2 id="modal-image-title" className="text-lg font-bold text-foreground">
-              Manage Produce Photos
+              {t("dashboard:manage_photos_title", "Manage Produce Photos")}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {listing.title} • {images.length}/5 photos attached
+              {listing.title} • {t("dashboard:photos_attached_count", "{{count}}/5 photos attached", { count: images.length })}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Close dialog"
+            aria-label={t("common:close_dialog", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -221,14 +227,14 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
           {/* Current Gallery */}
           <div>
             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-              Attached Produce Photos ({images.length}/5)
+              {t("dashboard:attached_photos_heading", "Attached Produce Photos ({{count}}/5)", { count: images.length })}
             </h3>
             {images.length === 0 ? (
               <div className="p-8 rounded-xl border border-dashed border-border text-center bg-secondary/20">
                 <ImageIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" aria-hidden="true" />
-                <p className="text-sm font-medium text-foreground">No photos attached yet</p>
+                <p className="text-sm font-medium text-foreground">{t("dashboard:no_photos_yet", "No photos attached yet")}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Upload crisp photos of your harvested produce lot to attract commercial buyers.
+                  {t("dashboard:upload_photos_hint", "Upload crisp photos of your harvested produce lot to attract commercial buyers.")}
                 </p>
               </div>
             ) : (
@@ -243,7 +249,7 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
                     <div className="aspect-video w-full rounded-lg overflow-hidden bg-black/5 flex items-center justify-center relative">
                       <img
                         src={listingsApi.getImageUrl(listing.id, img.id)}
-                        alt={`Produce lot photo ${img.display_order + 1}`}
+                        alt={t("dashboard:produce_photo_alt", "Produce lot photo {{n}}", { n: img.display_order + 1 })}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           // Fallback placeholder if streaming fails
@@ -251,9 +257,9 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
                         }}
                       />
                       {img.is_primary && (
-                        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-primary text-primary-foreground text-[10px] font-bold tracking-wider uppercase shadow-xs flex items-center gap-1">
+                        <span className="absolute top-2 start-2 px-2 py-0.5 rounded-md bg-primary text-primary-foreground text-[10px] font-bold tracking-wider uppercase shadow-xs flex items-center gap-1">
                           <Star className="w-3 h-3 fill-current" aria-hidden="true" />
-                          Primary Thumbnail
+                          {t("dashboard:primary_thumbnail", "Primary Thumbnail")}
                         </span>
                       )}
                     </div>
@@ -267,11 +273,11 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
                           className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary-800 font-semibold transition-colors disabled:opacity-50"
                         >
                           <Star className="w-3.5 h-3.5" aria-hidden="true" />
-                          <span>Make Primary</span>
+                          <span>{t("dashboard:make_primary", "Make Primary")}</span>
                         </button>
                       ) : (
                         <span className="text-[11px] text-muted-foreground font-medium">
-                          Catalog Display Photo
+                          {t("dashboard:catalog_display_photo", "Catalog Display Photo")}
                         </span>
                       )}
 
@@ -280,7 +286,7 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
                         onClick={() => handleDeleteImage(img.id)}
                         disabled={actionLoadingId === img.id}
                         className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
-                        aria-label="Delete photo"
+                        aria-label={t("dashboard:delete_photo", "Delete photo")}
                       >
                         {actionLoadingId === img.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
@@ -298,7 +304,7 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
           {/* Upload New Image Form */}
           {images.length < 5 && (
             <form onSubmit={handleUpload} className="p-4 rounded-xl border border-border bg-secondary/30 space-y-3">
-              <h3 className="text-xs font-semibold text-foreground">Upload New Photo</h3>
+              <h3 className="text-xs font-semibold text-foreground">{t("dashboard:upload_new_photo", "Upload New Photo")}</h3>
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 <input
@@ -307,7 +313,7 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
                   accept=".jpg,.jpeg,.png,.webp"
                   onChange={handleFileChange}
                   disabled={isUploading}
-                  className="block w-full text-xs text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary-700 cursor-pointer disabled:opacity-50"
+                  className="block w-full text-xs text-muted-foreground file:me-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary-700 cursor-pointer disabled:opacity-50"
                 />
 
                 <label className="inline-flex items-center gap-1.5 text-xs text-foreground cursor-pointer flex-shrink-0">
@@ -317,13 +323,13 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
                     onChange={(e) => setIsPrimary(e.target.checked)}
                     className="rounded text-primary focus:ring-primary"
                   />
-                  <span>Set as Primary</span>
+                  <span>{t("dashboard:set_as_primary", "Set as Primary")}</span>
                 </label>
               </div>
 
               <div className="flex items-center justify-between pt-1">
                 <span className="text-[11px] text-muted-foreground">
-                  Max 5 MB • JPEG, PNG, or WebP
+                  {t("dashboard:image_spec_hint", "Max 5 MB • JPEG, PNG, or WebP")}
                 </span>
 
                 <button
@@ -334,12 +340,12 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
                   {isUploading ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
-                      <span>Uploading...</span>
+                      <span>{t("common:uploading", "Uploading...")}</span>
                     </>
                   ) : (
                     <>
                       <Upload className="w-3.5 h-3.5" aria-hidden="true" />
-                      <span>Upload Photo</span>
+                      <span>{t("dashboard:upload_photo_btn", "Upload Photo")}</span>
                     </>
                   )}
                 </button>
@@ -355,7 +361,7 @@ export const ListingImageModal: React.FC<ListingImageModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors"
           >
-            Close
+            {t("common:close", "Close")}
           </button>
         </div>
       </div>

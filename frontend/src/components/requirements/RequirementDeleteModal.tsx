@@ -1,5 +1,6 @@
 import React from "react";
 import { AlertTriangle, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { BuyerRequirementDetail } from "../../types";
 
 interface RequirementDeleteModalProps {
@@ -17,6 +18,8 @@ export const RequirementDeleteModal: React.FC<RequirementDeleteModalProps> = ({
   onClose,
   onConfirm,
 }) => {
+  const { t } = useTranslation(["requirements", "common"]);
+
   if (!isOpen || !requirement) return null;
 
   return (
@@ -33,17 +36,20 @@ export const RequirementDeleteModal: React.FC<RequirementDeleteModalProps> = ({
 
         <div className="text-center space-y-1">
           <h2 id="modal-delete-req-title" className="text-lg font-bold text-foreground">
-            Remove Procurement Requirement
+            {t("requirements:delete_requirement_title", "Remove Procurement Requirement")}
           </h2>
           <p className="text-xs text-muted-foreground">
-            Are you sure you want to remove &quot;{requirement.title}&quot;?
+            {t("requirements:delete_requirement_confirm", "Are you sure you want to remove \"{{title}}\"?", {
+              title: requirement.title,
+            })}
           </p>
         </div>
 
         <p className="text-xs text-muted-foreground bg-secondary/50 p-3 rounded-xl border border-border leading-relaxed">
-          The requirement will be soft-deleted and transitioned to closed status. It will no longer appear
-          on the public demand discovery board. Existing negotiation records or confirmed orders referencing
-          this procurement demand will remain intact.
+          {t(
+            "requirements:delete_requirement_desc",
+            "The requirement will be soft-deleted and transitioned to closed status. It will no longer appear on the public demand discovery board. Existing negotiation records or confirmed orders referencing this procurement demand will remain intact."
+          )}
         </p>
 
         <div className="flex items-center justify-end gap-3 pt-2">
@@ -53,7 +59,7 @@ export const RequirementDeleteModal: React.FC<RequirementDeleteModalProps> = ({
             disabled={isDeleting}
             className="px-4 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors"
           >
-            Cancel
+            {t("common:cancel", "Cancel")}
           </button>
           <button
             type="button"
@@ -64,10 +70,10 @@ export const RequirementDeleteModal: React.FC<RequirementDeleteModalProps> = ({
             {isDeleting ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
-                <span>Removing...</span>
+                <span>{t("requirements:removing_requirement", "Removing...")}</span>
               </>
             ) : (
-              <span>Confirm Removal</span>
+              <span>{t("requirements:confirm_removal", "Confirm Removal")}</span>
             )}
           </button>
         </div>

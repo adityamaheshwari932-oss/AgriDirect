@@ -1,6 +1,7 @@
-﻿import React from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { CheckCircle2, ArrowRight, UserCheck, AlertCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { User } from "../../types";
 import { calculateProfileCompletion } from "../../utils/status";
 
@@ -13,6 +14,7 @@ export const ProfileCompletionCard: React.FC<ProfileCompletionCardProps> = ({
   user,
   className = "",
 }) => {
+  const { t } = useTranslation(["profile", "common"]);
   const completion = calculateProfileCompletion(user);
   const isComplete = completion.percentage === 100;
 
@@ -36,17 +38,20 @@ export const ProfileCompletionCard: React.FC<ProfileCompletionCardProps> = ({
               id="profile-completion-heading"
               className="text-base font-bold text-foreground"
             >
-              Profile Completion
+              {t("profile:completion_title", "Profile Completion")}
             </h2>
             <p className="text-xs text-muted-foreground">
               {isComplete
-                ? "Your commercial profile is comprehensive"
-                : `${completion.completedCount} of ${completion.totalCount} attributes recorded`}
+                ? t("profile:completion_comprehensive", "Your commercial profile is comprehensive")
+                : t("profile:completion_progress", "{{completed}} of {{total}} attributes recorded", {
+                    completed: completion.completedCount,
+                    total: completion.totalCount,
+                  })}
             </p>
           </div>
         </div>
 
-        <div className="text-right">
+        <div className="text-end">
           <span className="text-lg font-bold text-primary">
             {completion.percentage}%
           </span>
@@ -60,7 +65,7 @@ export const ProfileCompletionCard: React.FC<ProfileCompletionCardProps> = ({
         aria-valuenow={completion.percentage}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label="Profile completion progress"
+        aria-label={t("profile:completion_aria", "Profile completion progress")}
       >
         <div
           className="bg-primary h-2 rounded-full transition-all duration-500 ease-out"
@@ -73,7 +78,7 @@ export const ProfileCompletionCard: React.FC<ProfileCompletionCardProps> = ({
         <div className="text-xs text-muted-foreground space-y-2">
           <div className="flex items-center gap-1.5 font-medium text-foreground">
             <AlertCircle className="w-3.5 h-3.5 text-harvest-600" aria-hidden="true" />
-            <span>Recommended additions:</span>
+            <span>{t("profile:recommended_additions", "Recommended additions:")}</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {completion.missingFields.slice(0, 4).map((field) => (
@@ -86,14 +91,14 @@ export const ProfileCompletionCard: React.FC<ProfileCompletionCardProps> = ({
             ))}
             {completion.missingFields.length > 4 && (
               <span className="text-[11px] text-muted-foreground self-center">
-                +{completion.missingFields.length - 4} more
+                +{completion.missingFields.length - 4} {t("common:more", "more")}
               </span>
             )}
           </div>
         </div>
       ) : (
         <p className="text-xs text-emerald-700 bg-emerald-50 p-2.5 rounded-lg border border-emerald-200">
-          All recommended profile attributes have been completed.
+          {t("profile:all_completed", "All recommended profile attributes have been completed.")}
         </p>
       )}
 
@@ -103,8 +108,12 @@ export const ProfileCompletionCard: React.FC<ProfileCompletionCardProps> = ({
           to="/dashboard/profile"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary-800 transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded"
         >
-          <span>{isComplete ? "Manage Profile" : "Complete Missing Attributes"}</span>
-          <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+          <span>
+            {isComplete
+              ? t("profile:manage_profile", "Manage Profile")
+              : t("profile:complete_attributes", "Complete Missing Attributes")}
+          </span>
+          <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
         </Link>
       </div>
     </div>

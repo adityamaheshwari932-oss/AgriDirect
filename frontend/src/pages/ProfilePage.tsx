@@ -1,5 +1,6 @@
 import React, { useContext, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   User as UserIcon,
   Tractor,
@@ -23,6 +24,7 @@ import {
   BUYER_TYPE_LABELS,
   VERIFICATION_STATUS_CONFIG,
 } from "../utils/status";
+import { formatDate } from "../utils/formatters";
 import type {
   BuyerProfileUpdate,
   FarmerProfileUpdate,
@@ -39,6 +41,7 @@ const BUYER_TYPE_OPTIONS = [
 ];
 
 export const ProfilePage: React.FC = () => {
+  const { t } = useTranslation(["profile", "validation", "common"]);
   const { user, setUser } = useAuth();
   const toast = useContext(ToastContext);
   const [isEditing, setIsEditing] = useState(false);
@@ -162,7 +165,7 @@ export const ProfilePage: React.FC = () => {
     const errors: Record<string, string> = {};
 
     if (!farmerForm.full_name?.trim()) {
-      errors.full_name = "Full name is required.";
+      errors.full_name = t("validation:full_name_required", "Full name is required.");
     }
 
     if (
@@ -170,7 +173,7 @@ export const ProfilePage: React.FC = () => {
       farmerForm.farm_size_acres !== null &&
       Number(farmerForm.farm_size_acres) <= 0
     ) {
-      errors.farm_size_acres = "Farm size must be a positive number of acres.";
+      errors.farm_size_acres = t("validation:acres_positive", "Farm size must be a positive number of acres.");
     }
 
     setFieldErrors(errors);
@@ -181,11 +184,11 @@ export const ProfilePage: React.FC = () => {
     const errors: Record<string, string> = {};
 
     if (!buyerForm.contact_person_name?.trim()) {
-      errors.contact_person_name = "Contact person name is required.";
+      errors.contact_person_name = t("validation:contact_person_required", "Contact person name is required.");
     }
 
     if (!buyerForm.business_type?.trim()) {
-      errors.business_type = "Please select a commercial entity type.";
+      errors.business_type = t("validation:business_type_required", "Please select a commercial entity type.");
     }
 
     setFieldErrors(errors);
@@ -219,31 +222,31 @@ export const ProfilePage: React.FC = () => {
 
       const updatedUser = await usersApi.updateFarmerProfile(payload);
       setUser(updatedUser);
-      setSuccessMessage("Farm profile updated successfully.");
-      toast?.success("Farm profile updated successfully.", "Profile Updated");
+      setSuccessMessage(t("profile:toast_farmer_updated", "Farm profile updated successfully."));
+      toast?.success(t("profile:toast_farmer_updated", "Farm profile updated successfully."), "Profile Updated");
       setIsEditing(false);
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         if (err.isConflict) {
-          const msg = err.message || "This phone number is already registered to another account.";
+          const msg = err.message || t("validation:phone_conflict", "This phone number is already registered to another account.");
           setFormError(msg);
-          setFieldErrors({ phone_number: "Phone number already in use" });
+          setFieldErrors({ phone_number: t("validation:phone_in_use", "Phone number already in use") });
           toast?.error(msg, "Conflict Error");
         } else if (err.isValidationError) {
-          setFormError("Validation error: please check highlighted fields.");
-          toast?.warning("Validation error: please check highlighted fields.", "Validation Failed");
+          setFormError(t("validation:error_highlighted", "Validation error: please check highlighted fields."));
+          toast?.warning(t("validation:error_highlighted", "Validation error: please check highlighted fields."), "Validation Failed");
           const backendErrors: Record<string, string> = {};
           for (const [key, msgs] of Object.entries(err.fieldErrors)) {
             backendErrors[key] = msgs[0];
           }
           setFieldErrors(backendErrors);
         } else if (err.isNetworkError) {
-          setFormError("Network error: Unable to reach AgriDirect servers. Please check your connection.");
+          setFormError(t("common:errors.network", "Network error: Unable to reach AgriDirect servers. Please check your connection."));
         } else {
-          setFormError(err.message || "Failed to update profile. Please try again.");
+          setFormError(err.message || t("profile:error_update", "Failed to update profile. Please try again."));
         }
       } else {
-        setFormError("An unexpected error occurred while saving your profile.");
+        setFormError(t("common:errors.unexpected", "An unexpected error occurred while saving your profile."));
       }
     } finally {
       setIsSaving(false);
@@ -279,31 +282,31 @@ export const ProfilePage: React.FC = () => {
 
       const updatedUser = await usersApi.updateBuyerProfile(payload);
       setUser(updatedUser);
-      setSuccessMessage("Commercial business profile updated successfully.");
-      toast?.success("Commercial business profile updated successfully.", "Profile Updated");
+      setSuccessMessage(t("profile:toast_buyer_updated", "Commercial business profile updated successfully."));
+      toast?.success(t("profile:toast_buyer_updated", "Commercial business profile updated successfully."), "Profile Updated");
       setIsEditing(false);
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         if (err.isConflict) {
-          const msg = err.message || "This phone number is already registered to another account.";
+          const msg = err.message || t("validation:phone_conflict", "This phone number is already registered to another account.");
           setFormError(msg);
-          setFieldErrors({ phone_number: "Phone number already in use" });
+          setFieldErrors({ phone_number: t("validation:phone_in_use", "Phone number already in use") });
           toast?.error(msg, "Conflict Error");
         } else if (err.isValidationError) {
-          setFormError("Validation error: please check highlighted fields.");
-          toast?.warning("Validation error: please check highlighted fields.", "Validation Failed");
+          setFormError(t("validation:error_highlighted", "Validation error: please check highlighted fields."));
+          toast?.warning(t("validation:error_highlighted", "Validation error: please check highlighted fields."), "Validation Failed");
           const backendErrors: Record<string, string> = {};
           for (const [key, msgs] of Object.entries(err.fieldErrors)) {
             backendErrors[key] = msgs[0];
           }
           setFieldErrors(backendErrors);
         } else if (err.isNetworkError) {
-          setFormError("Network error: Unable to reach AgriDirect servers. Please check your connection.");
+          setFormError(t("common:errors.network", "Network error: Unable to reach AgriDirect servers. Please check your connection."));
         } else {
-          setFormError(err.message || "Failed to update profile. Please try again.");
+          setFormError(err.message || t("profile:error_update", "Failed to update profile. Please try again."));
         }
       } else {
-        setFormError("An unexpected error occurred while saving your profile.");
+        setFormError(t("common:errors.unexpected", "An unexpected error occurred while saving your profile."));
       }
     } finally {
       setIsSaving(false);
@@ -322,10 +325,10 @@ export const ProfilePage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            Account & Commercial Profile
+            {t("profile:title", "Account & Commercial Profile")}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Manage your personal credentials, contact details, and commercial trading information
+            {t("profile:subtitle", "Manage your personal credentials, contact details, and commercial trading information")}
           </p>
         </div>
 
@@ -339,7 +342,7 @@ export const ProfilePage: React.FC = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground font-semibold text-xs sm:text-sm hover:bg-primary-700 transition-colors shadow-xs focus:outline-none focus:ring-2 focus:ring-primary self-start sm:self-auto"
           >
             <Edit3 className="w-4 h-4" aria-hidden="true" />
-            <span>Edit Profile</span>
+            <span>{t("profile:edit_profile", "Edit Profile")}</span>
           </button>
         ) : (
           <button
@@ -352,7 +355,7 @@ export const ProfilePage: React.FC = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card text-foreground font-medium text-xs sm:text-sm hover:bg-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-primary self-start sm:self-auto"
           >
             <X className="w-4 h-4" aria-hidden="true" />
-            <span>Cancel</span>
+            <span>{t("common:actions.cancel", "Cancel")}</span>
           </button>
         )}
       </div>
@@ -384,10 +387,10 @@ export const ProfilePage: React.FC = () => {
         <div className="p-4 sm:p-5 bg-secondary/30 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
             <Lock className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-            <span>Server-Managed Security Attributes</span>
+            <span>{t("profile:server_attributes", "Server-Managed Security Attributes")}</span>
           </div>
           <span className="text-xs text-muted-foreground font-normal">
-            Controlled by system authorization
+            {t("profile:server_attributes_desc", "Controlled by system authorization")}
           </span>
         </div>
 
@@ -395,7 +398,7 @@ export const ProfilePage: React.FC = () => {
           {/* User ID */}
           <div className="space-y-1">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block">
-              Account ID
+              {t("profile:account_id", "Account ID")}
             </span>
             <div className="font-mono text-xs text-foreground truncate" title={user.id}>
               {user.id}
@@ -405,7 +408,7 @@ export const ProfilePage: React.FC = () => {
           {/* Email Address */}
           <div className="space-y-1">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block">
-              Registered Email
+              {t("profile:registered_email", "Registered Email")}
             </span>
             <div className="font-medium text-foreground truncate" title={user.email}>
               {user.email}
@@ -415,7 +418,7 @@ export const ProfilePage: React.FC = () => {
           {/* Verification Status */}
           <div className="space-y-1">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block">
-              Verification Status
+              {t("profile:verification_status", "Verification Status")}
             </span>
             <div>
               <span
@@ -428,7 +431,7 @@ export const ProfilePage: React.FC = () => {
                 to="/dashboard/verification"
                 className="text-[11px] font-semibold text-primary hover:text-primary-800 hover:underline block mt-1"
               >
-                View Verification Evidence →
+                {t("profile:view_verification_evidence", "View Verification Evidence →")}
               </Link>
             </div>
           </div>
@@ -436,7 +439,7 @@ export const ProfilePage: React.FC = () => {
           {/* Account Status */}
           <div className="space-y-1">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block">
-              Account Status
+              {t("profile:account_status", "Account Status")}
             </span>
             <div>
               <span
@@ -450,18 +453,18 @@ export const ProfilePage: React.FC = () => {
           {/* Role */}
           <div className="space-y-1">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block">
-              Authorized Role
+              {t("profile:authorized_role", "Authorized Role")}
             </span>
             <div className="font-semibold capitalize text-foreground flex items-center gap-1.5">
               {isFarmer ? (
                 <>
                   <Tractor className="w-4 h-4 text-primary" aria-hidden="true" />
-                  <span>Agricultural Producer</span>
+                  <span>{t("profile:agricultural_producer", "Agricultural Producer")}</span>
                 </>
               ) : (
                 <>
                   <Store className="w-4 h-4 text-harvest-600" aria-hidden="true" />
-                  <span>Commercial Bulk Buyer</span>
+                  <span>{t("profile:commercial_bulk_buyer", "Commercial Bulk Buyer")}</span>
                 </>
               )}
             </div>
@@ -470,11 +473,11 @@ export const ProfilePage: React.FC = () => {
           {/* Member Since */}
           <div className="space-y-1">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block">
-              Member Since
+              {t("profile:member_since", "Member Since")}
             </span>
             <div className="text-foreground text-xs flex items-center gap-1">
               <Calendar className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
-              <span>{new Date(user.created_at).toLocaleDateString()}</span>
+              <span>{formatDate(user.created_at)}</span>
             </div>
           </div>
 
@@ -484,7 +487,7 @@ export const ProfilePage: React.FC = () => {
               to="/dashboard/verification"
               className="text-xs font-semibold text-primary hover:text-primary-800 transition-colors inline-flex items-center gap-1"
             >
-              <span>View Verification Requirements</span>
+              <span>{t("profile:view_verification_requirements", "View Verification Requirements")}</span>
               <ShieldCheck className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
             </Link>
           </div>
@@ -937,7 +940,7 @@ export const ProfilePage: React.FC = () => {
                   disabled={isSaving}
                   className="px-4 py-2 rounded-lg border border-border bg-card text-foreground font-medium text-xs sm:text-sm hover:bg-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                  Cancel
+                  {t("common:actions.cancel", "Cancel")}
                 </button>
                 <button
                   type="submit"
@@ -947,12 +950,12 @@ export const ProfilePage: React.FC = () => {
                   {isSaving ? (
                     <>
                       <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                      <span>Saving Changes...</span>
+                      <span>{t("profile:saving_changes", "Saving Changes...")}</span>
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4" aria-hidden="true" />
-                      <span>Save Changes</span>
+                      <span>{t("profile:save_changes", "Save Changes")}</span>
                     </>
                   )}
                 </button>
@@ -1181,7 +1184,7 @@ export const ProfilePage: React.FC = () => {
                   disabled={isSaving}
                   className="px-4 py-2 rounded-lg border border-border bg-card text-foreground font-medium text-xs sm:text-sm hover:bg-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                  Cancel
+                  {t("common:actions.cancel", "Cancel")}
                 </button>
                 <button
                   type="submit"
@@ -1191,12 +1194,12 @@ export const ProfilePage: React.FC = () => {
                   {isSaving ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Saving Changes...</span>
+                      <span>{t("profile:saving_changes", "Saving Changes...")}</span>
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4" aria-hidden="true" />
-                      <span>Save Changes</span>
+                      <span>{t("profile:save_changes", "Save Changes")}</span>
                     </>
                   )}
                 </button>

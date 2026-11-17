@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Tractor,
   MapPin,
@@ -24,6 +25,7 @@ import { ProfileCompletionCard } from "../components/ui/ProfileCompletionCard";
 import { ACCOUNT_STATUS_CONFIG } from "../utils/status";
 
 export const FarmerDashboardPage: React.FC = () => {
+  const { t } = useTranslation(["dashboard", "profile", "common"]);
   const { user } = useAuth();
 
   if (!user || user.role !== "farmer") {
@@ -40,18 +42,18 @@ export const FarmerDashboardPage: React.FC = () => {
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Welcome Banner */}
       <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-primary-900 via-primary-800 to-primary-950 text-white shadow-md relative overflow-hidden">
-        <div className="absolute right-0 bottom-0 translate-x-8 translate-y-8 opacity-10 pointer-events-none">
+        <div className="absolute end-0 bottom-0 rtl:-translate-x-8 translate-x-8 translate-y-8 opacity-10 pointer-events-none">
           <Tractor className="w-64 h-64" aria-hidden="true" />
         </div>
 
         <div className="relative z-10 max-w-3xl space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-800/80 border border-primary-700/60 text-xs font-medium text-emerald-200">
             <Sparkles className="w-3.5 h-3.5 text-harvest-400" aria-hidden="true" />
-            <span>Agricultural Producer Portal</span>
+            <span>{t("dashboard:farmer.portal_title", "Agricultural Producer Portal")}</span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            Welcome back, {farmerName}
+            {t("dashboard:farmer.welcome_back", "Welcome back, {{name}}", { name: farmerName })}
           </h1>
 
           <p className="text-sm sm:text-base text-primary-100/90 leading-relaxed max-w-2xl">
@@ -65,7 +67,7 @@ export const FarmerDashboardPage: React.FC = () => {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-primary-900 font-semibold text-xs sm:text-sm hover:bg-primary-50 transition-colors shadow-xs"
             >
               <UserIcon className="w-4 h-4 text-primary-700" aria-hidden="true" />
-              <span>Update Farm Profile</span>
+              <span>{t("profile:overview.edit_profile", "Update Farm Profile")}</span>
             </Link>
 
             <Link
@@ -73,7 +75,7 @@ export const FarmerDashboardPage: React.FC = () => {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-800/80 border border-primary-700 text-white font-medium text-xs sm:text-sm hover:bg-primary-700 transition-colors"
             >
               <ShieldCheck className="w-4 h-4 text-harvest-400" aria-hidden="true" />
-              <span>Verification Status</span>
+              <span>{t("common:nav.verification", "Verification Status")}</span>
             </Link>
           </div>
         </div>
@@ -94,14 +96,19 @@ export const FarmerDashboardPage: React.FC = () => {
           <div>
             <h2 className="text-base font-bold text-foreground flex items-center gap-2">
               <Sprout className="w-4 h-4 text-primary" />
-              Farm Trade Operations Navigation
+              {t("dashboard:farmer.ops_nav_title", "Farm Trade Operations Navigation")}
             </h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Quick access to your active harvest listings, buyer negotiations, and fulfillment agreements
+              {t(
+                "dashboard:farmer.ops_nav_desc",
+                "Quick access to your active harvest listings, buyer negotiations, and fulfillment agreements"
+              )}
             </p>
           </div>
           <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-secondary text-foreground border border-border self-start sm:self-auto">
-            {isVerified ? "Direct Trading Active" : "Verification Pending"}
+            {isVerified
+              ? t("dashboard:farmer.status_verified", "Direct Trading Active")
+              : t("dashboard:farmer.status_unverified", "Verification Pending")}
           </span>
         </div>
 
@@ -114,7 +121,7 @@ export const FarmerDashboardPage: React.FC = () => {
               <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-700 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                 <Layers className="w-4 h-4" />
               </div>
-              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 rtl:rotate-180 transition-all" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
@@ -134,7 +141,7 @@ export const FarmerDashboardPage: React.FC = () => {
               <div className="w-9 h-9 rounded-lg bg-amber-500/10 text-amber-700 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors">
                 <Handshake className="w-4 h-4" />
               </div>
-              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-amber-600 group-hover:translate-x-0.5 transition-all" />
+              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-amber-600 group-hover:translate-x-0.5 rtl:rotate-180 transition-all" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground group-hover:text-amber-700 transition-colors">
@@ -154,7 +161,7 @@ export const FarmerDashboardPage: React.FC = () => {
               <div className="w-9 h-9 rounded-lg bg-blue-500/10 text-blue-700 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
                 <ClipboardList className="w-4 h-4" />
               </div>
-              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-blue-600 group-hover:translate-x-0.5 rtl:rotate-180 transition-all" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground group-hover:text-blue-700 transition-colors">
@@ -174,7 +181,7 @@ export const FarmerDashboardPage: React.FC = () => {
               <div className="w-9 h-9 rounded-lg bg-purple-500/10 text-purple-700 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-colors">
                 <MessageSquare className="w-4 h-4" />
               </div>
-              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all" />
+              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-purple-600 group-hover:translate-x-0.5 rtl:rotate-180 transition-all" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground group-hover:text-purple-700 transition-colors">
@@ -267,7 +274,7 @@ export const FarmerDashboardPage: React.FC = () => {
             className="text-xs font-semibold text-primary hover:text-primary-800 transition-colors inline-flex items-center gap-1"
           >
             <span>Edit Profile</span>
-            <ArrowRight className="w-3 h-3" aria-hidden="true" />
+            <ArrowRight className="w-3 h-3 rtl:rotate-180" aria-hidden="true" />
           </Link>
         </div>
 
@@ -451,7 +458,7 @@ export const FarmerDashboardPage: React.FC = () => {
               className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline pt-1"
             >
               <span>Manage Profile</span>
-              <ArrowRight className="w-3 h-3" aria-hidden="true" />
+              <ArrowRight className="w-3 h-3 rtl:rotate-180" aria-hidden="true" />
             </Link>
           </div>
 
@@ -468,7 +475,7 @@ export const FarmerDashboardPage: React.FC = () => {
               className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline pt-1"
             >
               <span>Verification Portal</span>
-              <ArrowRight className="w-3 h-3" aria-hidden="true" />
+              <ArrowRight className="w-3 h-3 rtl:rotate-180" aria-hidden="true" />
             </Link>
           </div>
 

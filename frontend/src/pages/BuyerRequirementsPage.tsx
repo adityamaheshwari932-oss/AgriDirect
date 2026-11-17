@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Plus,
   Edit,
@@ -23,6 +24,7 @@ import { EmptyState, ErrorState, LoadingState } from "../components/ui/states";
 import { RequirementCreateEditModal } from "../components/requirements/RequirementCreateEditModal";
 import { RequirementDeleteModal } from "../components/requirements/RequirementDeleteModal";
 import { FulfillmentApprovalModal } from "../components/requirements/FulfillmentApprovalModal";
+import { formatNumber } from "../utils/formatters";
 import type {
   BuyerRequirementDetail,
   ProduceCategory,
@@ -30,6 +32,7 @@ import type {
 } from "../types";
 
 export const BuyerRequirementsPage: React.FC = () => {
+  const { t } = useTranslation(["requirements", "marketplace", "common"]);
   const { user } = useAuth();
   const toast = useContext(ToastContext);
 
@@ -177,35 +180,35 @@ export const BuyerRequirementsPage: React.FC = () => {
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            Active Demand
+            {t("requirements:status_active", "Active Demand")}
           </span>
         );
       case "draft":
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-            Draft
+            {t("requirements:status_draft", "Draft")}
           </span>
         );
       case "closed":
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-secondary text-muted-foreground border border-border">
             <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
-            Closed
+            {t("requirements:status_closed", "Closed")}
           </span>
         );
       case "partially_fulfilled":
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-800 border border-blue-200">
             <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-            Partially Fulfilled
+            {t("requirements:status_partially_fulfilled", "Partially Fulfilled")}
           </span>
         );
       case "fulfilled":
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-800 border border-purple-200">
             <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-            Fulfilled
+            {t("requirements:status_fulfilled", "Fulfilled")}
           </span>
         );
       default:
@@ -223,10 +226,13 @@ export const BuyerRequirementsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            Buyer Requirements Board
+            {t("requirements:board_title", "Buyer Requirements Board")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Manage your commercial procurement specifications, delivery deadlines, and open demand
+            {t(
+              "requirements:board_subtitle",
+              "Manage your commercial procurement specifications, delivery deadlines, and open demand"
+            )}
           </p>
         </div>
 
@@ -247,7 +253,7 @@ export const BuyerRequirementsPage: React.FC = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary-700 text-sm font-semibold transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" aria-hidden="true" />
-            <span>Post Requirement</span>
+            <span>{t("requirements:post_requirement", "Post Requirement")}</span>
           </button>
         </div>
       </div>
@@ -261,9 +267,14 @@ export const BuyerRequirementsPage: React.FC = () => {
           <div className="flex items-start gap-3">
             <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
             <div className="space-y-1">
-              <p className="font-semibold text-sm">Commercial Buyer Verification Incomplete</p>
+              <p className="font-semibold text-sm">
+                {t("requirements:verification_incomplete", "Commercial Buyer Verification Incomplete")}
+              </p>
               <p className="text-xs text-amber-800 leading-relaxed">
-                Your business credentials must be verified before active procurement demands can be discovered by agricultural producers on the marketplace. You can save drafts in the meantime.
+                {t(
+                  "requirements:verification_warning",
+                  "Your business credentials must be verified before active procurement demands can be discovered by agricultural producers on the marketplace. You can save drafts in the meantime."
+                )}
               </p>
             </div>
           </div>
@@ -271,7 +282,7 @@ export const BuyerRequirementsPage: React.FC = () => {
             to="/dashboard/verification"
             className="px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-950 font-semibold text-xs whitespace-nowrap transition-colors"
           >
-            Complete Verification →
+            {t("requirements:complete_verification", "Complete Verification →")}
           </Link>
         </div>
       )}
@@ -332,13 +343,13 @@ export const BuyerRequirementsPage: React.FC = () => {
 
         {/* Search input */}
         <div className="relative max-w-xs w-full">
-          <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" aria-hidden="true" />
+          <Search className="w-4 h-4 text-muted-foreground absolute start-3 top-2.5" aria-hidden="true" />
           <input
             type="text"
             placeholder="Search produce name or dock..."
             value={searchFilter}
             onChange={(e) => setSearchFilter(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full ps-9 pe-3 py-1.5 text-xs rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
       </div>
@@ -363,7 +374,7 @@ export const BuyerRequirementsPage: React.FC = () => {
         <div className="space-y-4">
           {/* Table for Desktop */}
           <div className="hidden md:block rounded-xl border border-border overflow-hidden bg-card shadow-xs">
-            <table className="w-full text-left border-collapse text-xs">
+            <table className="w-full text-start border-collapse text-xs">
               <thead className="bg-secondary/40 text-muted-foreground font-semibold uppercase tracking-wider border-b border-border">
                 <tr>
                   <th className="py-3 px-4">Procurement Demand</th>
@@ -372,7 +383,7 @@ export const BuyerRequirementsPage: React.FC = () => {
                   <th className="py-3 px-4">Destination Receiving Dock</th>
                   <th className="py-3 px-4">Deadline Date</th>
                   <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
+                  <th className="py-3 px-4 text-end">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -401,7 +412,7 @@ export const BuyerRequirementsPage: React.FC = () => {
                       </div>
                       {req.target_price_per_unit && (
                         <div className="text-muted-foreground text-[11px]">
-                          Target: ₹{Number(req.target_price_per_unit).toLocaleString()} / {req.unit}
+                          Target: ₹{formatNumber(req.target_price_per_unit)} / {req.unit}
                         </div>
                       )}
                     </td>
@@ -417,7 +428,7 @@ export const BuyerRequirementsPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-3 px-4">{getStatusBadge(req.status)}</td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3 px-4 text-end">
                       <div className="flex items-center justify-end gap-1">
                         <button
                           type="button"
@@ -550,7 +561,7 @@ export const BuyerRequirementsPage: React.FC = () => {
                   disabled={page <= 1}
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-secondary disabled:opacity-50 transition-colors"
                 >
-                  <ChevronLeft className="w-3.5 h-3.5" aria-hidden="true" />
+                  <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
                   <span>Previous</span>
                 </button>
                 <span className="font-semibold text-foreground">
@@ -563,7 +574,7 @@ export const BuyerRequirementsPage: React.FC = () => {
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-secondary disabled:opacity-50 transition-colors"
                 >
                   <span>Next</span>
-                  <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
+                  <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
                 </button>
               </div>
             </div>

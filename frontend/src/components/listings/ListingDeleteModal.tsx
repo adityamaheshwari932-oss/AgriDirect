@@ -1,5 +1,6 @@
 import React from "react";
 import { AlertTriangle, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { ProduceListingDetail } from "../../types/listings";
 
 interface ListingDeleteModalProps {
@@ -17,6 +18,8 @@ export const ListingDeleteModal: React.FC<ListingDeleteModalProps> = ({
   onClose,
   onConfirm,
 }) => {
+  const { t } = useTranslation(["dashboard", "common"]);
+
   if (!isOpen || !listing) return null;
 
   return (
@@ -33,17 +36,20 @@ export const ListingDeleteModal: React.FC<ListingDeleteModalProps> = ({
 
         <div className="text-center space-y-1">
           <h2 id="modal-delete-title" className="text-lg font-bold text-foreground">
-            Remove Produce Listing
+            {t("dashboard:remove_listing_title", "Remove Produce Listing")}
           </h2>
           <p className="text-xs text-muted-foreground">
-            Are you sure you want to remove &quot;{listing.title}&quot;?
+            {t("dashboard:remove_listing_confirm", "Are you sure you want to remove \"{{title}}\"?", {
+              title: listing.title,
+            })}
           </p>
         </div>
 
         <p className="text-xs text-muted-foreground bg-secondary/50 p-3 rounded-xl border border-border leading-relaxed">
-          The listing will be soft-deleted and transitioned to closed. It will immediately cease to be
-          discoverable by wholesale buyers on the public marketplace. Historical trade records and
-          orders referencing this lot remain preserved.
+          {t(
+            "dashboard:remove_listing_desc",
+            "The listing will be soft-deleted and transitioned to closed. It will immediately cease to be discoverable by wholesale buyers on the public marketplace. Historical trade records and orders referencing this lot remain preserved."
+          )}
         </p>
 
         <div className="flex items-center justify-end gap-3 pt-2">
@@ -53,7 +59,7 @@ export const ListingDeleteModal: React.FC<ListingDeleteModalProps> = ({
             disabled={isDeleting}
             className="px-4 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors"
           >
-            Cancel
+            {t("common:cancel", "Cancel")}
           </button>
           <button
             type="button"
@@ -64,10 +70,10 @@ export const ListingDeleteModal: React.FC<ListingDeleteModalProps> = ({
             {isDeleting ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
-                <span>Removing...</span>
+                <span>{t("dashboard:removing_listing", "Removing...")}</span>
               </>
             ) : (
-              <span>Confirm Removal</span>
+              <span>{t("dashboard:confirm_removal", "Confirm Removal")}</span>
             )}
           </button>
         </div>

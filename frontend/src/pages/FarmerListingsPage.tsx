@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Plus,
   Edit,
@@ -21,12 +22,14 @@ import { EmptyState, ErrorState, LoadingState } from "../components/ui/states";
 import { ListingCreateEditModal } from "../components/listings/ListingCreateEditModal";
 import { ListingImageModal } from "../components/listings/ListingImageModal";
 import { ListingDeleteModal } from "../components/listings/ListingDeleteModal";
+import { formatNumber } from "../utils/formatters";
 import type {
   ProduceCategory,
   ProduceListingDetail,
 } from "../types/listings";
 
 export const FarmerListingsPage: React.FC = () => {
+  const { t } = useTranslation(["marketplace", "inventory", "common"]);
   const { user } = useAuth();
   const toast = useContext(ToastContext);
 
@@ -156,28 +159,28 @@ export const FarmerListingsPage: React.FC = () => {
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            Active Lot
+            {t("marketplace:status_active", "Active Lot")}
           </span>
         );
       case "draft":
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-            Draft
+            {t("marketplace:status_draft", "Draft")}
           </span>
         );
       case "closed":
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-secondary text-muted-foreground border border-border">
             <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
-            Closed
+            {t("marketplace:status_closed", "Closed")}
           </span>
         );
       case "partially_fulfilled":
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-800 border border-blue-200">
             <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-            Partially Sold
+            {t("marketplace:status_partially_sold", "Partially Sold")}
           </span>
         );
       default:
@@ -195,10 +198,13 @@ export const FarmerListingsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            My Produce Listings
+            {t("marketplace:my_listings.title", "My Produce Listings")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Manage your harvested supply lots, wholesale pricing, and photos available to commercial buyers
+            {t(
+              "marketplace:my_listings.subtitle",
+              "Manage your harvested supply lots, wholesale pricing, and photos available to commercial buyers"
+            )}
           </p>
         </div>
 
@@ -219,7 +225,7 @@ export const FarmerListingsPage: React.FC = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary-700 text-sm font-semibold transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" aria-hidden="true" />
-            <span>Create Produce Listing</span>
+            <span>{t("marketplace:my_listings.create_button", "Create Produce Listing")}</span>
           </button>
         </div>
       </div>
@@ -233,9 +239,14 @@ export const FarmerListingsPage: React.FC = () => {
           <div className="flex items-start gap-3">
             <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
             <div className="space-y-1">
-              <p className="font-semibold text-sm">Producer Verification Incomplete</p>
+              <p className="font-semibold text-sm">
+                {t("marketplace:my_listings.verification_incomplete", "Producer Verification Incomplete")}
+              </p>
               <p className="text-xs text-amber-800 leading-relaxed">
-                Your account must be verified before active produce lots can be discovered by commercial buyers on the public marketplace. You can prepare drafts in the meantime.
+                {t(
+                  "marketplace:my_listings.verification_warning",
+                  "Your account must be verified before active produce lots can be discovered by commercial buyers on the public marketplace. You can prepare drafts in the meantime."
+                )}
               </p>
             </div>
           </div>
@@ -243,7 +254,7 @@ export const FarmerListingsPage: React.FC = () => {
             to="/dashboard/verification"
             className="px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-950 font-semibold text-xs whitespace-nowrap transition-colors"
           >
-            Complete Verification →
+            {t("marketplace:my_listings.complete_verification", "Complete Verification →")}
           </Link>
         </div>
       )}
@@ -277,13 +288,13 @@ export const FarmerListingsPage: React.FC = () => {
 
         {/* Search input */}
         <div className="relative max-w-xs w-full">
-          <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" aria-hidden="true" />
+          <Search className="w-4 h-4 text-muted-foreground absolute start-3 top-2.5" aria-hidden="true" />
           <input
             type="text"
             placeholder="Search produce name or city..."
             value={searchFilter}
             onChange={(e) => setSearchFilter(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full ps-9 pe-3 py-1.5 text-xs rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
       </div>
@@ -308,7 +319,7 @@ export const FarmerListingsPage: React.FC = () => {
         <div className="space-y-4">
           {/* Table for Desktop */}
           <div className="hidden md:block rounded-xl border border-border overflow-hidden bg-card shadow-xs">
-            <table className="w-full text-left border-collapse text-xs">
+            <table className="w-full text-start border-collapse text-xs">
               <thead className="bg-secondary/40 text-muted-foreground font-semibold uppercase tracking-wider border-b border-border">
                 <tr>
                   <th className="py-3 px-4">Produce Details</th>
@@ -316,7 +327,7 @@ export const FarmerListingsPage: React.FC = () => {
                   <th className="py-3 px-4">Wholesale Price</th>
                   <th className="py-3 px-4">Sourcing Location</th>
                   <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
+                  <th className="py-3 px-4 text-end">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -340,7 +351,7 @@ export const FarmerListingsPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-3 px-4 font-semibold text-foreground text-sm">
-                      ₹{Number(listing.price_per_unit).toLocaleString()} / {listing.unit}
+                      ₹{formatNumber(listing.price_per_unit)} / {listing.unit}
                     </td>
                     <td className="py-3 px-4">
                       <div className="text-foreground font-medium">
@@ -354,7 +365,7 @@ export const FarmerListingsPage: React.FC = () => {
                       )}
                     </td>
                     <td className="py-3 px-4">{getStatusBadge(listing.status)}</td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3 px-4 text-end">
                       <div className="flex items-center justify-end gap-1">
                         <button
                           type="button"
@@ -443,7 +454,7 @@ export const FarmerListingsPage: React.FC = () => {
                   <div>
                     <span className="text-muted-foreground block text-[11px]">Wholesale Price</span>
                     <span className="font-semibold text-foreground">
-                      ₹{Number(listing.price_per_unit).toLocaleString()} / {listing.unit}
+                      ₹{formatNumber(listing.price_per_unit)} / {listing.unit}
                     </span>
                   </div>
                 </div>
@@ -501,7 +512,7 @@ export const FarmerListingsPage: React.FC = () => {
                   disabled={page <= 1}
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-secondary disabled:opacity-50 transition-colors"
                 >
-                  <ChevronLeft className="w-3.5 h-3.5" aria-hidden="true" />
+                  <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
                   <span>Previous</span>
                 </button>
                 <span className="font-semibold text-foreground">
@@ -514,7 +525,7 @@ export const FarmerListingsPage: React.FC = () => {
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-secondary disabled:opacity-50 transition-colors"
                 >
                   <span>Next</span>
-                  <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
+                  <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
                 </button>
               </div>
             </div>
