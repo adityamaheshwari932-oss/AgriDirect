@@ -9,12 +9,14 @@ import {
   DollarSign,
   Package,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { offersApi } from "../../api/offers";
 import { listingsApi } from "../../api/listings";
 import { requirementsApi } from "../../api/requirements";
 import type { ProduceListingDetail } from "../../types/listings";
 import type { BuyerRequirementDetail } from "../../types/requirements";
 import type { OfferCreatePayload, OfferDetail } from "../../types/offers";
+import { formatNumber } from "../../utils/formatters";
 
 interface OfferCreateModalProps {
   isOpen: boolean;
@@ -33,6 +35,7 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
   targetListing,
   targetRequirement,
 }) => {
+  const { t } = useTranslation(["offers", "validation", "marketplace", "requirements", "dashboard", "common", "errors"]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -124,12 +127,12 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
     const numPrice = Number(unitPrice);
 
     if (isNaN(numQty) || numQty <= 0) {
-      setError("Please specify a valid physical quantity greater than 0.");
+      setError(t("validation:valid_quantity_gt_zero", "Please specify a valid physical quantity greater than 0."));
       return;
     }
 
     if (isNaN(numPrice) || numPrice <= 0) {
-      setError("Please specify a valid wholesale unit price greater than 0.");
+      setError(t("validation:valid_price_gt_zero", "Please specify a valid wholesale unit price greater than 0."));
       return;
     }
 
@@ -141,7 +144,7 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
 
     if (targetType === "listing") {
       if (!targetListing) {
-        setError("Missing reference listing.");
+        setError(t("errors:missing_listing", "Missing reference listing."));
         return;
       }
       recipientId = targetListing.farmer_id;
@@ -151,16 +154,22 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
       productName = targetListing.product_name;
 
       if (numQty > Number(targetListing.available_quantity)) {
-        setError(`Offered quantity exceeds available stock (${targetListing.available_quantity} ${unit}).`);
+        setError(
+          t(
+            "validation:qty_exceeds_stock",
+            `Offered quantity exceeds available stock (${targetListing.available_quantity} ${unit}).`,
+            { stock: targetListing.available_quantity, unit }
+          )
+        );
         return;
       }
     } else {
       if (!targetRequirement) {
-        setError("Missing reference requirement.");
+        setError(t("errors:missing_requirement", "Missing reference requirement."));
         return;
       }
       if (!selectedListingId) {
-        setError("Please select one of your active produce listings to back this offer.");
+        setError(t("validation:select_produce_lot_backing", "Please select one of your active produce listings to back this offer."));
         return;
       }
       recipientId = targetRequirement.buyer_id;
@@ -170,7 +179,13 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
       productName = targetRequirement.product_name;
 
       if (numQty > Number(targetRequirement.remaining_quantity)) {
-        setError(`Offered quantity exceeds buyer remaining demand (${targetRequirement.remaining_quantity} ${unit}).`);
+        setError(
+          t(
+            "validation:qty_exceeds_demand",
+            `Offered quantity exceeds buyer remaining demand (${targetRequirement.remaining_quantity} ${unit}).`,
+            { demand: targetRequirement.remaining_quantity, unit }
+          )
+        );
         return;
       }
     }
@@ -200,7 +215,7 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
       }
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to submit offer proposal.";
+      const msg = err instanceof Error ? err.message : t("errors:submit_offer_failed", "Failed to submit offer proposal.");
       setError(msg);
     } finally {
       setIsSubmitting(false);
@@ -224,17 +239,22 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
         <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-secondary/40">
           <div>
             <h2 id="modal-offer-create-title" className="text-lg font-bold text-foreground">
-              {targetType === "listing" ? "Submit Commercial Purchase Offer" : "Submit Produce Supply Offer"}
+              {targetType === "listing"
+                ? t("offers:submit_purchase_offer", "Submit Commercial Purchase Offer")
+                : t("offers:submit_supply_offer", "Submit Produce Supply Offer")}
             </h2>
             <p className="text-xs text-muted-foreground">
-              Direct B2B negotiation without intermediaries — terms legally binding upon counterparty acceptance
+              {t(
+                "offers:offer_create_subtitle",
+                "Direct B2B negotiation without intermediaries — terms legally binding upon counterparty acceptance"
+              )}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Close dialog"
+            aria-label={t("common:close_dialog", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -246,7 +266,7 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
             <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-3">
               <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div>
-                <p className="font-semibold">Offer Submission Error</p>
+                <p className="font-semibold">{t("offers:offer_submission_error", "Offer Submission Error")}</p>
                 <p className="text-xs">{error}</p>
               </div>
             </div>
@@ -255,30 +275,30 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
           {/* Reference Target Info */}
           <div className="p-4 rounded-xl bg-secondary/30 border border-border text-xs space-y-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">
-              Reference Market Context
+              {t("offers:reference_market_context", "Reference Market Context")}
             </span>
             {targetType === "listing" && targetListing && (
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <span className="text-muted-foreground">Produce Catalog Item:</span>{" "}
+                  <span className="text-muted-foreground">{t("offers:produce_catalog_item", "Produce Catalog Item:")}</span>{" "}
                   <span className="font-semibold text-foreground">{targetListing.product_name}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Available Stock:</span>{" "}
+                  <span className="text-muted-foreground">{t("offers:available_stock", "Available Stock:")}</span>{" "}
                   <span className="font-semibold text-foreground">
-                    {targetListing.available_quantity} {targetListing.unit}
+                    {formatNumber(targetListing.available_quantity)} {targetListing.unit}
                   </span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Listed Unit Price:</span>{" "}
+                  <span className="text-muted-foreground">{t("offers:listed_unit_price", "Listed Unit Price:")}</span>{" "}
                   <span className="font-semibold text-foreground">
-                    ₹{Number(targetListing.price_per_unit).toLocaleString()} / {targetListing.unit}
+                    ₹{formatNumber(Number(targetListing.price_per_unit))} / {targetListing.unit}
                   </span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Producer:</span>{" "}
+                  <span className="text-muted-foreground">{t("offers:producer_label", "Producer:")}</span>{" "}
                   <span className="font-semibold text-foreground">
-                    {targetListing.farmer?.farm_name || targetListing.farmer?.full_name || "Verified Producer"}
+                    {targetListing.farmer?.farm_name || targetListing.farmer?.full_name || t("marketplace:verified_producer", "Verified Producer")}
                   </span>
                 </div>
               </div>
@@ -287,27 +307,27 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
             {targetType === "requirement" && targetRequirement && (
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <span className="text-muted-foreground">Procurement Item:</span>{" "}
+                  <span className="text-muted-foreground">{t("offers:procurement_item", "Procurement Item:")}</span>{" "}
                   <span className="font-semibold text-foreground">{targetRequirement.product_name}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Remaining Demand:</span>{" "}
+                  <span className="text-muted-foreground">{t("offers:remaining_demand", "Remaining Demand:")}</span>{" "}
                   <span className="font-semibold text-foreground">
-                    {targetRequirement.remaining_quantity} {targetRequirement.unit}
+                    {formatNumber(targetRequirement.remaining_quantity)} {targetRequirement.unit}
                   </span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Buyer Target Price:</span>{" "}
+                  <span className="text-muted-foreground">{t("offers:buyer_target_price", "Buyer Target Price:")}</span>{" "}
                   <span className="font-semibold text-foreground">
                     {targetRequirement.target_price_per_unit
-                      ? `₹${Number(targetRequirement.target_price_per_unit).toLocaleString()} / ${targetRequirement.unit}`
-                      : "Negotiable"}
+                      ? `₹${formatNumber(Number(targetRequirement.target_price_per_unit))} / ${targetRequirement.unit}`
+                      : t("offers:price_negotiable", "Negotiable")}
                   </span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Buyer Enterprise:</span>{" "}
+                  <span className="text-muted-foreground">{t("offers:buyer_enterprise", "Buyer Enterprise:")}</span>{" "}
                   <span className="font-semibold text-foreground">
-                    {targetRequirement.buyer?.business_name || "Commercial Buyer"}
+                    {targetRequirement.buyer?.business_name || t("marketplace:verified_buyer", "Commercial Buyer")}
                   </span>
                 </div>
               </div>
@@ -321,17 +341,19 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
                 htmlFor="farmer-backing-listing-select"
                 className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
               >
-                Select Backing Produce Lot <span className="text-destructive">*</span>
+                {t("offers:select_backing_lot", "Select Backing Produce Lot")} <span className="text-destructive">*</span>
               </label>
               {isLoadingRelated ? (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
                   <Loader2 className="w-4 h-4 animate-spin text-primary" aria-hidden="true" />
-                  <span>Loading your available produce lots...</span>
+                  <span>{t("offers:loading_produce_lots", "Loading your available produce lots...")}</span>
                 </div>
               ) : myListings.length === 0 ? (
                 <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 text-xs">
-                  You do not have any active produce listings. You must publish an active listing
-                  to back physical goods delivery before submitting an offer.
+                  {t(
+                    "offers:no_active_listings_notice",
+                    "You do not have any active produce listings. You must publish an active listing to back physical goods delivery before submitting an offer."
+                  )}
                 </div>
               ) : (
                 <select
@@ -341,10 +363,12 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
                   className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-medium"
                   required
                 >
-                  <option value="" disabled>Choose one of your active listings...</option>
+                  <option value="" disabled>
+                    {t("offers:choose_active_listing", "Choose one of your active listings...")}
+                  </option>
                   {myListings.map((l) => (
                     <option key={l.id} value={l.id}>
-                      {l.product_name} — {l.available_quantity} {l.unit} available (₹{Number(l.price_per_unit).toLocaleString()}/{l.unit})
+                      {l.product_name} — {formatNumber(l.available_quantity)} {l.unit} available (₹{formatNumber(Number(l.price_per_unit))}/{l.unit})
                     </option>
                   ))}
                 </select>
@@ -358,7 +382,7 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
                 htmlFor="buyer-linked-req-select"
                 className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
               >
-                Link to Buyer Requirement (Optional)
+                {t("offers:link_buyer_req", "Link to Buyer Requirement (Optional)")}
               </label>
               <select
                 id="buyer-linked-req-select"
@@ -366,10 +390,10 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
                 onChange={(e) => setSelectedRequirementId(e.target.value)}
                 className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-medium"
               >
-                <option value="">None (Independent Spot Purchase)</option>
+                <option value="">{t("offers:none_spot_purchase", "None (Independent Spot Purchase)")}</option>
                 {myRequirements.map((r) => (
                   <option key={r.id} value={r.id}>
-                    {r.title} — {r.remaining_quantity} {r.unit} remaining
+                    {r.title} — {formatNumber(r.remaining_quantity)} {r.unit} remaining
                   </option>
                 ))}
               </select>
@@ -383,7 +407,9 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
                 htmlFor="offer-quantity-input"
                 className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
               >
-                Physical Quantity ({targetType === "listing" ? targetListing?.unit : targetRequirement?.unit}) <span className="text-destructive">*</span>
+                {t("offers:physical_quantity_label", `Physical Quantity (${targetType === "listing" ? targetListing?.unit : targetRequirement?.unit})`, {
+                  unit: targetType === "listing" ? targetListing?.unit : targetRequirement?.unit,
+                })} <span className="text-destructive">*</span>
               </label>
               <div className="relative">
                 <input
@@ -394,10 +420,10 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value === "" ? "" : parseFloat(e.target.value))}
                   placeholder="e.g. 50"
-                  className="w-full rounded-xl border border-border bg-card pl-9 pr-4 py-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full rounded-xl border border-border bg-card ps-9 pe-4 py-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   required
                 />
-                <Package className="w-4 h-4 text-muted-foreground absolute left-3 top-3" aria-hidden="true" />
+                <Package className="w-4 h-4 text-muted-foreground absolute start-3 top-3" aria-hidden="true" />
               </div>
             </div>
 
@@ -406,7 +432,9 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
                 htmlFor="offer-unitprice-input"
                 className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
               >
-                Offered Unit Price (₹ / {targetType === "listing" ? targetListing?.unit : targetRequirement?.unit}) <span className="text-destructive">*</span>
+                {t("offers:offered_unit_price_label", `Offered Unit Price (₹ / ${targetType === "listing" ? targetListing?.unit : targetRequirement?.unit})`, {
+                  unit: targetType === "listing" ? targetListing?.unit : targetRequirement?.unit,
+                })} <span className="text-destructive">*</span>
               </label>
               <div className="relative">
                 <input
@@ -417,10 +445,10 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
                   value={unitPrice}
                   onChange={(e) => setUnitPrice(e.target.value === "" ? "" : parseFloat(e.target.value))}
                   placeholder="e.g. 24.50"
-                  className="w-full rounded-xl border border-border bg-card pl-9 pr-4 py-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full rounded-xl border border-border bg-card ps-9 pe-4 py-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   required
                 />
-                <DollarSign className="w-4 h-4 text-muted-foreground absolute left-3 top-3" aria-hidden="true" />
+                <DollarSign className="w-4 h-4 text-muted-foreground absolute start-3 top-3" aria-hidden="true" />
               </div>
             </div>
           </div>
@@ -432,7 +460,7 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
                 htmlFor="offer-qualitygrade-input"
                 className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
               >
-                Quality Grade
+                {t("offers:quality_grade_label", "Quality Grade")}
               </label>
               <input
                 id="offer-qualitygrade-input"
@@ -450,7 +478,7 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
                 htmlFor="offer-deliverydate-input"
                 className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
               >
-                Proposed Delivery Date
+                {t("offers:proposed_delivery_date_label", "Proposed Delivery Date")}
               </label>
               <div className="relative">
                 <input
@@ -459,9 +487,9 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
                   min={todayStr}
                   value={proposedDeliveryDate}
                   onChange={(e) => setProposedDeliveryDate(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-card pl-9 pr-4 py-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full rounded-xl border border-border bg-card ps-9 pe-4 py-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 />
-                <Calendar className="w-4 h-4 text-muted-foreground absolute left-3 top-3" aria-hidden="true" />
+                <Calendar className="w-4 h-4 text-muted-foreground absolute start-3 top-3" aria-hidden="true" />
               </div>
             </div>
           </div>
@@ -472,7 +500,7 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
               htmlFor="offer-deliveryterms-input"
               className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
             >
-              Logistics & Delivery Terms
+              {t("offers:logistics_delivery_terms", "Logistics & Delivery Terms")}
             </label>
             <div className="relative">
               <input
@@ -482,9 +510,9 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
                 onChange={(e) => setDeliveryTerms(e.target.value)}
                 placeholder="e.g. Farm gate pickup by buyer truck, payment upon delivery dock inspection"
                 maxLength={2000}
-                className="w-full rounded-xl border border-border bg-card pl-9 pr-4 py-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full rounded-xl border border-border bg-card ps-9 pe-4 py-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
-              <Truck className="w-4 h-4 text-muted-foreground absolute left-3 top-3" aria-hidden="true" />
+              <Truck className="w-4 h-4 text-muted-foreground absolute start-3 top-3" aria-hidden="true" />
             </div>
           </div>
 
@@ -492,14 +520,17 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
           <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 flex items-center justify-between">
             <div>
               <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
-                Estimated Commercial Total
+                {t("offers:estimated_commercial_total", "Estimated Commercial Total")}
               </span>
               <p className="text-[11px] text-muted-foreground">
-                Authoritative gross total is computed server-side upon submission
+                {t(
+                  "offers:gross_total_computed_serverside",
+                  "Authoritative gross total is computed server-side upon submission"
+                )}
               </p>
             </div>
-            <div className="text-right">
-              <span className="text-xl font-black text-primary">₹{Number(estimatedTotal).toLocaleString()}</span>
+            <div className="text-end">
+              <span className="text-xl font-black text-primary">₹{formatNumber(Number(estimatedTotal))}</span>
             </div>
           </div>
 
@@ -511,7 +542,7 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
               disabled={isSubmitting}
               className="px-4 py-2 rounded-xl border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors disabled:opacity-50"
             >
-              Cancel
+              {t("common:cancel", "Cancel")}
             </button>
             <button
               type="submit"
@@ -521,12 +552,12 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                  <span>Submitting Offer...</span>
+                  <span>{t("offers:submitting_offer", "Submitting Offer...")}</span>
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
-                  <span>Submit Formal Proposal</span>
+                  <span>{t("offers:submit_formal_proposal", "Submit Formal Proposal")}</span>
                 </>
               )}
             </button>

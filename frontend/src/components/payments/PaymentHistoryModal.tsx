@@ -9,8 +9,10 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { paymentsApi } from "../../api/payments";
 import type { PaymentComplaint, PaymentRecord } from "../../types/payments";
+import { formatDate, formatNumber } from "../../utils/formatters";
 import { PaymentComplaintModal } from "./PaymentComplaintModal";
 
 interface PaymentHistoryModalProps {
@@ -30,6 +32,7 @@ export const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
   onClose,
   onPaymentUpdated,
 }) => {
+  const { t } = useTranslation(["payments", "common", "errors"]);
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,12 +51,15 @@ export const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
       const res = await paymentsApi.listOrderPayments(orderId);
       setPayments(res.items || []);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to load payment records.";
+      const msg =
+        err instanceof Error
+          ? err.message
+          : t("payments:history.load_failed", "Failed to load payment records.");
       setError(msg);
     } finally {
       setIsLoading(false);
     }
-  }, [orderId]);
+  }, [orderId, t]);
 
   useEffect(() => {
     if (isOpen) {
@@ -70,11 +76,19 @@ export const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
     setActionSuccess(null);
     try {
       await paymentsApi.acknowledgePayment(paymentId);
-      setActionSuccess("Payment receipt confirmed and marked acknowledged.");
+      setActionSuccess(
+        t(
+          "payments:history.ack_success",
+          "Payment receipt confirmed and marked acknowledged."
+        )
+      );
       await loadPayments();
       if (onPaymentUpdated) onPaymentUpdated();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to acknowledge payment.";
+      const msg =
+        err instanceof Error
+          ? err.message
+          : t("payments:history.ack_failed", "Failed to acknowledge payment.");
       setError(msg);
     } finally {
       setAcknowledgingId(null);
@@ -82,7 +96,13 @@ export const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
   };
 
   const handleDisputeSuccess = (complaint: PaymentComplaint) => {
-    setActionSuccess(`Payment claim disputed successfully (Complaint #${complaint.id.slice(0, 8)}).`);
+    setActionSuccess(
+      t(
+        "payments:history.dispute_success",
+        "Payment claim disputed successfully (Complaint #{{id}}).",
+        { id: complaint.id.slice(0, 8) }
+      )
+    );
     void loadPayments();
     if (onPaymentUpdated) onPaymentUpdated();
   };
@@ -93,14 +113,14 @@ export const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-700">
             <CheckCircle2 className="w-3 h-3 text-emerald-600" aria-hidden="true" />
-            Acknowledged
+            {t("payments:status.acknowledged", "Acknowledged")}
           </span>
         );
       case "disputed":
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-destructive/10 text-destructive">
             <AlertTriangle className="w-3 h-3 text-destructive" aria-hidden="true" />
-            Disputed
+            {t("payments:status.disputed", "Disputed")}
           </span>
         );
       case "recorded":
@@ -108,7 +128,7 @@ export const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700">
             <Clock className="w-3 h-3 text-amber-600" aria-hidden="true" />
-            Pending Ack
+            {t("payments:status.pending_ack", "Pending Ack")}
           </span>
         );
     }
@@ -128,16 +148,20 @@ export const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
             <CreditCard className="w-5 h-5 text-primary" aria-hidden="true" />
             <div>
               <h2 id="modal-payment-history-title" className="text-base font-bold text-foreground">
-                Payment Records Ledger
+                {t("payments:history.title", "Payment Records Ledger")}
               </h2>
-              <p className="text-xs text-muted-foreground">Order Reference: {orderNumber}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("payments:history.order_ref", "Order Reference: {{orderNumber}}", {
+                  orderNumber,
+                })}
+              </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Close dialog"
+            aria-label={t("common:actions.close", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -161,11 +185,16 @@ export const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
           {isLoading ? (
             <div className="py-12 flex flex-col items-center justify-center gap-2">
               <Loader2 className="w-6 h-6 animate-spin text-primary" aria-hidden="true" />
-              <span className="text-xs text-muted-foreground">Loading payment records...</span>
+              <span className="text-xs text-muted-foreground">
+                {t("payments:history.loading", "Loading payment records...")}
+              </span>
             </div>
           ) : payments.length === 0 ? (
             <div className="py-12 text-center text-xs text-muted-foreground">
-              No off-platform payment claims have been logged against this order yet.
+              {t(
+                "payments:history.empty",
+                "No off-platform payment claims have been logged against this order yet."
+              )}
             </div>
           ) : (
             <div className="space-y-3">
@@ -177,7 +206,7 @@ export const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-foreground">
-                        ₹{Number(p.amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        ₹{formatNumber(Number(p.amount), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                       <span className="text-xs px-2 py-0.5 rounded-md bg-secondary text-foreground uppercase font-semibold">
                         {p.payment_method.replace("_", " ")}
@@ -188,17 +217,17 @@ export const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-muted-foreground">
                     <div>
-                      <span className="block text-[11px]">Payment Date</span>
-                      <span className="font-medium text-foreground">{p.payment_date}</span>
+                      <span className="block text-[11px]">{t("payments:payment_date_label", "Payment Date")}</span>
+                      <span className="font-medium text-foreground">{formatDate(p.payment_date)}</span>
                     </div>
                     <div>
-                      <span className="block text-[11px]">Reference / UTR</span>
+                      <span className="block text-[11px]">{t("payments:history.reference_utr", "Reference / UTR")}</span>
                       <span className="font-medium text-foreground font-mono">
                         {p.reference_number || "—"}
                       </span>
                     </div>
                     <div>
-                      <span className="block text-[11px]">Receipt Proof</span>
+                      <span className="block text-[11px]">{t("payments:history.receipt_proof", "Receipt Proof")}</span>
                       {p.has_proof ? (
                         <a
                           href={paymentsApi.getProofUrl(p.id)}
@@ -207,10 +236,12 @@ export const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                           className="inline-flex items-center gap-1 text-primary hover:underline font-semibold"
                         >
                           <Download className="w-3 h-3" aria-hidden="true" />
-                          <span>View Proof</span>
+                          <span>{t("payments:history.view_proof", "View Proof")}</span>
                         </a>
                       ) : (
-                        <span className="text-muted-foreground">None attached</span>
+                        <span className="text-muted-foreground">
+                          {t("payments:history.none_attached", "None attached")}
+                        </span>
                       )}
                     </div>
                   </div>
@@ -224,7 +255,7 @@ export const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                         onClick={() => setDisputePayment(p)}
                         className="px-3 py-1.5 rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 text-xs font-semibold transition-colors"
                       >
-                        Dispute Claim
+                        {t("payments:history.btn_dispute", "Dispute Claim")}
                       </button>
                     )}
 
@@ -239,12 +270,12 @@ export const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
                         {acknowledgingId === p.id ? (
                           <>
                             <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
-                            <span>Confirming...</span>
+                            <span>{t("payments:history.confirming", "Confirming...")}</span>
                           </>
                         ) : (
                           <>
                             <CheckCircle2 className="w-3 h-3" aria-hidden="true" />
-                            <span>Acknowledge Receipt</span>
+                            <span>{t("payments:history.btn_acknowledge", "Acknowledge Receipt")}</span>
                           </>
                         )}
                       </button>
@@ -263,7 +294,7 @@ export const PaymentHistoryModal: React.FC<PaymentHistoryModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 rounded-xl border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors"
           >
-            Close
+            {t("common:actions.close", "Close")}
           </button>
         </div>
       </div>

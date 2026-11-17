@@ -1,6 +1,8 @@
 import React from "react";
 import { ArrowRight, CheckCircle2, Clock, XCircle, Ban, History } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { OfferDetail, OfferStatus } from "../../types/offers";
+import { formatNumber } from "../../utils/formatters";
 
 interface NegotiationHistoryTimelineProps {
   history: OfferDetail[];
@@ -13,6 +15,8 @@ export const NegotiationHistoryTimeline: React.FC<NegotiationHistoryTimelineProp
   currentOfferId,
   onSelectOffer,
 }) => {
+  const { t } = useTranslation(["offers", "common"]);
+
   if (!history || history.length === 0) return null;
 
   const getStatusIcon = (status: OfferStatus) => {
@@ -20,7 +24,7 @@ export const NegotiationHistoryTimeline: React.FC<NegotiationHistoryTimelineProp
       case "accepted":
         return <CheckCircle2 className="w-4 h-4 text-emerald-600" aria-hidden="true" />;
       case "countered":
-        return <ArrowRight className="w-4 h-4 text-blue-600" aria-hidden="true" />;
+        return <ArrowRight className="w-4 h-4 text-blue-600 rtl:rotate-180" aria-hidden="true" />;
       case "rejected":
         return <XCircle className="w-4 h-4 text-red-600" aria-hidden="true" />;
       case "withdrawn":
@@ -53,13 +57,17 @@ export const NegotiationHistoryTimeline: React.FC<NegotiationHistoryTimelineProp
     <div className="space-y-3">
       <div className="flex items-center gap-1.5 text-xs font-bold text-foreground uppercase tracking-wider">
         <History className="w-4 h-4 text-primary" aria-hidden="true" />
-        <span>Negotiation Lineage ({history.length} round{history.length > 1 ? "s" : ""})</span>
+        <span>
+          {t("offers:negotiation_lineage", `Negotiation Lineage (${history.length} round${history.length > 1 ? "s" : ""})`, {
+            count: history.length,
+          })}
+        </span>
       </div>
 
-      <div className="relative pl-6 space-y-4 before:content-[''] before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
+      <div className="relative ps-6 space-y-4 before:content-[''] before:absolute before:start-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
         {history.map((step, idx) => {
           const isSelected = step.id === currentOfferId;
-          const senderName = step.sender?.name || step.sender?.business_name || "Participant";
+          const senderName = step.sender?.name || step.sender?.business_name || t("offers:participant", "Participant");
           const senderRole = step.sender?.role || "user";
 
           return (
@@ -73,7 +81,7 @@ export const NegotiationHistoryTimeline: React.FC<NegotiationHistoryTimelineProp
             >
               {/* Timeline marker */}
               <div
-                className={`absolute -left-[27px] top-3.5 w-4 h-4 rounded-full bg-card border-2 flex items-center justify-center ${
+                className={`absolute -start-[27px] top-3.5 w-4 h-4 rounded-full bg-card border-2 flex items-center justify-center ${
                   isSelected ? "border-primary" : "border-muted-foreground/40"
                 }`}
               >
@@ -87,11 +95,14 @@ export const NegotiationHistoryTimeline: React.FC<NegotiationHistoryTimelineProp
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-1.5">
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-foreground">
-                    Round {idx + 1}: {step.offer_number}
+                    {t("offers:round_n", `Round ${idx + 1}: ${step.offer_number}`, {
+                      n: idx + 1,
+                      num: step.offer_number,
+                    })}
                   </span>
                   {isSelected && (
                     <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-primary text-primary-foreground">
-                      Current
+                      {t("offers:current_badge", "Current")}
                     </span>
                   )}
                 </div>
@@ -103,22 +114,22 @@ export const NegotiationHistoryTimeline: React.FC<NegotiationHistoryTimelineProp
                     )}`}
                   >
                     {getStatusIcon(step.status)}
-                    <span className="capitalize">{step.status}</span>
+                    <span className="capitalize">{t(`offers:status_${step.status}`, step.status)}</span>
                   </span>
                 </div>
               </div>
 
               <div className="text-muted-foreground grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
                 <div>
-                  <span className="text-muted-foreground">Proposed by:</span>{" "}
+                  <span className="text-muted-foreground">{t("offers:proposed_by", "Proposed by:")}</span>{" "}
                   <span className="font-semibold text-foreground">
                     {senderName} ({senderRole})
                   </span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Proposal Total:</span>{" "}
+                  <span className="text-muted-foreground">{t("offers:proposal_total", "Proposal Total:")}</span>{" "}
                   <span className="font-bold text-foreground">
-                    ₹{Number(step.total_amount).toLocaleString()}
+                    ₹{formatNumber(Number(step.total_amount))}
                   </span>
                 </div>
               </div>
@@ -130,7 +141,7 @@ export const NegotiationHistoryTimeline: React.FC<NegotiationHistoryTimelineProp
                       key={it.id}
                       className="px-2 py-0.5 rounded bg-secondary text-foreground font-medium"
                     >
-                      {it.product_name}: {it.quantity} {it.unit} @ ₹{Number(it.unit_price).toLocaleString()}
+                      {it.product_name}: {formatNumber(it.quantity)} {it.unit} @ ₹{formatNumber(Number(it.unit_price))}
                     </span>
                   ))}
                 </div>
@@ -143,7 +154,7 @@ export const NegotiationHistoryTimeline: React.FC<NegotiationHistoryTimelineProp
                     onClick={() => onSelectOffer(step.id)}
                     className="text-[11px] text-primary hover:text-primary-800 font-semibold"
                   >
-                    View This Version →
+                    {t("offers:view_this_version", "View This Version →")}
                   </button>
                 </div>
               )}

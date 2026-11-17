@@ -20,12 +20,14 @@ import {
   Check,
   Printer,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ordersApi } from "../../api/orders";
 import { chatApi } from "../../api/chat";
 import { paymentsApi } from "../../api/payments";
 import { useAuth } from "../../store/authStore";
 import type { OrderDetail, OrderAmendment } from "../../types/orders";
 import type { PaymentSummary } from "../../types/payments";
+import { formatDate, formatNumber } from "../../utils/formatters";
 import { OrderCancelModal } from "./OrderCancelModal";
 import { AmendmentProposalModal } from "./AmendmentProposalModal";
 import { InventoryAuditModal } from "./InventoryAuditModal";
@@ -49,6 +51,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   onClose,
   onOrderUpdated,
 }) => {
+  const { t } = useTranslation(["orders", "common", "errors", "navigation"]);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -98,12 +101,15 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       setAmendments(amendmentData.items || []);
       setPaymentSummary(paymentData);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to load order specifications.";
+      const msg =
+        err instanceof Error
+          ? err.message
+          : t("orders:detail.load_failed", "Failed to load order specifications.");
       setError(msg);
     } finally {
       setIsLoading(false);
     }
-  }, [orderId]);
+  }, [orderId, t]);
 
   useEffect(() => {
     void loadOrderData();
@@ -127,10 +133,21 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
 
   const counterpartyId = isFarmerSeller ? order?.buyer_id || "" : order?.farmer_id || "";
   const counterpartyName = isFarmerSeller
-    ? order?.buyer?.business_name || order?.buyer?.full_name || "Commercial Buyer"
-    : order?.farmer?.farm_name || order?.farmer?.full_name || "Agricultural Producer";
+    ? order?.buyer?.business_name ||
+      order?.buyer?.full_name ||
+      t("orders:detail.buyer_default_name", "Commercial Buyer")
+    : order?.farmer?.farm_name ||
+      order?.farmer?.full_name ||
+      t("orders:detail.farmer_default_name", "Agricultural Producer");
 
   const hasPendingAmendment = amendments.some((a) => a.status === "proposed");
+
+  const formatDeliveryStatus = (status: unknown): string => {
+    if (typeof status === "string" && status.trim().length > 0) {
+      return status.replace(/_/g, " ");
+    }
+    return t("orders:detail.delivery_status_unavailable", "Unavailable");
+  };
 
   const handleMessageCounterparty = async () => {
     if (!order || !user || !counterpartyId) return;
@@ -159,10 +176,18 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
     try {
       const updated = await ordersApi.markDeliveryCompleted(order.id);
       setOrder(updated);
-      setActionSuccess("Delivery marked as completed by seller. Awaiting counterparty acknowledgement.");
+      setActionSuccess(
+        t(
+          "orders:detail.delivery_marked_success",
+          "Delivery marked as completed by seller. Awaiting counterparty acknowledgement."
+        )
+      );
       if (onOrderUpdated) onOrderUpdated();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to mark delivery completed.";
+      const msg =
+        err instanceof Error
+          ? err.message
+          : t("orders:detail.mark_delivery_failed", "Failed to mark delivery completed.");
       setActionError(msg);
     } finally {
       setIsMarkingDelivery(false);
@@ -177,10 +202,15 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
     try {
       const updated = await ordersApi.confirmOrder(order.id);
       setOrder(updated);
-      setActionSuccess("Commercial order confirmed successfully.");
+      setActionSuccess(
+        t("orders:detail.order_confirmed_success", "Commercial order confirmed successfully.")
+      );
       if (onOrderUpdated) onOrderUpdated();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to confirm order.";
+      const msg =
+        err instanceof Error
+          ? err.message
+          : t("orders:detail.confirm_failed", "Failed to confirm order.");
       setActionError(msg);
     } finally {
       setIsConfirming(false);
@@ -194,11 +224,16 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
     setActionSuccess(null);
     try {
       await ordersApi.acceptAmendment(order.id, aid);
-      setActionSuccess("Order amendment accepted and terms updated.");
+      setActionSuccess(
+        t("orders:detail.amendment_accepted_success", "Order amendment accepted and terms updated.")
+      );
       await loadOrderData();
       if (onOrderUpdated) onOrderUpdated();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to accept amendment.";
+      const msg =
+        err instanceof Error
+          ? err.message
+          : t("orders:detail.accept_amendment_failed", "Failed to accept amendment.");
       setActionError(msg);
     } finally {
       setProcessingAmendmentId(null);
@@ -212,11 +247,19 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
     setActionSuccess(null);
     try {
       await ordersApi.rejectAmendment(order.id, aid);
-      setActionSuccess("Order amendment rejected. Original contract terms preserved.");
+      setActionSuccess(
+        t(
+          "orders:detail.amendment_rejected_success",
+          "Order amendment rejected. Original contract terms preserved."
+        )
+      );
       await loadOrderData();
       if (onOrderUpdated) onOrderUpdated();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to reject amendment.";
+      const msg =
+        err instanceof Error
+          ? err.message
+          : t("orders:detail.reject_amendment_failed", "Failed to reject amendment.");
       setActionError(msg);
     } finally {
       setProcessingAmendmentId(null);
@@ -234,63 +277,93 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
 
     // Stage 2: Confirmed
     let s2Status: "complete" | "current" | "upcoming" | "cancelled" = "upcoming";
-    let s2Desc = "Terms locked";
+    let s2Desc = t("orders:lifecycle.terms_locked", "Terms locked");
     if (isCancelled) {
       s2Status = "cancelled";
     } else if (order.status === "pending") {
       s2Status = "current";
-      s2Desc = "Awaiting confirmation";
+      s2Desc = t("orders:lifecycle.awaiting_confirmation", "Awaiting confirmation");
     } else {
       s2Status = "complete";
     }
 
     // Stage 3: In Transit / Dispatched
     let s3Status: "complete" | "current" | "upcoming" | "cancelled" = "upcoming";
-    let s3Desc = "Pending dispatch";
+    let s3Desc = t("orders:lifecycle.pending_dispatch", "Pending dispatch");
     if (isCancelled) {
       s3Status = "cancelled";
     } else if (order.status === "pending") {
       s3Status = "upcoming";
     } else if (order.delivery_status === "not_arranged") {
       s3Status = "current";
-      s3Desc = "Arrange logistics";
+      s3Desc = t("orders:lifecycle.arrange_logistics", "Arrange logistics");
     } else {
       s3Status = "complete";
-      s3Desc = "Dispatched / En route";
+      s3Desc = t("orders:lifecycle.dispatched_enroute", "Dispatched / En route");
     }
 
     // Stage 4: Delivery Receipt
     let s4Status: "complete" | "current" | "upcoming" | "cancelled" = "upcoming";
-    let s4Desc = "Awaiting delivery";
+    let s4Desc = t("orders:lifecycle.awaiting_delivery", "Awaiting delivery");
     if (isCancelled) {
       s4Status = "cancelled";
     } else if (order.delivery_status === "completed" || isCompleted) {
       s4Status = "complete";
-      s4Desc = "Receipt confirmed";
+      s4Desc = t("orders:lifecycle.receipt_confirmed", "Receipt confirmed");
     } else if (order.delivery_status === "completion_marked") {
       s4Status = "current";
-      s4Desc = "Pending acknowledgement";
+      s4Desc = t("orders:lifecycle.pending_acknowledgement", "Pending acknowledgement");
     }
 
     // Stage 5: Settlement & Concluded
     let s5Status: "complete" | "current" | "upcoming" | "cancelled" = "upcoming";
-    let s5Desc = "Direct settlement";
+    let s5Desc = t("orders:lifecycle.direct_settlement", "Direct settlement");
     if (isCancelled) {
       s5Status = "cancelled";
     } else if (isCompleted) {
       s5Status = "complete";
-      s5Desc = "Trade concluded";
+      s5Desc = t("orders:lifecycle.trade_concluded", "Trade concluded");
     } else if (order.delivery_status === "completed") {
       s5Status = "current";
-      s5Desc = "Finalizing records";
+      s5Desc = t("orders:lifecycle.finalizing_records", "Finalizing records");
     }
 
     return [
-      { id: "created", step: 1, label: "Created", desc: "Contract bound", status: s1Status },
-      { id: "confirmed", step: 2, label: "Confirmed", desc: s2Desc, status: s2Status },
-      { id: "transit", step: 3, label: "In Transit", desc: s3Desc, status: s3Status },
-      { id: "received", step: 4, label: "Delivered", desc: s4Desc, status: s4Status },
-      { id: "concluded", step: 5, label: "Concluded", desc: s5Desc, status: s5Status },
+      {
+        id: "created",
+        step: 1,
+        label: t("orders:lifecycle.created", "Created"),
+        desc: t("orders:lifecycle.contract_bound", "Contract bound"),
+        status: s1Status,
+      },
+      {
+        id: "confirmed",
+        step: 2,
+        label: t("orders:lifecycle.confirmed", "Confirmed"),
+        desc: s2Desc,
+        status: s2Status,
+      },
+      {
+        id: "transit",
+        step: 3,
+        label: t("orders:lifecycle.in_transit", "In Transit"),
+        desc: s3Desc,
+        status: s3Status,
+      },
+      {
+        id: "received",
+        step: 4,
+        label: t("orders:lifecycle.delivered", "Delivered"),
+        desc: s4Desc,
+        status: s4Status,
+      },
+      {
+        id: "concluded",
+        step: 5,
+        label: t("orders:lifecycle.concluded", "Concluded"),
+        desc: s5Desc,
+        status: s5Status,
+      },
     ];
   };
 
@@ -300,28 +373,28 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700">
             <Clock className="w-3.5 h-3.5 text-amber-600" aria-hidden="true" />
-            Pending Farmer Confirmation
+            {t("orders:status.pending_farmer_confirmation", "Pending Farmer Confirmation")}
           </span>
         );
       case "confirmed":
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-700">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" aria-hidden="true" />
-            Confirmed & Active
+            {t("orders:status.confirmed_active", "Confirmed & Active")}
           </span>
         );
       case "completed":
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/10 text-blue-700">
             <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" aria-hidden="true" />
-            Completed
+            {t("orders:status.completed", "Completed")}
           </span>
         );
       case "cancelled":
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-destructive/10 text-destructive">
             <XCircle className="w-3.5 h-3.5 text-destructive" aria-hidden="true" />
-            Cancelled
+            {t("orders:status.cancelled", "Cancelled")}
           </span>
         );
       default:
@@ -346,12 +419,19 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h2 id="modal-order-detail-title" className="text-lg font-bold text-foreground">
-                Order {order?.order_number || "Specifications"}
+                {order
+                  ? t("orders:detail.order_title", "Order {{orderNumber}}", {
+                      orderNumber: order.order_number,
+                    })
+                  : t("orders:detail.order_specs", "Order Specifications")}
               </h2>
               {order && getOrderStatusBadge(order.status)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Official binding trade record created via bilateral negotiation on AgriDirect
+              {t(
+                "orders:detail.subtitle",
+                "Official binding trade record created via bilateral negotiation on AgriDirect"
+              )}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -360,17 +440,20 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 type="button"
                 onClick={() => setIsSlipModalOpen(true)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold transition-colors shadow-xs"
-                title="Print or download official B2B trade confirmation slip"
+                title={t(
+                  "orders:detail.trade_slip_tooltip",
+                  "Print or download official B2B trade confirmation slip"
+                )}
               >
                 <Printer className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Trade Slip</span>
+                <span>{t("orders:detail.trade_slip", "Trade Slip")}</span>
               </button>
             )}
             <button
               type="button"
               onClick={onClose}
               className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-              aria-label="Close dialog"
+              aria-label={t("common:actions.close", "Close dialog")}
             >
               <X className="w-5 h-5" aria-hidden="true" />
             </button>
@@ -382,13 +465,15 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
           {isLoading ? (
             <div className="py-12 flex flex-col items-center justify-center text-muted-foreground gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-primary" aria-hidden="true" />
-              <p className="text-sm">Loading order contract specifications...</p>
+              <p className="text-sm">
+                {t("orders:detail.loading_specs", "Loading order contract specifications...")}
+              </p>
             </div>
           ) : error ? (
             <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-3">
               <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div>
-                <p className="font-semibold">Unable to Load Order</p>
+                <p className="font-semibold">{t("orders:detail.unable_to_load", "Unable to Load Order")}</p>
                 <p className="text-xs">{error}</p>
               </div>
             </div>
@@ -413,29 +498,31 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                     <FileText className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-                    Bilateral Trade Lifecycle
+                    {t("orders:lifecycle_title", "Bilateral Trade Lifecycle")}
                   </span>
                   {order.status === "cancelled" ? (
                     <span className="text-xs font-semibold text-destructive flex items-center gap-1">
-                      <XCircle className="w-3.5 h-3.5" aria-hidden="true" /> Order Cancelled
+                      <XCircle className="w-3.5 h-3.5" aria-hidden="true" />{" "}
+                      {t("orders:status.order_cancelled", "Order Cancelled")}
                     </span>
                   ) : order.status === "completed" ? (
                     <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Trade Concluded
+                      <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />{" "}
+                      {t("orders:status.trade_concluded", "Trade Concluded")}
                     </span>
                   ) : (
                     <span className="text-xs font-medium text-muted-foreground">
-                      Active Stage:{" "}
+                      {t("orders:lifecycle.active_stage", "Active Stage:")}{" "}
                       <span className="font-semibold text-foreground capitalize">
                         {order.delivery_status === "completed"
-                          ? "Final Settlement"
+                          ? t("orders:lifecycle.final_settlement", "Final Settlement")
                           : order.delivery_status === "completion_marked"
-                          ? "Receipt Ack"
+                          ? t("orders:lifecycle.receipt_ack", "Receipt Ack")
                           : order.delivery_status === "arranged"
-                          ? "In Transit"
+                          ? t("orders:lifecycle.in_transit", "In Transit")
                           : order.status === "confirmed"
-                          ? "Logistics Planning"
-                          : "Confirmation"}
+                          ? t("orders:lifecycle.logistics_planning", "Logistics Planning")
+                          : t("orders:lifecycle.confirmation", "Confirmation")}
                       </span>
                     </span>
                   )}
@@ -476,12 +563,12 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                           </span>
                           <span className="text-[10px] font-semibold uppercase tracking-wider">
                             {isComplete
-                              ? "Done"
+                              ? t("common:status.done", "Done")
                               : isCurrent
-                              ? "Active"
+                              ? t("common:status.active", "Active")
                               : isCancelled
-                              ? "Void"
-                              : "Next"}
+                              ? t("common:status.void", "Void")
+                              : t("common:status.next", "Next")}
                           </span>
                         </div>
                         <div>
@@ -504,13 +591,16 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 <div className="p-4 rounded-xl border border-border bg-secondary/30 space-y-1.5">
                   <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
                     <Tractor className="w-4 h-4 text-primary" aria-hidden="true" />
-                    <span>Agricultural Producer</span>
+                    <span>{t("orders:detail.producer_card_title", "Agricultural Producer")}</span>
                   </div>
                   <p className="font-bold text-sm text-foreground">
-                    {order.farmer?.farm_name || order.farmer?.full_name || "Verified Producer"}
+                    {order.farmer?.farm_name ||
+                      order.farmer?.full_name ||
+                      t("orders:detail.verified_producer", "Verified Producer")}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {order.farmer?.email || "Producer Account"}
+                    {order.farmer?.email ||
+                      t("orders:detail.producer_account", "Producer Account")}
                   </p>
                 </div>
 
@@ -518,13 +608,17 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 <div className="p-4 rounded-xl border border-border bg-secondary/30 space-y-1.5">
                   <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
                     <Building className="w-4 h-4 text-blue-600" aria-hidden="true" />
-                    <span>Commercial Buyer</span>
+                    <span>{t("orders:detail.buyer_card_title", "Commercial Buyer")}</span>
                   </div>
                   <p className="font-bold text-sm text-foreground">
-                    {order.buyer?.business_name || "Verified Buyer"}
+                    {order.buyer?.business_name ||
+                      t("orders:detail.verified_buyer", "Verified Buyer")}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Contact: {order.buyer?.full_name || order.buyer?.email || "Enterprise Representative"}
+                    {t("orders:detail.contact_prefix", "Contact:")}{" "}
+                    {order.buyer?.full_name ||
+                      order.buyer?.email ||
+                      t("orders:detail.enterprise_rep", "Enterprise Representative")}
                   </p>
                 </div>
               </div>
@@ -532,17 +626,19 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               {/* Order Line Items */}
               <div className="space-y-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
-                  Contract Line Items ({order.items.length})
+                  {t("orders:detail.items_count", "Contract Line Items ({{count}})", {
+                    count: order.items.length,
+                  })}
                 </span>
                 <div className="rounded-xl border border-border overflow-hidden">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-secondary/60 text-muted-foreground border-b border-border font-bold">
                       <tr>
-                        <th className="px-4 py-2.5">Produce Item</th>
-                        <th className="px-4 py-2.5">Quality</th>
-                        <th className="px-4 py-2.5 text-right">Quantity</th>
-                        <th className="px-4 py-2.5 text-right">Unit Price</th>
-                        <th className="px-4 py-2.5 text-right">Line Subtotal</th>
+                        <th className="px-4 py-2.5">{t("orders:detail.col_item", "Produce Item")}</th>
+                        <th className="px-4 py-2.5">{t("orders:detail.col_quality", "Quality")}</th>
+                        <th className="px-4 py-2.5 text-right">{t("orders:detail.col_quantity", "Quantity")}</th>
+                        <th className="px-4 py-2.5 text-right">{t("orders:detail.col_unit_price", "Unit Price")}</th>
+                        <th className="px-4 py-2.5 text-right">{t("orders:detail.col_subtotal", "Line Subtotal")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -552,16 +648,16 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                             {it.product_name}
                           </td>
                           <td className="px-4 py-3 text-muted-foreground">
-                            {it.quality_grade || "Standard"}
+                            {it.quality_grade || t("orders:detail.standard_grade", "Standard")}
                           </td>
                           <td className="px-4 py-3 text-right font-medium">
-                            {it.quantity} {it.unit}
+                            {formatNumber(it.quantity)} {it.unit}
                           </td>
                           <td className="px-4 py-3 text-right text-muted-foreground font-mono">
-                            ₹{Number(it.unit_price).toLocaleString()}
+                            ₹{formatNumber(Number(it.unit_price))}
                           </td>
                           <td className="px-4 py-3 text-right font-bold text-foreground font-mono">
-                            ₹{Number(it.subtotal).toLocaleString()}
+                            ₹{formatNumber(Number(it.subtotal))}
                           </td>
                         </tr>
                       ))}
@@ -569,10 +665,10 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                     <tfoot className="bg-secondary/40 border-t border-border font-bold text-xs">
                       <tr>
                         <td colSpan={4} className="px-4 py-3 text-right text-muted-foreground">
-                          Total Commercial Valuation:
+                          {t("orders:detail.total_valuation", "Total Commercial Valuation:")}
                         </td>
                         <td className="px-4 py-3 text-right text-base text-primary font-black font-mono">
-                          ₹{Number(order.total_amount).toLocaleString()}
+                          ₹{formatNumber(Number(order.total_amount))}
                         </td>
                       </tr>
                     </tfoot>
@@ -585,24 +681,30 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 <div>
                   <span className="text-muted-foreground block text-[11px] font-bold uppercase tracking-wider mb-1 flex items-center gap-1">
                     <Truck className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-                    Delivery Terms & Instructions
+                    {t("orders:detail.delivery_terms_title", "Delivery Terms & Instructions")}
                   </span>
                   <p className="text-foreground leading-relaxed">
-                    {order.delivery_notes || "Standard delivery / Farm gate pickup as agreed"}
+                    {order.delivery_notes ||
+                      t(
+                        "orders:detail.default_delivery_notes",
+                        "Standard delivery / Farm gate pickup as agreed"
+                      )}
                   </p>
                 </div>
                 <div>
                   <span className="text-muted-foreground block text-[11px] font-bold uppercase tracking-wider mb-1 flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-                    Agreed Fulfillment Date
+                    {t("orders:detail.fulfillment_date_title", "Agreed Fulfillment Date")}
                   </span>
                   <p className="text-foreground font-semibold">
-                    {order.delivery_arranged_date || "As scheduled"}
+                    {order.delivery_arranged_date
+                      ? formatDate(order.delivery_arranged_date)
+                      : t("orders:detail.as_scheduled", "As scheduled")}
                   </p>
                   <div className="mt-2 text-[11px] text-muted-foreground">
-                    Delivery Status:{" "}
+                    {t("orders:detail.delivery_status_label", "Delivery Status:")}{" "}
                     <span className="font-semibold text-foreground capitalize">
-                      {order.delivery_status.replace(/_/g, " ")}
+                      {formatDeliveryStatus(order.delivery_status)}
                     </span>
                   </div>
                 </div>
@@ -616,17 +718,20 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
                       <Truck className="w-4 h-4" />
-                      Delivery Coordination
+                      {t("orders:detail.coordination_title", "Delivery Coordination")}
                     </span>
                     <span className="text-[11px] text-muted-foreground">
-                      Current Stage:{" "}
+                      {t("orders:detail.current_stage_label", "Current Stage:")}{" "}
                       <span className="font-semibold text-foreground capitalize">
-                        {order.delivery_status.replace(/_/g, " ")}
+                        {formatDeliveryStatus(order.delivery_status)}
                       </span>
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Update fulfillment milestones as goods move from origin to destination. Once received, the counterparty must acknowledge receipt to conclude the order.
+                    {t(
+                      "orders:detail.coordination_desc",
+                      "Update fulfillment milestones as goods move from origin to destination. Once received, the counterparty must acknowledge receipt to conclude the order."
+                    )}
                   </p>
                   <div className="flex flex-wrap items-center gap-2 pt-1">
                     {canArrangeDelivery && (
@@ -636,7 +741,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                         className="px-3.5 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold shadow-xs transition-colors flex items-center gap-1"
                       >
                         <Truck className="w-3.5 h-3.5" />
-                        <span>Arrange Delivery</span>
+                        <span>{t("orders:detail.btn_arrange_delivery", "Arrange Delivery")}</span>
                       </button>
                     )}
                     {canMarkDeliveryCompleted && (
@@ -651,7 +756,9 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                         ) : (
                           <CheckCircle2 className="w-3.5 h-3.5" />
                         )}
-                        <span>Mark Delivery Completed</span>
+                        <span>
+                          {t("orders:detail.btn_mark_completed", "Mark Delivery Completed")}
+                        </span>
                       </button>
                     )}
                     {canAcknowledgeDelivery && (
@@ -661,13 +768,21 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                         className="px-3.5 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-xs font-semibold shadow-xs transition-colors flex items-center gap-1"
                       >
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Acknowledge Delivery Receipt</span>
+                        <span>
+                          {t(
+                            "orders:detail.btn_acknowledge_receipt",
+                            "Acknowledge Delivery Receipt"
+                          )}
+                        </span>
                       </button>
                     )}
                     {isAwaitingCounterpartyAck && (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-800 text-xs font-semibold border border-amber-500/20">
                         <Clock className="w-3.5 h-3.5 text-amber-600" />
-                        Awaiting counterparty delivery receipt acknowledgement
+                        {t(
+                          "orders:detail.awaiting_ack",
+                          "Awaiting counterparty delivery receipt acknowledgement"
+                        )}
                       </span>
                     )}
                   </div>
@@ -678,7 +793,10 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
-                    Off-Platform Payment Tracking
+                    {t(
+                      "orders:detail.payment_tracking_title",
+                      "Off-Platform Payment Tracking"
+                    )}
                   </span>
                   <div className="flex items-center gap-2">
                     <button
@@ -686,7 +804,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                       onClick={() => setIsPaymentHistoryOpen(true)}
                       className="text-xs font-semibold text-primary hover:underline"
                     >
-                      Payment History
+                      {t("orders:detail.payment_history_link", "Payment History")}
                     </button>
                     {!isFarmerSeller && order.status !== "cancelled" && (
                       <button
@@ -694,7 +812,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                         onClick={() => setIsPaymentRecordOpen(true)}
                         className="px-2.5 py-1 rounded-md bg-primary text-primary-foreground text-xs font-semibold shadow-xs hover:bg-primary/90 transition-colors"
                       >
-                        + Record Payment
+                        {t("orders:detail.btn_record_payment", "+ Record Payment")}
                       </button>
                     )}
                   </div>
@@ -708,10 +826,16 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   <div>
                     <span className="font-bold text-foreground flex items-center gap-1.5">
                       <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                      Order Concluded — Leave Feedback
+                      {t(
+                        "orders:detail.concluded_feedback_title",
+                        "Order Concluded — Leave Feedback"
+                      )}
                     </span>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Share your experience regarding produce quality, punctuality, and communication.
+                      {t(
+                        "orders:detail.concluded_feedback_desc",
+                        "Share your experience regarding produce quality, punctuality, and communication."
+                      )}
                     </p>
                   </div>
                   <button
@@ -720,7 +844,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                     className="shrink-0 px-3.5 py-1.5 rounded-lg bg-amber-500 text-white hover:bg-amber-600 font-semibold shadow-xs transition-colors flex items-center gap-1"
                   >
                     <Star className="w-3.5 h-3.5 fill-white" />
-                    <span>Rate Deal</span>
+                    <span>{t("orders:detail.btn_rate_deal", "Rate Deal")}</span>
                   </button>
                 </div>
               )}
@@ -729,7 +853,11 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
-                    Post-Finalization Amendments ({amendments.length})
+                    {t(
+                      "orders:detail.amendments_count",
+                      "Post-Finalization Amendments ({{count}})",
+                      { count: amendments.length }
+                    )}
                   </span>
                   {order.status === "confirmed" && !hasPendingAmendment && (
                     <button
@@ -737,14 +865,17 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                       onClick={() => setIsAmendmentModalOpen(true)}
                       className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
                     >
-                      + Propose Amendment
+                      {t("orders:detail.btn_propose_amendment", "+ Propose Amendment")}
                     </button>
                   )}
                 </div>
 
                 {amendments.length === 0 ? (
                   <p className="text-xs text-muted-foreground italic">
-                    No amendments proposed. Original contract terms remain in effect.
+                    {t(
+                      "orders:detail.no_amendments",
+                      "No amendments proposed. Original contract terms remain in effect."
+                    )}
                   </p>
                 ) : (
                   <div className="space-y-2">
@@ -760,7 +891,8 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-foreground uppercase tracking-wider text-[11px]">
-                                {amd.amendment_type} Amendment
+                                {amd.amendment_type}{" "}
+                                {t("orders:detail.amendment_suffix", "Amendment")}
                               </span>
                               <span
                                 className={`px-2 py-0.5 rounded-full text-[10px] font-bold capitalize ${
@@ -775,23 +907,33 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                               </span>
                             </div>
                             <span className="text-[11px] text-muted-foreground font-mono">
-                              {new Date(amd.created_at).toLocaleDateString()}
+                              {formatDate(amd.created_at)}
                             </span>
                           </div>
 
                           <div className="text-xs text-foreground bg-secondary/30 p-2.5 rounded-lg border border-border/50 space-y-1.5">
                             <div>
-                              <span className="text-muted-foreground block text-[11px]">Justification:</span>
+                              <span className="text-muted-foreground block text-[11px]">
+                                {t("orders:detail.justification_label", "Justification:")}
+                              </span>
                               <p className="font-medium">{amd.justification}</p>
                             </div>
                             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/50 text-[11px]">
                               <div>
-                                <span className="text-muted-foreground block">Previous Specification:</span>
-                                <span className="font-mono text-muted-foreground">{amd.old_value || "—"}</span>
+                                <span className="text-muted-foreground block">
+                                  {t("orders:detail.prev_spec_label", "Previous Specification:")}
+                                </span>
+                                <span className="font-mono text-muted-foreground">
+                                  {amd.old_value || "—"}
+                                </span>
                               </div>
                               <div>
-                                <span className="text-muted-foreground block">Amended Proposal:</span>
-                                <span className="font-mono font-bold text-primary">{amd.new_value}</span>
+                                <span className="text-muted-foreground block">
+                                  {t("orders:detail.amended_proposal_label", "Amended Proposal:")}
+                                </span>
+                                <span className="font-mono font-bold text-primary">
+                                  {amd.new_value}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -800,7 +942,10 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                             <div className="pt-1 flex items-center justify-end gap-2">
                               {isProposer ? (
                                 <span className="text-[11px] text-amber-700 italic">
-                                  Awaiting counterparty review
+                                  {t(
+                                    "orders:detail.awaiting_review",
+                                    "Awaiting counterparty review"
+                                  )}
                                 </span>
                               ) : (
                                 <>
@@ -810,7 +955,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                                     onClick={() => handleRejectAmendment(amd.id)}
                                     className="px-3 py-1 rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 text-xs font-semibold transition-colors disabled:opacity-50"
                                   >
-                                    Reject
+                                    {t("common:actions.reject", "Reject")}
                                   </button>
                                   <button
                                     type="button"
@@ -818,7 +963,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                                     onClick={() => handleAcceptAmendment(amd.id)}
                                     className="px-3.5 py-1 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold transition-colors disabled:opacity-50"
                                   >
-                                    Accept Amendment
+                                    {t("orders:detail.btn_accept_amendment", "Accept Amendment")}
                                   </button>
                                 </>
                               )}
@@ -835,9 +980,10 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               <div className="p-3.5 rounded-xl bg-secondary/40 border border-border text-[11px] text-muted-foreground flex items-start gap-2.5">
                 <DollarSign className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <p className="leading-relaxed">
-                  AgriDirect is a pure trade matching platform. Payments and physical transportation
-                  are settled directly between buyer and farmer in accordance with agreed terms.
-                  AgriDirect never holds funds, processes escrow, or takes custody of agricultural commodities.
+                  {t(
+                    "orders:detail.disclaimer",
+                    "AgriDirect is a pure trade matching platform. Payments and physical transportation are settled directly between buyer and farmer in accordance with agreed terms. AgriDirect never holds funds, processes escrow, or takes custody of agricultural commodities."
+                  )}
                 </p>
               </div>
             </>
@@ -855,7 +1001,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-semibold transition-colors"
                 >
                   <History className="w-3.5 h-3.5" aria-hidden="true" />
-                  <span>Audit Ledger</span>
+                  <span>{t("orders:detail.btn_audit_ledger", "Audit Ledger")}</span>
                 </button>
                 {(order.status === "completed" || order.status === "confirmed") && (
                   <button
@@ -864,7 +1010,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                     className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-semibold transition-colors"
                   >
                     <Printer className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span>Print Slip</span>
+                    <span>{t("orders:detail.btn_print_slip", "Print Slip")}</span>
                   </button>
                 )}
                 <button
@@ -878,7 +1024,9 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   ) : (
                     <MessageSquare className="w-3.5 h-3.5" />
                   )}
-                  <span>Message Counterparty</span>
+                  <span>
+                    {t("orders:detail.btn_message_counterparty", "Message Counterparty")}
+                  </span>
                 </button>
                 <button
                   type="button"
@@ -886,7 +1034,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   className="inline-flex items-center gap-1.5 text-xs text-destructive hover:underline font-semibold transition-colors"
                 >
                   <ShieldAlert className="w-3.5 h-3.5" />
-                  <span>Report</span>
+                  <span>{t("orders:detail.btn_report", "Report")}</span>
                 </button>
               </>
             )}
@@ -898,7 +1046,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 rounded-xl border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors"
             >
-              Close
+              {t("common:actions.close", "Close")}
             </button>
 
             {/* Cancel Button */}
@@ -909,7 +1057,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 className="px-4 py-2 rounded-xl border border-destructive/30 text-destructive hover:bg-destructive/10 text-xs font-bold transition-colors flex items-center gap-1.5"
               >
                 <AlertTriangle className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Cancel Order</span>
+                <span>{t("orders:cancel_order", "Cancel Order")}</span>
               </button>
             )}
 
@@ -924,12 +1072,12 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 {isConfirming ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
-                    <span>Confirming...</span>
+                    <span>{t("orders:detail.confirming", "Confirming...")}</span>
                   </>
                 ) : (
                   <>
                     <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span>Confirm Order</span>
+                    <span>{t("orders:confirm_order", "Confirm Order")}</span>
                   </>
                 )}
               </button>

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { X, AlertTriangle, Upload, AlertCircle, Loader2, FileCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { formatNumber } from "../../utils/formatters";
 import { paymentsApi } from "../../api/payments";
 import type { PaymentComplaint, PaymentComplaintCreatePayload } from "../../types/payments";
 
@@ -20,6 +22,7 @@ export const PaymentComplaintModal: React.FC<PaymentComplaintModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { t } = useTranslation(["payments", "disputes", "orders", "common", "validation", "errors"]);
   const [reason, setReason] = useState("");
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,7 +34,7 @@ export const PaymentComplaintModal: React.FC<PaymentComplaintModalProps> = ({
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       if (file.size > 10 * 1024 * 1024) {
-        setError("Evidence document must not exceed 10 MB.");
+        setError(t("payments:evidence_size_error", "Evidence document must not exceed 10 MB."));
         return;
       }
       setEvidenceFile(file);
@@ -45,7 +48,7 @@ export const PaymentComplaintModal: React.FC<PaymentComplaintModalProps> = ({
 
     const trimmed = reason.trim();
     if (trimmed.length < 5) {
-      setError("Please provide a detailed dispute narrative (at least 5 characters).");
+      setError(t("payments:dispute_min_length_error", "Please provide a detailed dispute narrative (at least 5 characters)."));
       return;
     }
 
@@ -60,7 +63,7 @@ export const PaymentComplaintModal: React.FC<PaymentComplaintModalProps> = ({
       onSuccess(complaint);
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to file payment dispute.";
+      const msg = err instanceof Error ? err.message : t("payments:dispute_failed_error", "Failed to file payment dispute.");
       setError(msg);
     } finally {
       setIsSubmitting(false);
@@ -80,14 +83,14 @@ export const PaymentComplaintModal: React.FC<PaymentComplaintModalProps> = ({
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-destructive" aria-hidden="true" />
             <h2 id="modal-payment-complaint-title" className="text-base font-bold text-foreground">
-              Dispute Payment Claim
+              {t("payments:dispute_modal_title", "Dispute Payment Claim")}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Close dialog"
+            aria-label={t("common:close_dialog", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -104,13 +107,17 @@ export const PaymentComplaintModal: React.FC<PaymentComplaintModalProps> = ({
 
           <div className="p-3 rounded-xl bg-secondary/50 border border-border text-xs text-muted-foreground space-y-1">
             <p>
-              Order: <strong className="text-foreground">{orderNumber}</strong> | Claimed Amount:{" "}
-              <strong className="text-foreground">₹{paymentAmount}</strong>
+              {t("orders:order", "Order")}: <strong className="text-foreground">{orderNumber}</strong> |{" "}
+              {t("payments:claimed_amount", "Claimed Amount")}:{" "}
+              <strong className="text-foreground">
+                ₹{isNaN(Number(paymentAmount)) ? paymentAmount : formatNumber(Number(paymentAmount), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </strong>
             </p>
             <p className="text-[11px] leading-relaxed">
-              Filing a dispute transitions the payment record to{" "}
-              <span className="font-bold text-destructive">Disputed</span> and alerts the counterparty.
-              The claim is queued for administrative mediation and evidence verification.
+              {t(
+                "payments:dispute_notice",
+                "Filing a dispute transitions the payment record to Disputed and alerts the counterparty. The claim is queued for administrative mediation and evidence verification."
+              )}
             </p>
           </div>
 
@@ -119,14 +126,17 @@ export const PaymentComplaintModal: React.FC<PaymentComplaintModalProps> = ({
               htmlFor="complaint-reason-input"
               className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
             >
-              Factual Ground for Dispute <span className="text-destructive">*</span>
+              {t("payments:dispute_reason_label", "Factual Ground for Dispute")} <span className="text-destructive">*</span>
             </label>
             <textarea
               id="complaint-reason-input"
               rows={4}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="State the exact discrepancy (e.g. funds not received in bank account, incorrect amount, duplicate receipt)..."
+              placeholder={t(
+                "payments:dispute_reason_placeholder",
+                "State the exact discrepancy (e.g. funds not received in bank account, incorrect amount, duplicate receipt)..."
+              )}
               minLength={5}
               maxLength={2000}
               className="w-full rounded-xl border border-border bg-card px-3.5 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-medium"
@@ -141,7 +151,7 @@ export const PaymentComplaintModal: React.FC<PaymentComplaintModalProps> = ({
               className="block text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5"
             >
               <Upload className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-              <span>Attach Bank Statement / Evidence (Optional, Max 10MB)</span>
+              <span>{t("payments:dispute_evidence_label", "Attach Bank Statement / Evidence (Optional, Max 10MB)")}</span>
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -149,7 +159,7 @@ export const PaymentComplaintModal: React.FC<PaymentComplaintModalProps> = ({
                 type="file"
                 accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx"
                 onChange={handleFileChange}
-                className="text-xs text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-border file:text-xs file:font-semibold file:bg-secondary file:text-foreground hover:file:bg-secondary/80 cursor-pointer"
+                className="text-xs text-muted-foreground file:me-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-border file:text-xs file:font-semibold file:bg-secondary file:text-foreground hover:file:bg-secondary/80 cursor-pointer"
               />
               {evidenceFile && (
                 <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 font-medium">
@@ -167,7 +177,7 @@ export const PaymentComplaintModal: React.FC<PaymentComplaintModalProps> = ({
               disabled={isSubmitting}
               className="px-4 py-2 rounded-xl border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors disabled:opacity-50"
             >
-              Cancel
+              {t("common:cancel", "Cancel")}
             </button>
             <button
               type="submit"
@@ -177,10 +187,10 @@ export const PaymentComplaintModal: React.FC<PaymentComplaintModalProps> = ({
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                  <span>Submitting Dispute...</span>
+                  <span>{t("payments:submitting_dispute", "Submitting Dispute...")}</span>
                 </>
               ) : (
-                <span>Submit Formal Dispute</span>
+                <span>{t("payments:submit_dispute", "Submit Formal Dispute")}</span>
               )}
             </button>
           </div>

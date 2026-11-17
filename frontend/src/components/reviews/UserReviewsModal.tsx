@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { X, Star, Loader2, AlertCircle, Calendar } from "lucide-react";
 import { reviewsApi } from "../../api/reviews";
 import { StarRatingDisplay } from "./StarRatingDisplay";
+import { formatDate } from "../../utils/formatters";
 import type { ReviewItem, UserReputationSummary } from "../../types/reviews";
 
 interface UserReviewsModalProps {
@@ -19,6 +21,7 @@ export const UserReviewsModal: React.FC<UserReviewsModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { t, i18n } = useTranslation(["reviews", "common"]);
   const [summary, setSummary] = useState<UserReputationSummary | null>(null);
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,7 +45,10 @@ export const UserReviewsModal: React.FC<UserReviewsModalProps> = ({
       })
       .catch((err: unknown) => {
         if (!isMounted) return;
-        const msg = err instanceof Error ? err.message : "Failed to load reviews.";
+        const msg =
+          err instanceof Error
+            ? err.message
+            : t("reviews:error_load_failed", "Failed to load reviews.");
         setError(msg);
       })
       .finally(() => {
@@ -52,7 +58,7 @@ export const UserReviewsModal: React.FC<UserReviewsModalProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [isOpen, userId]);
+  }, [isOpen, userId, t]);
 
   if (!isOpen) return null;
 
@@ -64,10 +70,11 @@ export const UserReviewsModal: React.FC<UserReviewsModalProps> = ({
           <div>
             <h2 className="text-base font-bold text-foreground flex items-center gap-2">
               <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-              Reputation & Verified Reviews
+              {t("reviews:user_modal_title", "Reputation & Verified Reviews")}
             </h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Performance feedback for <span className="font-semibold text-foreground">{userName}</span>
+              {t("reviews:user_modal_subtitle", "Performance feedback for")}{" "}
+              <span className="font-semibold text-foreground">{userName}</span>
               {userRole && ` (${userRole})`}
             </p>
           </div>
@@ -75,6 +82,7 @@ export const UserReviewsModal: React.FC<UserReviewsModalProps> = ({
             type="button"
             onClick={onClose}
             className="p-1 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+            aria-label={t("common:actions.close", "Close")}
           >
             <X className="w-5 h-5" />
           </button>
@@ -85,7 +93,7 @@ export const UserReviewsModal: React.FC<UserReviewsModalProps> = ({
           {isLoading ? (
             <div className="py-12 flex flex-col items-center justify-center gap-2 text-muted-foreground">
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
-              <p className="text-xs">Loading reputation history...</p>
+              <p className="text-xs">{t("reviews:loading_history", "Loading reputation history...")}</p>
             </div>
           ) : error ? (
             <div className="p-4 text-center space-y-2">
@@ -97,7 +105,7 @@ export const UserReviewsModal: React.FC<UserReviewsModalProps> = ({
               {/* Summary Scorecard */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 rounded-xl bg-secondary/30 border border-border">
                 {/* Left: Overall score */}
-                <div className="md:col-span-5 flex flex-col items-center justify-center text-center p-2 border-b md:border-b-0 md:border-r border-border/80">
+                <div className="md:col-span-5 flex flex-col items-center justify-center text-center p-2 border-b md:border-b-0 md:border-e border-border/80">
                   <span className="text-4xl font-extrabold text-foreground">
                     {summary.average_rating ? summary.average_rating.toFixed(1) : "0.0"}
                   </span>
@@ -105,32 +113,48 @@ export const UserReviewsModal: React.FC<UserReviewsModalProps> = ({
                     <StarRatingDisplay rating={summary.average_rating} size="lg" showValue={false} />
                   </div>
                   <p className="text-xs text-muted-foreground mt-1.5 font-medium">
-                    Based on {summary.total_reviews} verified {summary.total_reviews === 1 ? "review" : "reviews"}
+                    {summary.total_reviews === 1
+                      ? t("reviews:based_on_reviews", "Based on {{count}} verified review", {
+                          count: 1,
+                        })
+                      : t(
+                          "reviews:based_on_reviews_plural",
+                          "Based on {{count}} verified reviews",
+                          { count: summary.total_reviews }
+                        )}
                   </p>
                 </div>
 
                 {/* Right: Sub-dimension averages */}
                 <div className="md:col-span-7 flex flex-col justify-center space-y-2 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Produce Quality</span>
+                    <span className="text-muted-foreground">
+                      {t("reviews:produce_quality", "Produce Quality")}
+                    </span>
                     <span className="font-semibold text-foreground">
                       {summary.quality_rating_avg ? `${summary.quality_rating_avg.toFixed(1)} / 5` : "N/A"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Description Accuracy</span>
+                    <span className="text-muted-foreground">
+                      {t("reviews:description_accuracy", "Description Accuracy")}
+                    </span>
                     <span className="font-semibold text-foreground">
                       {summary.accuracy_rating_avg ? `${summary.accuracy_rating_avg.toFixed(1)} / 5` : "N/A"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Communication</span>
+                    <span className="text-muted-foreground">
+                      {t("reviews:communication", "Communication")}
+                    </span>
                     <span className="font-semibold text-foreground">
                       {summary.communication_rating_avg ? `${summary.communication_rating_avg.toFixed(1)} / 5` : "N/A"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Reliability & Fulfillment</span>
+                    <span className="text-muted-foreground">
+                      {t("reviews:reliability_fulfillment", "Reliability & Fulfillment")}
+                    </span>
                     <span className="font-semibold text-foreground">
                       {summary.reliability_rating_avg ? `${summary.reliability_rating_avg.toFixed(1)} / 5` : "N/A"}
                     </span>
@@ -141,21 +165,19 @@ export const UserReviewsModal: React.FC<UserReviewsModalProps> = ({
               {/* Reviews List */}
               <div className="space-y-3">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Recent Feedback ({reviews.length})
+                  {t("reviews:recent_feedback", "Recent Feedback ({{count}})", {
+                    count: reviews.length,
+                  })}
                 </h3>
 
                 {reviews.length === 0 ? (
                   <div className="py-8 text-center text-xs text-muted-foreground bg-secondary/20 rounded-lg border border-border">
-                    No verified reviews on record yet.
+                    {t("reviews:no_reviews_record", "No verified reviews on record yet.")}
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {reviews.map((rev) => {
-                      const dateStr = new Date(rev.created_at).toLocaleDateString([], {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      });
+                      const dateStr = formatDate(rev.created_at, i18n.language);
 
                       return (
                         <div
@@ -179,16 +201,32 @@ export const UserReviewsModal: React.FC<UserReviewsModalProps> = ({
                           {/* Sub-rating tags */}
                           <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground pt-1 border-t border-border/40">
                             {rev.quality_rating && (
-                              <span>Quality: {rev.quality_rating}/5</span>
+                              <span>
+                                {t("reviews:tag_quality", "Quality: {{rating}}/5", {
+                                  rating: rev.quality_rating,
+                                })}
+                              </span>
                             )}
                             {rev.accuracy_rating && (
-                              <span>Accuracy: {rev.accuracy_rating}/5</span>
+                              <span>
+                                {t("reviews:tag_accuracy", "Accuracy: {{rating}}/5", {
+                                  rating: rev.accuracy_rating,
+                                })}
+                              </span>
                             )}
                             {rev.communication_rating && (
-                              <span>Communication: {rev.communication_rating}/5</span>
+                              <span>
+                                {t("reviews:tag_communication", "Communication: {{rating}}/5", {
+                                  rating: rev.communication_rating,
+                                })}
+                              </span>
                             )}
                             {rev.reliability_rating && (
-                              <span>Reliability: {rev.reliability_rating}/5</span>
+                              <span>
+                                {t("reviews:tag_reliability", "Reliability: {{rating}}/5", {
+                                  rating: rev.reliability_rating,
+                                })}
+                              </span>
                             )}
                           </div>
                         </div>
@@ -204,4 +242,3 @@ export const UserReviewsModal: React.FC<UserReviewsModalProps> = ({
     </div>
   );
 };
-

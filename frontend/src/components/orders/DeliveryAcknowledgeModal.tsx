@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { X, CheckCircle2, AlertCircle, Loader2, PackageCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ordersApi } from "../../api/orders";
 import type { DeliveryAcknowledgePayload, OrderDetail } from "../../types/orders";
 
@@ -16,6 +17,7 @@ export const DeliveryAcknowledgeModal: React.FC<DeliveryAcknowledgeModalProps> =
   onClose,
   onSuccess,
 }) => {
+  const { t } = useTranslation(["orders", "validation", "common", "errors"]);
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +38,10 @@ export const DeliveryAcknowledgeModal: React.FC<DeliveryAcknowledgeModalProps> =
       onSuccess(updated);
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to acknowledge delivery receipt.";
+      const msg =
+        err instanceof Error
+          ? err.message
+          : t("orders:delivery.ack_failed", "Failed to acknowledge delivery receipt.");
       setError(msg);
     } finally {
       setIsSubmitting(false);
@@ -56,14 +61,17 @@ export const DeliveryAcknowledgeModal: React.FC<DeliveryAcknowledgeModalProps> =
           <div className="flex items-center gap-2">
             <PackageCheck className="w-5 h-5 text-emerald-600" aria-hidden="true" />
             <h2 id="modal-delivery-ack-title" className="text-base font-bold text-foreground">
-              Acknowledge Delivery & Complete Order
+              {t(
+                "orders:delivery.acknowledge_title",
+                "Acknowledge Delivery & Complete Order"
+              )}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Close dialog"
+            aria-label={t("common:actions.close", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -80,13 +88,18 @@ export const DeliveryAcknowledgeModal: React.FC<DeliveryAcknowledgeModalProps> =
 
           <div className="text-xs text-muted-foreground space-y-2">
             <p>
-              Confirming receipt for Order <strong className="text-foreground">{order.order_number}</strong>.
+              {t("orders:delivery.confirming_receipt", "Confirming receipt for Order")}{" "}
+              <strong className="text-foreground">{order.order_number}</strong>.
             </p>
             <div className="p-3 rounded-xl bg-secondary/50 border border-border space-y-1">
-              <span className="font-semibold text-foreground block">Binding Finalization:</span>
+              <span className="font-semibold text-foreground block">
+                {t("orders:delivery.binding_finalization", "Binding Finalization:")}
+              </span>
               <p className="text-[11px] leading-relaxed">
-                By acknowledging physical receipt of the produce, this trade transaction will be permanently marked as{" "}
-                <strong className="text-foreground">Completed</strong> and all line items will transition to fulfilled.
+                {t(
+                  "orders:delivery.finalization_desc",
+                  "By acknowledging physical receipt of the produce, this trade transaction will be permanently marked as Completed and all line items will transition to fulfilled."
+                )}
               </p>
             </div>
           </div>
@@ -96,14 +109,20 @@ export const DeliveryAcknowledgeModal: React.FC<DeliveryAcknowledgeModalProps> =
               htmlFor="delivery-ack-notes"
               className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
             >
-              Inspection Notes / Verification Remarks (Optional)
+              {t(
+                "orders:delivery.ack_notes_label",
+                "Inspection Notes / Verification Remarks (Optional)"
+              )}
             </label>
             <textarea
               id="delivery-ack-notes"
               rows={3}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g., Goods inspected at farm gate, weights match weighbridge receipt..."
+              placeholder={t(
+                "orders:delivery.ack_notes_placeholder",
+                "e.g., Goods inspected at farm gate, weights match weighbridge receipt..."
+              )}
               maxLength={1000}
               className="w-full rounded-xl border border-border bg-card px-3.5 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-medium"
             />
@@ -116,7 +135,7 @@ export const DeliveryAcknowledgeModal: React.FC<DeliveryAcknowledgeModalProps> =
               disabled={isSubmitting}
               className="px-4 py-2 rounded-xl border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors disabled:opacity-50"
             >
-              Cancel
+              {t("common:actions.cancel", "Cancel")}
             </button>
             <button
               type="submit"
@@ -126,12 +145,14 @@ export const DeliveryAcknowledgeModal: React.FC<DeliveryAcknowledgeModalProps> =
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                  <span>Finalizing...</span>
+                  <span>{t("orders:delivery.finalizing", "Finalizing...")}</span>
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
-                  <span>Acknowledge & Complete</span>
+                  <span>
+                    {t("orders:delivery.ack_complete_btn", "Acknowledge & Complete")}
+                  </span>
                 </>
               )}
             </button>

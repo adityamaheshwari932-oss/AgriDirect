@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { X, Truck, Calendar, MapPin, FileText, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ordersApi } from "../../api/orders";
 import type { DeliveryArrangePayload, OrderDetail } from "../../types/orders";
 
@@ -16,6 +17,7 @@ export const DeliveryArrangeModal: React.FC<DeliveryArrangeModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { t } = useTranslation(["orders", "validation", "common", "errors"]);
   const [deliveryMethod, setDeliveryMethod] = useState(
     order?.delivery_method || "seller_dispatch"
   );
@@ -38,11 +40,15 @@ export const DeliveryArrangeModal: React.FC<DeliveryArrangeModalProps> = ({
     setError(null);
 
     if (!destinationAddress.trim()) {
-      setError("Delivery destination address is required.");
+      setError(
+        t("orders:delivery.address_required", "Delivery destination address is required.")
+      );
       return;
     }
     if (!arrangedDate) {
-      setError("Scheduled delivery or pickup date is required.");
+      setError(
+        t("orders:delivery.date_required", "Scheduled delivery or pickup date is required.")
+      );
       return;
     }
 
@@ -59,7 +65,10 @@ export const DeliveryArrangeModal: React.FC<DeliveryArrangeModalProps> = ({
       onSuccess(updated);
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to arrange delivery.";
+      const msg =
+        err instanceof Error
+          ? err.message
+          : t("orders:delivery.failed", "Failed to arrange delivery.");
       setError(msg);
     } finally {
       setIsSubmitting(false);
@@ -79,14 +88,14 @@ export const DeliveryArrangeModal: React.FC<DeliveryArrangeModalProps> = ({
           <div className="flex items-center gap-2">
             <Truck className="w-5 h-5 text-primary" aria-hidden="true" />
             <h2 id="modal-delivery-arrange-title" className="text-base font-bold text-foreground">
-              Arrange Delivery Logistics
+              {t("orders:delivery.arrange_title", "Arrange Delivery Logistics")}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Close dialog"
+            aria-label={t("common:actions.close", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -102,11 +111,14 @@ export const DeliveryArrangeModal: React.FC<DeliveryArrangeModalProps> = ({
 
           <div className="text-xs text-muted-foreground space-y-1">
             <p>
-              Order Reference: <strong className="text-foreground">{order.order_number}</strong>
+              {t("orders:order_number", "Order Reference")}:{" "}
+              <strong className="text-foreground">{order.order_number}</strong>
             </p>
             <p className="text-[11px]">
-              Scheduling delivery will notify the counterparty and transition the order to{" "}
-              <span className="font-semibold text-foreground">Delivery Arranged</span>.
+              {t(
+                "orders:delivery.stage_notice",
+                "Scheduling delivery will notify the counterparty and transition the order to Delivery Arranged."
+              )}
             </p>
           </div>
 
@@ -116,7 +128,8 @@ export const DeliveryArrangeModal: React.FC<DeliveryArrangeModalProps> = ({
               htmlFor="delivery-method-select"
               className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
             >
-              Logistics Method <span className="text-destructive">*</span>
+              {t("orders:delivery.method_label", "Logistics Method")}{" "}
+              <span className="text-destructive">*</span>
             </label>
             <select
               id="delivery-method-select"
@@ -125,9 +138,24 @@ export const DeliveryArrangeModal: React.FC<DeliveryArrangeModalProps> = ({
               className="w-full rounded-xl border border-border bg-card px-3.5 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-medium"
               required
             >
-              <option value="seller_dispatch">Farmer Dispatch / Seller Transport</option>
-              <option value="buyer_pickup">Buyer Pickup at Farm Gate / Mandi</option>
-              <option value="third_party_transport">Third-Party Logistics / Freight Service</option>
+              <option value="seller_dispatch">
+                {t(
+                  "orders:delivery.method_seller_dispatch",
+                  "Farmer Dispatch / Seller Transport"
+                )}
+              </option>
+              <option value="buyer_pickup">
+                {t(
+                  "orders:delivery.method_buyer_pickup",
+                  "Buyer Pickup at Farm Gate / Mandi"
+                )}
+              </option>
+              <option value="third_party_transport">
+                {t(
+                  "orders:delivery.method_third_party",
+                  "Third-Party Logistics / Freight Service"
+                )}
+              </option>
             </select>
           </div>
 
@@ -138,7 +166,8 @@ export const DeliveryArrangeModal: React.FC<DeliveryArrangeModalProps> = ({
               className="block text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5"
             >
               <Calendar className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-              <span>Scheduled Date</span> <span className="text-destructive">*</span>
+              <span>{t("orders:delivery.scheduled_date_label", "Scheduled Date")}</span>{" "}
+              <span className="text-destructive">*</span>
             </label>
             <input
               id="arranged-date-input"
@@ -157,14 +186,23 @@ export const DeliveryArrangeModal: React.FC<DeliveryArrangeModalProps> = ({
               className="block text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5"
             >
               <MapPin className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-              <span>Physical Destination Address</span> <span className="text-destructive">*</span>
+              <span>
+                {t(
+                  "orders:delivery.destination_address_label",
+                  "Physical Destination Address"
+                )}
+              </span>{" "}
+              <span className="text-destructive">*</span>
             </label>
             <textarea
               id="destination-address-input"
               rows={2}
               value={destinationAddress}
               onChange={(e) => setDestinationAddress(e.target.value)}
-              placeholder="Full street address, district, state, pin code..."
+              placeholder={t(
+                "orders:delivery.destination_placeholder",
+                "Full street address, district, state, pin code..."
+              )}
               className="w-full rounded-xl border border-border bg-card px-3.5 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-medium"
               required
             />
@@ -177,14 +215,22 @@ export const DeliveryArrangeModal: React.FC<DeliveryArrangeModalProps> = ({
               className="block text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5"
             >
               <FileText className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-              <span>Handling & Contact Instructions (Optional)</span>
+              <span>
+                {t(
+                  "orders:delivery.notes_label",
+                  "Handling & Contact Instructions (Optional)"
+                )}
+              </span>
             </label>
             <textarea
               id="delivery-notes-input"
               rows={2}
               value={deliveryNotes}
               onChange={(e) => setDeliveryNotes(e.target.value)}
-              placeholder="e.g., Driver phone number, vehicle plate number, gate entry contact..."
+              placeholder={t(
+                "orders:delivery.notes_placeholder",
+                "e.g., Driver phone number, vehicle plate number, gate entry contact..."
+              )}
               maxLength={1000}
               className="w-full rounded-xl border border-border bg-card px-3.5 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-medium"
             />
@@ -198,7 +244,7 @@ export const DeliveryArrangeModal: React.FC<DeliveryArrangeModalProps> = ({
               disabled={isSubmitting}
               className="px-4 py-2 rounded-xl border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors disabled:opacity-50"
             >
-              Cancel
+              {t("common:actions.cancel", "Cancel")}
             </button>
             <button
               type="submit"
@@ -208,10 +254,10 @@ export const DeliveryArrangeModal: React.FC<DeliveryArrangeModalProps> = ({
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                  <span>Scheduling...</span>
+                  <span>{t("orders:delivery.scheduling", "Scheduling...")}</span>
                 </>
               ) : (
-                <span>Confirm Logistics</span>
+                <span>{t("orders:delivery.confirm_logistics", "Confirm Logistics")}</span>
               )}
             </button>
           </div>

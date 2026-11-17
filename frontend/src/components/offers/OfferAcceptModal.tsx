@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { X, Loader2, AlertCircle, CheckCircle2, ShieldCheck, Info } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../store/authStore";
 import { offersApi } from "../../api/offers";
 import { ApiError } from "../../api/errors";
+import { formatNumber } from "../../utils/formatters";
 import type {
   ItemFulfillmentDecision,
   OfferAcceptPayload,
@@ -23,6 +25,7 @@ export const OfferAcceptModal: React.FC<OfferAcceptModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { t } = useTranslation(["offers", "orders", "common", "errors"]);
   const { user } = useAuth();
   const isBuyer = user?.role === "buyer";
 
@@ -113,10 +116,10 @@ export const OfferAcceptModal: React.FC<OfferAcceptModalProps> = ({
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         setGeneralError(
-          err.message || "Failed to accept offer. The proposal or inventory state may have changed."
+          err.message || t("errors:offer_accept_failed", "Failed to accept offer. The proposal or inventory state may have changed.")
         );
       } else {
-        setGeneralError("An unexpected network error occurred while accepting offer.");
+        setGeneralError(t("errors:network_error_accept", "An unexpected network error occurred while accepting offer."));
       }
     } finally {
       setIsSubmitting(false);
@@ -139,10 +142,13 @@ export const OfferAcceptModal: React.FC<OfferAcceptModalProps> = ({
             </div>
             <div>
               <h2 id="modal-accept-offer-title" className="text-base font-bold text-foreground">
-                Accept Trade Offer
+                {t("offers:accept_offer_modal_title", "Accept Trade Offer")}
               </h2>
               <p className="text-xs text-muted-foreground">
-                Finalizing proposal {offer.offer_number} (Total: ₹{Number(offer.total_amount).toLocaleString()})
+                {t("offers:finalizing_proposal", `Finalizing proposal ${offer.offer_number} (Total: ₹${formatNumber(Number(offer.total_amount))})`, {
+                  num: offer.offer_number,
+                  total: formatNumber(Number(offer.total_amount)),
+                })}
               </p>
             </div>
           </div>
@@ -150,7 +156,7 @@ export const OfferAcceptModal: React.FC<OfferAcceptModalProps> = ({
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Close dialog"
+            aria-label={t("common:close_dialog", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -170,11 +176,13 @@ export const OfferAcceptModal: React.FC<OfferAcceptModalProps> = ({
             <div className="p-3.5 rounded-xl bg-secondary/40 border border-border space-y-1.5 text-foreground leading-relaxed">
               <div className="flex items-center gap-1.5 font-bold text-primary">
                 <ShieldCheck className="w-4 h-4" aria-hidden="true" />
-                <span>Binding Trade Commitment</span>
+                <span>{t("offers:binding_trade_commitment", "Binding Trade Commitment")}</span>
               </div>
               <p className="text-muted-foreground">
-                Accepting this offer generates an official B2B trade <strong>Order</strong>{" "}
-                and atomically updates producer inventory.
+                {t(
+                  "offers:binding_commitment_desc",
+                  "Accepting this offer generates an official B2B trade Order and atomically updates producer inventory."
+                )}
               </p>
             </div>
 
@@ -182,7 +190,7 @@ export const OfferAcceptModal: React.FC<OfferAcceptModalProps> = ({
             {isBuyer && reqItems.length > 0 ? (
               <div className="space-y-3 pt-1">
                 <div className="font-bold text-foreground text-xs uppercase tracking-wider flex items-center gap-1">
-                  <span>Requirement Fulfillment Decision</span>
+                  <span>{t("offers:fulfillment_decision_heading", "Requirement Fulfillment Decision")}</span>
                 </div>
 
                 {!isMultiRequirement ? (
@@ -196,10 +204,10 @@ export const OfferAcceptModal: React.FC<OfferAcceptModalProps> = ({
                       />
                       <div>
                         <span className="font-semibold text-foreground block">
-                          Deduct from linked requirement remaining demand
+                          {t("offers:deduct_remaining_demand", "Deduct from linked requirement remaining demand")}
                         </span>
                         <span className="text-[11px] text-muted-foreground block">
-                          Automatically reduces remaining demand on your procurement board.
+                          {t("offers:deduct_remaining_demand_desc", "Automatically reduces remaining demand on your procurement board.")}
                         </span>
                       </div>
                     </label>
@@ -213,10 +221,10 @@ export const OfferAcceptModal: React.FC<OfferAcceptModalProps> = ({
                       />
                       <div>
                         <span className="font-semibold text-foreground block">
-                          Mark requirement as Closed upon acceptance
+                          {t("offers:close_req_upon_acceptance", "Mark requirement as Closed upon acceptance")}
                         </span>
                         <span className="text-[11px] text-muted-foreground block">
-                          Archiving requirement demand so no further offers can be submitted.
+                          {t("offers:close_req_desc", "Archiving requirement demand so no further offers can be submitted.")}
                         </span>
                       </div>
                     </label>
@@ -224,8 +232,7 @@ export const OfferAcceptModal: React.FC<OfferAcceptModalProps> = ({
                 ) : (
                   <div className="space-y-3">
                     <p className="text-[11px] text-muted-foreground">
-                      This multi-product proposal links to several procurement requirements. Specify
-                      decisions for each item:
+                      {t("offers:multi_req_desc", "This multi-product proposal links to several procurement requirements. Specify decisions for each item:")}
                     </p>
                     {reqItems.map((it) => {
                       const dec = itemFulfillments[it.id] || {
@@ -239,7 +246,7 @@ export const OfferAcceptModal: React.FC<OfferAcceptModalProps> = ({
                           className="p-3 rounded-xl border border-border bg-secondary/20 space-y-2"
                         >
                           <div className="font-semibold text-foreground">
-                            {it.product_name} ({it.quantity} {it.unit})
+                            {it.product_name} ({formatNumber(it.quantity)} {it.unit})
                           </div>
                           <label className="flex items-center gap-2 text-[11px]">
                             <input
@@ -250,7 +257,7 @@ export const OfferAcceptModal: React.FC<OfferAcceptModalProps> = ({
                               }
                               className="rounded text-primary focus:ring-primary"
                             />
-                            <span>Apply quantity toward requirement fulfillment</span>
+                            <span>{t("offers:apply_qty_toward_fulfillment", "Apply quantity toward requirement fulfillment")}</span>
                           </label>
                         </div>
                       );
@@ -262,9 +269,10 @@ export const OfferAcceptModal: React.FC<OfferAcceptModalProps> = ({
               <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200 text-blue-900 flex items-start gap-2">
                 <Info className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <p className="text-[11px] leading-relaxed">
-                  As the seller, your acceptance commits your harvested produce supply. If this offer
-                  was placed against a buyer requirement, fulfillment deductions will be submitted
-                  for the buyer’s review under platform governance rules.
+                  {t(
+                    "offers:seller_acceptance_notice",
+                    "As the seller, your acceptance commits your harvested produce supply. If this offer was placed against a buyer requirement, fulfillment deductions will be submitted for the buyer’s review under platform governance rules."
+                  )}
                 </p>
               </div>
             ) : null}
@@ -278,7 +286,7 @@ export const OfferAcceptModal: React.FC<OfferAcceptModalProps> = ({
               disabled={isSubmitting}
               className="px-3.5 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors disabled:opacity-50"
             >
-              Cancel
+              {t("common:cancel", "Cancel")}
             </button>
             <button
               type="submit"
@@ -288,10 +296,10 @@ export const OfferAcceptModal: React.FC<OfferAcceptModalProps> = ({
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
-                  <span>Processing Acceptance...</span>
+                  <span>{t("offers:processing_acceptance", "Processing Acceptance...")}</span>
                 </>
               ) : (
-                <span>Confirm & Create Order</span>
+                <span>{t("offers:confirm_create_order", "Confirm & Create Order")}</span>
               )}
             </button>
           </div>

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   RotateCw,
   Search,
@@ -16,8 +17,10 @@ import { useAuth } from "../store/authStore";
 import type { OrderListItem } from "../types/orders";
 import { EmptyState, ErrorState, LoadingState } from "../components/ui/states";
 import { OrderDetailModal } from "../components/orders/OrderDetailModal";
+import { formatDate, formatNumber } from "../utils/formatters";
 
 export const OrdersPage: React.FC = () => {
+  const { t } = useTranslation(["orders", "delivery", "common"]);
   const { user } = useAuth();
 
   const [orders, setOrders] = useState<OrderListItem[]>([]);
@@ -48,12 +51,12 @@ export const OrdersPage: React.FC = () => {
       setTotalCount(response.total);
       setTotalPages(response.total_pages || 1);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to load orders.";
+      const msg = err instanceof Error ? err.message : t("orders:error_load", "Failed to load orders.");
       setError(msg);
     } finally {
       setIsLoading(false);
     }
-  }, [statusFilter, page, pageSize]);
+  }, [statusFilter, page, pageSize, t]);
 
   useEffect(() => {
     void loadOrders();
@@ -71,28 +74,28 @@ export const OrdersPage: React.FC = () => {
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700">
             <Clock className="w-3 h-3 text-amber-600" aria-hidden="true" />
-            Pending
+            {t("common:status.pending", "Pending")}
           </span>
         );
       case "confirmed":
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-700">
             <CheckCircle2 className="w-3 h-3 text-emerald-600" aria-hidden="true" />
-            Confirmed
+            {t("common:status.confirmed", "Confirmed")}
           </span>
         );
       case "completed":
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/10 text-blue-700">
             <CheckCircle2 className="w-3 h-3 text-blue-600" aria-hidden="true" />
-            Completed
+            {t("common:status.completed", "Completed")}
           </span>
         );
       case "cancelled":
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-destructive/10 text-destructive">
             <XCircle className="w-3 h-3 text-destructive" aria-hidden="true" />
-            Cancelled
+            {t("common:status.cancelled", "Cancelled")}
           </span>
         );
       default:
@@ -109,25 +112,25 @@ export const OrdersPage: React.FC = () => {
       case "pending":
         return (
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-secondary text-muted-foreground capitalize">
-            Pending Dispatch
+            {t("delivery:pending_dispatch", "Pending Dispatch")}
           </span>
         );
       case "arranged":
         return (
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-500/10 text-indigo-700 capitalize">
-            Arranged
+            {t("delivery:arranged", "Arranged")}
           </span>
         );
       case "in_transit":
         return (
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-700 capitalize">
-            In Transit
+            {t("delivery:in_transit", "In Transit")}
           </span>
         );
       case "completed":
         return (
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-700 capitalize">
-            Delivered
+            {t("delivery:delivered", "Delivered")}
           </span>
         );
       default:
@@ -145,10 +148,10 @@ export const OrdersPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            Commercial Orders Ledger
+            {t("orders:title", "Commercial Orders Ledger")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Audited trade agreements, delivery fulfillment records, and contract amendments
+            {t("orders:subtitle", "Audited trade agreements, delivery fulfillment records, and contract amendments")}
           </p>
         </div>
 
@@ -158,7 +161,7 @@ export const OrdersPage: React.FC = () => {
             onClick={() => void loadOrders()}
             disabled={isLoading}
             className="p-2 rounded-lg border border-border bg-card text-foreground hover:bg-secondary transition-colors disabled:opacity-50"
-            aria-label="Refresh orders"
+            aria-label={t("common:actions.refresh", "Refresh orders")}
           >
             <RotateCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} aria-hidden="true" />
           </button>
@@ -170,11 +173,11 @@ export const OrdersPage: React.FC = () => {
         {/* Status Filter Buttons */}
         <div className="flex flex-wrap items-center gap-1.5 p-1 bg-secondary rounded-xl text-xs font-semibold">
           {[
-            { id: "", label: "All Orders" },
-            { id: "pending", label: "Pending" },
-            { id: "confirmed", label: "Confirmed" },
-            { id: "completed", label: "Completed" },
-            { id: "cancelled", label: "Cancelled" },
+            { id: "", label: t("orders:filter_all", "All Orders") },
+            { id: "pending", label: t("orders:filter_pending", "Pending") },
+            { id: "confirmed", label: t("orders:filter_confirmed", "Confirmed") },
+            { id: "completed", label: t("orders:filter_completed", "Completed") },
+            { id: "cancelled", label: t("orders:filter_cancelled", "Cancelled") },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -200,41 +203,41 @@ export const OrdersPage: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search order number..."
-            className="w-full rounded-xl border border-border bg-card pl-9 pr-4 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-medium"
+            placeholder={t("orders:search_placeholder", "Search order number...")}
+            className="w-full rounded-xl border border-border bg-card ps-9 pe-4 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-medium"
           />
-          <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2" aria-hidden="true" />
+          <Search className="w-4 h-4 text-muted-foreground absolute start-3 top-2" aria-hidden="true" />
         </div>
       </div>
 
       {/* Main Content Area */}
       {isLoading ? (
-        <LoadingState message="Retrieving commercial trade agreements..." />
+        <LoadingState message={t("orders:loading", "Retrieving commercial trade agreements...")} />
       ) : error ? (
         <ErrorState
-          title="Failed to Load Orders"
+          title={t("orders:error_title", "Failed to Load Orders")}
           message={error}
           onRetry={() => void loadOrders()}
         />
       ) : filteredOrders.length === 0 ? (
         <EmptyState
-          title="No Commercial Orders Found"
-          description="You do not have any trade contracts matching the selected filters. Accepted negotiation offers automatically create binding order records."
+          title={t("orders:empty_title", "No Commercial Orders Found")}
+          description={t("orders:empty_desc", "You do not have any trade contracts matching the selected filters. Accepted negotiation offers automatically create binding order records.")}
         />
       ) : (
         <div className="space-y-4">
           {/* Desktop Table View */}
           <div className="hidden md:block rounded-xl border border-border overflow-hidden bg-card shadow-xs">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-start text-xs">
               <thead className="bg-secondary/60 text-muted-foreground border-b border-border font-bold uppercase tracking-wider text-[11px]">
                 <tr>
-                  <th className="px-5 py-3">Order Number</th>
-                  <th className="px-5 py-3">Trading Counterparty</th>
-                  <th className="px-5 py-3">Contract Value</th>
-                  <th className="px-5 py-3">Order Status</th>
-                  <th className="px-5 py-3">Fulfillment</th>
-                  <th className="px-5 py-3">Date (UTC)</th>
-                  <th className="px-5 py-3 text-right">Action</th>
+                  <th className="px-5 py-3">{t("orders:th_order_number", "Order Number")}</th>
+                  <th className="px-5 py-3">{t("common:labels.counterparty", "Trading Counterparty")}</th>
+                  <th className="px-5 py-3">{t("orders:contract_value", "Contract Value")}</th>
+                  <th className="px-5 py-3">{t("orders:th_order_status", "Order Status")}</th>
+                  <th className="px-5 py-3">{t("orders:fulfillment_status", "Fulfillment")}</th>
+                  <th className="px-5 py-3">{t("common:labels.date", "Date (UTC)")}</th>
+                  <th className="px-5 py-3 text-end">{t("common:labels.actions", "Action")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -256,25 +259,25 @@ export const OrdersPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-5 py-4 font-mono font-bold text-primary">
-                        ₹{Number(ord.total_amount).toLocaleString()}
+                        ₹{formatNumber(ord.total_amount)}
                       </td>
                       <td className="px-5 py-4">{getOrderStatusBadge(ord.status)}</td>
                       <td className="px-5 py-4">{getDeliveryStatusBadge(ord.delivery_status)}</td>
                       <td className="px-5 py-4 text-muted-foreground font-mono text-[11px]">
-                        {new Date(ord.created_at).toLocaleDateString()}
+                        {formatDate(ord.created_at)}
                       </td>
-                      <td className="px-5 py-4 text-right">
+                      <td className="px-5 py-4 text-end">
                         <div className="flex items-center justify-end gap-2">
                           {ord.status === "completed" && (
                             <button
                               type="button"
                               onClick={() => setSelectedOrderId(ord.id)}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold transition-colors"
-                              title="View & Print Trade Slip"
+                              title={t("orders:slip.print_button", "View & Print Trade Slip")}
                               aria-label={`Print Trade Slip for ${ord.order_number}`}
                             >
                               <Printer className="w-3.5 h-3.5" aria-hidden="true" />
-                              <span className="hidden lg:inline">Slip</span>
+                              <span className="hidden lg:inline">{t("orders:slip_button", "Slip")}</span>
                             </button>
                           )}
                           <button
@@ -283,7 +286,7 @@ export const OrdersPage: React.FC = () => {
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors"
                           >
                             <Eye className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
-                            <span>View Order</span>
+                            <span>{t("orders:view_order", "View Order")}</span>
                           </button>
                         </div>
                       </td>
@@ -316,21 +319,21 @@ export const OrdersPage: React.FC = () => {
 
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <span className="text-muted-foreground block text-[11px]">Counterparty:</span>
+                      <span className="text-muted-foreground block text-[11px]">{t("common:labels.counterparty", "Counterparty")}:</span>
                       <span className="font-semibold text-foreground">{counterpartyRole}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground block text-[11px]">Contract Valuation:</span>
+                      <span className="text-muted-foreground block text-[11px]">{t("orders:contract_value", "Contract Valuation")}:</span>
                       <span className="font-bold text-primary font-mono">
-                        ₹{Number(ord.total_amount).toLocaleString()}
+                        ₹{formatNumber(ord.total_amount)}
                       </span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground block text-[11px]">Fulfillment Status:</span>
+                      <span className="text-muted-foreground block text-[11px]">{t("orders:fulfillment_status", "Fulfillment Status")}:</span>
                       {getDeliveryStatusBadge(ord.delivery_status)}
                     </div>
                     <div>
-                      <span className="text-muted-foreground block text-[11px]">Produce Items:</span>
+                      <span className="text-muted-foreground block text-[11px]">{t("orders:produce_items", "Produce Items")}:</span>
                       <span className="text-foreground font-semibold">
                         {ord.items_count} {ord.items_count === 1 ? "item" : "items"}
                       </span>
@@ -344,7 +347,7 @@ export const OrdersPage: React.FC = () => {
                       className="w-full py-2 rounded-lg bg-secondary text-foreground hover:bg-secondary/80 text-xs font-semibold transition-colors flex items-center justify-center gap-2"
                     >
                       <ShoppingBag className="w-4 h-4 text-primary" aria-hidden="true" />
-                      <span>View Order Specifications</span>
+                      <span>{t("orders:view_specifications", "View Order Specifications")}</span>
                     </button>
                   </div>
                 </div>
@@ -356,7 +359,10 @@ export const OrdersPage: React.FC = () => {
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-4 border-t border-border text-xs text-muted-foreground">
               <span>
-                Showing {filteredOrders.length} of {totalCount} orders
+                {t("common:pagination.showing_results", `Showing ${filteredOrders.length} of ${totalCount} orders`, {
+                  count: filteredOrders.length,
+                  total: totalCount,
+                })}
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -365,11 +371,14 @@ export const OrdersPage: React.FC = () => {
                   disabled={page <= 1}
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-secondary disabled:opacity-50 transition-colors"
                 >
-                  <ChevronLeft className="w-3.5 h-3.5" aria-hidden="true" />
-                  <span>Previous</span>
+                  <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
+                  <span>{t("common:pagination.previous", "Previous")}</span>
                 </button>
                 <span className="font-semibold text-foreground">
-                  Page {page} of {totalPages}
+                  {t("common:pagination.showing_page", `Page ${page} of ${totalPages}`, {
+                    page,
+                    totalPages,
+                  })}
                 </span>
                 <button
                   type="button"
@@ -377,8 +386,8 @@ export const OrdersPage: React.FC = () => {
                   disabled={page >= totalPages}
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-secondary disabled:opacity-50 transition-colors"
                 >
-                  <span>Next</span>
-                  <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>{t("common:pagination.next", "Next")}</span>
+                  <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
                 </button>
               </div>
             </div>

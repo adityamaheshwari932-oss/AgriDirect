@@ -1,7 +1,9 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { X, Printer, Sprout, ShieldCheck, CheckCircle2, FileText, Truck, Building, User } from "lucide-react";
 import type { OrderDetail } from "../../types/orders";
 import type { PaymentSummary } from "../../types/payments";
+import { formatDate, formatNumber } from "../../utils/formatters";
 
 interface OrderSlipModalProps {
   isOpen: boolean;
@@ -16,26 +18,28 @@ export const OrderSlipModal: React.FC<OrderSlipModalProps> = ({
   paymentSummary,
   onClose,
 }) => {
+  const { t } = useTranslation(["orders", "common"]);
+
   if (!isOpen) return null;
 
   const handlePrint = () => {
     window.print();
   };
 
-  const formattedOrderDate = new Date(order.created_at).toLocaleDateString("en-IN", {
+  const formattedOrderDate = formatDate(order.created_at, {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
 
   const formattedCompletionDate = order.completed_at
-    ? new Date(order.completed_at).toLocaleDateString("en-IN", {
+    ? formatDate(order.completed_at, {
         year: "numeric",
         month: "short",
         day: "numeric",
       })
     : order.delivery_acknowledged_at
-    ? new Date(order.delivery_acknowledged_at).toLocaleDateString("en-IN", {
+    ? formatDate(order.delivery_acknowledged_at, {
         year: "numeric",
         month: "short",
         day: "numeric",
@@ -63,10 +67,14 @@ export const OrderSlipModal: React.FC<OrderSlipModalProps> = ({
             </div>
             <div>
               <h2 id="modal-order-slip-title" className="text-base font-bold text-foreground">
-                Trade Confirmation & Delivery Slip
+                {t("orders:slip.title", "Trade Confirmation & Delivery Slip")}
               </h2>
               <p className="text-xs text-muted-foreground">
-                Official bilateral B2B trade documentation for Order {order.order_number}
+                {t(
+                  "orders:slip.subtitle",
+                  "Official bilateral B2B trade documentation for Order {{orderNumber}}",
+                  { orderNumber: order.order_number }
+                )}
               </p>
             </div>
           </div>
@@ -77,13 +85,13 @@ export const OrderSlipModal: React.FC<OrderSlipModalProps> = ({
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold shadow-xs transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <Printer className="w-4 h-4" aria-hidden="true" />
-              <span>Print / Save as PDF</span>
+              <span>{t("orders:slip.print_button", "Print / Save as PDF")}</span>
             </button>
             <button
               type="button"
               onClick={onClose}
               className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-              aria-label="Close dialog"
+              aria-label={t("orders:slip.close_dialog", "Close dialog")}
             >
               <X className="w-5 h-5" aria-hidden="true" />
             </button>
@@ -105,29 +113,34 @@ export const OrderSlipModal: React.FC<OrderSlipModalProps> = ({
                     <Sprout className="w-5 h-5" />
                   </div>
                   <span className="text-2xl font-black tracking-tight text-emerald-950">
-                    AgriDirect
+                    {t("orders:slip.platform_header", "AgriDirect")}
                   </span>
                 </div>
                 <p className="text-[11px] font-semibold text-emerald-800 tracking-wider uppercase">
-                  B2B Direct Agricultural Trade Marketplace
+                  {t("orders:slip.platform_sub", "B2B Direct Agricultural Trade Marketplace")}
                 </p>
                 <p className="text-[10px] text-slate-500">
-                  Electronic Bilateral Trade Execution & Fulfillment Registry
+                  {t(
+                    "orders:slip.platform_desc",
+                    "Electronic Bilateral Trade Execution & Fulfillment Registry"
+                  )}
                 </p>
               </div>
 
-              <div className="text-left sm:text-right space-y-1">
+              <div className="text-start sm:text-end space-y-1">
                 <span className="inline-block px-3 py-1 rounded-md bg-emerald-100 text-emerald-800 text-xs font-bold tracking-wide uppercase">
-                  Trade Confirmation Slip
+                  {t("orders:slip.badge", "Trade Confirmation Slip")}
                 </span>
                 <p className="text-xs font-mono font-bold text-slate-900">
-                  REF: SLIP-{order.order_number}
+                  {t("orders:slip.ref_label", "REF: SLIP-{{orderNumber}}", {
+                    orderNumber: order.order_number,
+                  })}
                 </p>
                 <p className="text-[11px] text-slate-500">
                   Status:{" "}
                   <span className="font-bold text-emerald-700 uppercase">
                     {order.status === "completed"
-                      ? "Fulfilled & Settled"
+                      ? t("orders:slip.status_fulfilled", "Fulfilled & Settled")
                       : order.status === "confirmed"
                       ? "Confirmed & Active"
                       : order.status.replace(/_/g, " ")}
@@ -142,7 +155,7 @@ export const OrderSlipModal: React.FC<OrderSlipModalProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5 text-emerald-800 font-bold uppercase tracking-wider text-[11px]">
                   <Sprout className="w-3.5 h-3.5 text-emerald-700" />
-                  <span>Producer / Seller (Farmer)</span>
+                  <span>{t("orders:slip.producer_header", "Producer / Seller (Farmer)")}</span>
                 </div>
                 <div className="space-y-1 text-slate-700">
                   <p className="text-sm font-bold text-slate-900">
@@ -158,16 +171,16 @@ export const OrderSlipModal: React.FC<OrderSlipModalProps> = ({
                   )}
                   <div className="pt-1 flex items-center gap-1 text-[10px] text-emerald-700 font-semibold">
                     <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>Platform Identity Verified</span>
+                    <span>{t("orders:slip.verified_producer", "Platform Identity Verified")}</span>
                   </div>
                 </div>
               </div>
 
               {/* Buyer */}
-              <div className="space-y-2 border-t sm:border-t-0 sm:border-l border-slate-200 pt-3 sm:pt-0 sm:pl-6">
+              <div className="space-y-2 border-t sm:border-t-0 sm:border-s border-slate-200 pt-3 sm:pt-0 sm:ps-6">
                 <div className="flex items-center gap-1.5 text-blue-800 font-bold uppercase tracking-wider text-[11px]">
                   <Building className="w-3.5 h-3.5 text-blue-700" />
-                  <span>Commercial Buyer (Procurement)</span>
+                  <span>{t("orders:slip.buyer_header", "Commercial Buyer (Procurement)")}</span>
                 </div>
                 <div className="space-y-1 text-slate-700">
                   <p className="text-sm font-bold text-slate-900">
@@ -222,18 +235,18 @@ export const OrderSlipModal: React.FC<OrderSlipModalProps> = ({
             <div className="space-y-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
                 <Truck className="w-3.5 h-3.5 text-slate-500" />
-                <span>Agricultural Produce Manifest</span>
+                <span>{t("orders:slip.manifest_title", "Agricultural Produce Manifest")}</span>
               </h3>
               <div className="border border-slate-200 rounded-lg overflow-hidden">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-100 text-slate-600 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
                     <tr>
                       <th className="px-3 py-2.5">#</th>
-                      <th className="px-3 py-2.5">Commodity / Variety</th>
-                      <th className="px-3 py-2.5">Quality Grade</th>
-                      <th className="px-3 py-2.5 text-right">Quantity</th>
-                      <th className="px-3 py-2.5 text-right">Agreed Rate</th>
-                      <th className="px-3 py-2.5 text-right">Line Total</th>
+                      <th className="px-3 py-2.5">{t("orders:slip.col_commodity", "Commodity / Variety")}</th>
+                      <th className="px-3 py-2.5">{t("orders:slip.col_grade", "Quality Grade")}</th>
+                      <th className="px-3 py-2.5 text-right">{t("orders:slip.col_qty", "Quantity")}</th>
+                      <th className="px-3 py-2.5 text-right">{t("orders:slip.col_rate", "Agreed Rate")}</th>
+                      <th className="px-3 py-2.5 text-right">{t("orders:slip.col_subtotal", "Line Total")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 text-slate-800">
@@ -248,13 +261,13 @@ export const OrderSlipModal: React.FC<OrderSlipModalProps> = ({
                             {it.quality_grade || "Grade A (Standard)"}
                           </td>
                           <td className="px-3 py-2.5 text-right font-medium">
-                            {Number(it.quantity).toLocaleString()} {it.unit}
+                            {formatNumber(Number(it.quantity))} {it.unit}
                           </td>
                           <td className="px-3 py-2.5 text-right font-mono text-slate-700">
-                            ₹{Number(it.unit_price).toLocaleString()} / {it.unit}
+                            ₹{formatNumber(Number(it.unit_price))} / {it.unit}
                           </td>
                           <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-900">
-                            ₹{Number(it.subtotal).toLocaleString()}
+                            ₹{formatNumber(Number(it.subtotal))}
                           </td>
                         </tr>
                       ))
@@ -268,7 +281,7 @@ export const OrderSlipModal: React.FC<OrderSlipModalProps> = ({
                         <td className="px-3 py-2.5 text-right font-medium">Lot Fulfillment</td>
                         <td className="px-3 py-2.5 text-right font-mono text-slate-700">—</td>
                         <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-900">
-                          ₹{totalContractAmount.toLocaleString()}
+                          ₹{formatNumber(totalContractAmount)}
                         </td>
                       </tr>
                     )}
@@ -282,31 +295,33 @@ export const OrderSlipModal: React.FC<OrderSlipModalProps> = ({
               <div className="space-y-1 text-xs max-w-sm text-slate-600">
                 <span className="font-bold text-slate-800 flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
-                  Direct Bilateral Settlement
+                  {t("orders:slip.settlement_title", "Direct Bilateral Settlement")}
                 </span>
                 <p className="text-[11px] leading-relaxed">
-                  Funds transferred directly from buyer bank account to farmer bank account.
-                  Platform acts as the immutable bilateral audit recorder.
+                  {t(
+                    "orders:slip.settlement_desc",
+                    "Funds transferred directly from buyer bank account to farmer bank account. Platform acts as the immutable bilateral audit recorder."
+                  )}
                 </p>
               </div>
 
               <div className="w-full sm:w-64 space-y-1.5 text-xs">
                 <div className="flex justify-between text-slate-600">
-                  <span>Gross Trade Amount:</span>
+                  <span>{t("orders:slip.gross_amount", "Gross Trade Amount:")}</span>
                   <span className="font-mono font-semibold text-slate-900">
-                    ₹{totalContractAmount.toLocaleString()}
+                    ₹{formatNumber(totalContractAmount)}
                   </span>
                 </div>
                 <div className="flex justify-between text-slate-600">
-                  <span>Recorded Direct Payments:</span>
+                  <span>{t("orders:slip.recorded_payments", "Recorded Direct Payments:")}</span>
                   <span className="font-mono font-semibold text-emerald-700">
-                    ₹{recordedPayments.toLocaleString()}
+                    ₹{formatNumber(recordedPayments)}
                   </span>
                 </div>
                 <div className="flex justify-between border-t border-slate-300 pt-1.5 text-sm font-bold text-slate-950">
-                  <span>Total Settled Value:</span>
+                  <span>{t("orders:slip.total_settled", "Total Settled Value:")}</span>
                   <span className="font-mono text-emerald-800">
-                    ₹{totalContractAmount.toLocaleString()}
+                    ₹{formatNumber(totalContractAmount)}
                   </span>
                 </div>
               </div>
@@ -315,13 +330,16 @@ export const OrderSlipModal: React.FC<OrderSlipModalProps> = ({
             {/* 6. Legal Notice of Pure Matching Platform */}
             <div className="p-3 rounded-lg border border-slate-200 bg-white text-[10px] text-slate-500 leading-relaxed space-y-1">
               <p className="font-semibold text-slate-700 uppercase tracking-wider">
-                Official Platform Declaration & Regulatory Non-Involvement
+                {t(
+                  "orders:slip.legal_notice_title",
+                  "Official Platform Declaration & Regulatory Non-Involvement"
+                )}
               </p>
               <p>
-                AgriDirect is an electronic marketplace facilitating direct commercial trade contracts between
-                agricultural producers and verified enterprise buyers. AgriDirect is not a trading merchant, does not take
-                custody of agricultural commodities, does not inspect goods in transit, and does not process payments or escrow funds.
-                Contractual performance, quality verification, and financial settlement are the sole responsibility of the bilateral signatories.
+                {t(
+                  "orders:slip.legal_notice_text",
+                  "AgriDirect is an electronic marketplace facilitating direct commercial trade contracts between agricultural producers and verified enterprise buyers. AgriDirect is not a trading merchant, does not take custody of agricultural commodities, does not inspect goods in transit, and does not process payments or escrow funds. Contractual performance, quality verification, and financial settlement are the sole responsibility of the bilateral signatories."
+                )}
               </p>
             </div>
 
@@ -330,17 +348,21 @@ export const OrderSlipModal: React.FC<OrderSlipModalProps> = ({
               <div className="space-y-8">
                 <div className="border-b border-slate-400 pb-1">
                   <p className="font-bold text-slate-900">
-                    {order.farmer?.farm_name || order.farmer?.full_name || "Producer Signature"}
+                    {order.farmer?.farm_name ||
+                      order.farmer?.full_name ||
+                      t("orders:slip.seller_sign", "Producer Signature")}
                   </p>
                   <p className="text-[10px] text-slate-500">Authorized Farm Seller / Representative</p>
                 </div>
                 <p className="text-[10px] text-slate-400 font-mono">Date: ____________________</p>
               </div>
 
-              <div className="space-y-8 text-right">
+              <div className="space-y-8 text-end">
                 <div className="border-b border-slate-400 pb-1">
                   <p className="font-bold text-slate-900">
-                    {order.buyer?.business_name || order.buyer?.full_name || "Buyer Signature"}
+                    {order.buyer?.business_name ||
+                      order.buyer?.full_name ||
+                      t("orders:slip.buyer_sign", "Buyer Signature")}
                   </p>
                   <p className="text-[10px] text-slate-500">Authorized Procurement Officer</p>
                 </div>
@@ -350,7 +372,11 @@ export const OrderSlipModal: React.FC<OrderSlipModalProps> = ({
 
             {/* Platform Audit Hash Footer */}
             <div className="text-center pt-2 text-[9px] text-slate-400 font-mono">
-              AgriDirect Electronic Trade Ledger • Audit Ref: {order.id} • Generated via AgriDirect v1.0
+              {t(
+                "orders:slip.audit_footer",
+                "AgriDirect Electronic Trade Ledger • Audit Ref: {{orderId}} • Generated via AgriDirect v1.0",
+                { orderId: order.id }
+              )}
             </div>
           </div>
         </div>
