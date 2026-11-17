@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { X, Star, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { reviewsApi } from "../../api/reviews";
 import { StarRatingInput } from "./StarRatingInput";
@@ -21,6 +22,7 @@ export const ReviewSubmitModal: React.FC<ReviewSubmitModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { t } = useTranslation(["reviews", "common", "errors", "validation"]);
   const [overallRating, setOverallRating] = useState<number>(5);
   const [qualityRating, setQualityRating] = useState<number>(0);
   const [accuracyRating, setAccuracyRating] = useState<number>(0);
@@ -36,7 +38,12 @@ export const ReviewSubmitModal: React.FC<ReviewSubmitModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (overallRating < 1 || overallRating > 5) {
-      setError("Please select an overall rating between 1 and 5 stars.");
+      setError(
+        t(
+          "reviews:error_rating_range",
+          "Please select an overall rating between 1 and 5 stars."
+        )
+      );
       return;
     }
 
@@ -55,7 +62,10 @@ export const ReviewSubmitModal: React.FC<ReviewSubmitModalProps> = ({
       onSuccess(review);
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to submit review.";
+      const msg =
+        err instanceof Error
+          ? err.message
+          : t("reviews:error_submit_failed", "Failed to submit review.");
       setError(msg);
     } finally {
       setIsSubmitting(false);
@@ -70,17 +80,20 @@ export const ReviewSubmitModal: React.FC<ReviewSubmitModalProps> = ({
           <div>
             <h2 className="text-base font-bold text-foreground flex items-center gap-2">
               <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-              Rate & Review Deal
+              {t("reviews:submit_modal_title", "Rate & Review Deal")}
             </h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Reviewing experience with {counterpartyName}
-              {orderReference && ` (Order #${orderReference})`}
+              {t("reviews:submit_modal_subtitle", "Reviewing experience with {{counterparty}}", {
+                counterparty: counterpartyName,
+              })}
+              {orderReference && ` ${t("reviews:order_ref", `(Order #${orderReference})`, { reference: orderReference })}`}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+            aria-label={t("common:actions.close", "Close")}
           >
             <X className="w-5 h-5" />
           </button>
@@ -98,7 +111,7 @@ export const ReviewSubmitModal: React.FC<ReviewSubmitModalProps> = ({
           {/* Overall Rating */}
           <div className="p-3.5 bg-secondary/30 rounded-xl border border-border">
             <StarRatingInput
-              label="Overall Experience"
+              label={t("reviews:overall_experience", "Overall Experience")}
               value={overallRating}
               onChange={setOverallRating}
               required
@@ -109,28 +122,28 @@ export const ReviewSubmitModal: React.FC<ReviewSubmitModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div className="p-3 bg-secondary/20 rounded-lg border border-border/60">
               <StarRatingInput
-                label="Produce Quality"
+                label={t("reviews:produce_quality", "Produce Quality")}
                 value={qualityRating}
                 onChange={setQualityRating}
               />
             </div>
             <div className="p-3 bg-secondary/20 rounded-lg border border-border/60">
               <StarRatingInput
-                label="Description Accuracy"
+                label={t("reviews:description_accuracy", "Description Accuracy")}
                 value={accuracyRating}
                 onChange={setAccuracyRating}
               />
             </div>
             <div className="p-3 bg-secondary/20 rounded-lg border border-border/60">
               <StarRatingInput
-                label="Communication"
+                label={t("reviews:communication", "Communication")}
                 value={communicationRating}
                 onChange={setCommunicationRating}
               />
             </div>
             <div className="p-3 bg-secondary/20 rounded-lg border border-border/60">
               <StarRatingInput
-                label="Reliability & Punctuality"
+                label={t("reviews:reliability_punctuality", "Reliability & Punctuality")}
                 value={reliabilityRating}
                 onChange={setReliabilityRating}
               />
@@ -141,7 +154,7 @@ export const ReviewSubmitModal: React.FC<ReviewSubmitModalProps> = ({
           <div className="space-y-1">
             <div className="flex justify-between items-center text-xs">
               <label htmlFor="review_text" className="font-medium text-foreground">
-                Written Review (Optional)
+                {t("reviews:written_review_label", "Written Review (Optional)")}
               </label>
               <span className="text-muted-foreground text-[11px]">{reviewText.length}/2000</span>
             </div>
@@ -151,7 +164,10 @@ export const ReviewSubmitModal: React.FC<ReviewSubmitModalProps> = ({
               maxLength={2000}
               value={reviewText}
               onChange={(e) => setReviewText(e.target.value)}
-              placeholder="Share details about fulfillment quality, packaging, communication, or delivery timeliness..."
+              placeholder={t(
+                "reviews:written_review_placeholder",
+                "Share details about fulfillment quality, packaging, communication, or delivery timeliness..."
+              )}
               className="w-full px-3 py-2 text-xs rounded-lg border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
@@ -164,7 +180,7 @@ export const ReviewSubmitModal: React.FC<ReviewSubmitModalProps> = ({
               disabled={isSubmitting}
               className="px-4 py-2 text-xs font-medium rounded-lg border border-border bg-background hover:bg-secondary text-foreground transition-colors"
             >
-              Cancel
+              {t("common:actions.cancel", "Cancel")}
             </button>
             <button
               type="submit"
@@ -174,12 +190,12 @@ export const ReviewSubmitModal: React.FC<ReviewSubmitModalProps> = ({
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Submitting...
+                  {t("common:status.submitting", "Submitting...")}
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  Submit Review
+                  {t("reviews:submit_review_action", "Submit Review")}
                 </>
               )}
             </button>
@@ -189,4 +205,3 @@ export const ReviewSubmitModal: React.FC<ReviewSubmitModalProps> = ({
     </div>
   );
 };
-

@@ -258,4 +258,89 @@ describe("OrderDetailModal — Bilateral Delivery Acknowledgement", () => {
     expect(screen.getByText(/Trade Confirmation & Delivery Slip/i)).toBeInTheDocument();
     expect(screen.getByText(/SLIP-ORD-2026-0123/i)).toBeInTheDocument();
   });
+
+  describe("D-2: Safe delivery_status access regression tests", () => {
+    it("renders formatted delivery_status with underscores replaced by spaces", async () => {
+      authStore.setUser(farmerUser);
+      vi.mocked(ordersApi.getOrderDetail).mockResolvedValue({
+        ...baseOrder,
+        delivery_status: "not_arranged" as any,
+      });
+
+      render(
+        <MemoryRouter>
+          <OrderDetailModal orderId="order-123" onClose={vi.fn()} />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/ORD-2026-0123/)).toBeInTheDocument();
+      });
+
+      const matched = screen.getAllByText("not arranged");
+      expect(matched.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("renders safely without crashing when delivery_status is null", async () => {
+      authStore.setUser(farmerUser);
+      vi.mocked(ordersApi.getOrderDetail).mockResolvedValue({
+        ...baseOrder,
+        delivery_status: null as any,
+      });
+
+      render(
+        <MemoryRouter>
+          <OrderDetailModal orderId="order-123" onClose={vi.fn()} />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/ORD-2026-0123/)).toBeInTheDocument();
+      });
+
+      const unavailableLabels = screen.getAllByText(/Unavailable/i);
+      expect(unavailableLabels.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("renders safely without crashing when delivery_status is undefined", async () => {
+      authStore.setUser(farmerUser);
+      const orderWithoutDeliveryStatus = { ...baseOrder };
+      delete (orderWithoutDeliveryStatus as any).delivery_status;
+      vi.mocked(ordersApi.getOrderDetail).mockResolvedValue(orderWithoutDeliveryStatus);
+
+      render(
+        <MemoryRouter>
+          <OrderDetailModal orderId="order-123" onClose={vi.fn()} />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/ORD-2026-0123/)).toBeInTheDocument();
+      });
+
+      const unavailableLabels = screen.getAllByText(/Unavailable/i);
+      expect(unavailableLabels.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("renders safely without crashing when delivery_status is an unexpected non-string type", async () => {
+      authStore.setUser(farmerUser);
+      vi.mocked(ordersApi.getOrderDetail).mockResolvedValue({
+        ...baseOrder,
+        delivery_status: 12345 as any,
+      });
+
+      render(
+        <MemoryRouter>
+          <OrderDetailModal orderId="order-123" onClose={vi.fn()} />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/ORD-2026-0123/)).toBeInTheDocument();
+      });
+
+      const unavailableLabels = screen.getAllByText(/Unavailable/i);
+      expect(unavailableLabels.length).toBeGreaterThanOrEqual(1);
+    });
+  });
 });

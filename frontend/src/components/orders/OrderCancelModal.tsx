@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { X, AlertTriangle, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ordersApi } from "../../api/orders";
 import type { OrderDetail } from "../../types/orders";
 
@@ -16,6 +17,7 @@ export const OrderCancelModal: React.FC<OrderCancelModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { t } = useTranslation(["orders", "validation", "common", "errors"]);
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +30,12 @@ export const OrderCancelModal: React.FC<OrderCancelModalProps> = ({
 
     const trimmed = reason.trim();
     if (!trimmed) {
-      setError("A cancellation reason is required for audited commercial records.");
+      setError(
+        t(
+          "orders:cancel.reason_required",
+          "A cancellation reason is required for audited commercial records."
+        )
+      );
       return;
     }
 
@@ -38,7 +45,10 @@ export const OrderCancelModal: React.FC<OrderCancelModalProps> = ({
       onSuccess(updated);
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to cancel order.";
+      const msg =
+        err instanceof Error
+          ? err.message
+          : t("orders:cancel.failed", "Failed to cancel order.");
       setError(msg);
     } finally {
       setIsSubmitting(false);
@@ -58,14 +68,14 @@ export const OrderCancelModal: React.FC<OrderCancelModalProps> = ({
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-destructive" aria-hidden="true" />
             <h2 id="modal-order-cancel-title" className="text-base font-bold text-foreground">
-              Cancel Commercial Order
+              {t("orders:cancel.title", "Cancel Commercial Order")}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Close dialog"
+            aria-label={t("common:actions.close", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -81,14 +91,18 @@ export const OrderCancelModal: React.FC<OrderCancelModalProps> = ({
 
           <div className="text-xs text-muted-foreground space-y-2">
             <p>
-              Are you sure you want to cancel Order{" "}
+              {t("orders:cancel.confirm_prompt_prefix", "Are you sure you want to cancel Order")}{" "}
               <strong className="text-foreground">{order.order_number}</strong>?
             </p>
             <div className="p-3 rounded-lg bg-secondary/50 border border-border space-y-1">
-              <span className="font-semibold text-foreground block">Audited Restitution:</span>
+              <span className="font-semibold text-foreground block">
+                {t("orders:cancel.restitution_title", "Audited Restitution:")}
+              </span>
               <p className="text-[11px] leading-relaxed">
-                Cancelling this order will atomically restitute reserved inventory back to the farmer&apos;s
-                available stock and reverse any applied buyer requirement demand deductions.
+                {t(
+                  "orders:cancel.restitution_desc",
+                  "Cancelling this order will atomically restitute reserved inventory back to the farmer's available stock and reverse any applied buyer requirement demand deductions."
+                )}
               </p>
             </div>
           </div>
@@ -98,14 +112,18 @@ export const OrderCancelModal: React.FC<OrderCancelModalProps> = ({
               htmlFor="cancel-order-reason"
               className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
             >
-              Cancellation Reason <span className="text-destructive">*</span>
+              {t("orders:cancel.reason_label", "Cancellation Reason")}{" "}
+              <span className="text-destructive">*</span>
             </label>
             <textarea
               id="cancel-order-reason"
               rows={3}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Provide a clear commercial justification (e.g., severe transport disruption, harvest loss)..."
+              placeholder={t(
+                "orders:cancel.reason_placeholder",
+                "Provide a clear commercial justification (e.g., severe transport disruption, harvest loss)..."
+              )}
               maxLength={500}
               className="w-full rounded-xl border border-border bg-card px-3.5 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-medium"
               required
@@ -119,7 +137,7 @@ export const OrderCancelModal: React.FC<OrderCancelModalProps> = ({
               disabled={isSubmitting}
               className="px-4 py-2 rounded-xl border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors disabled:opacity-50"
             >
-              Keep Order Active
+              {t("orders:cancel.keep_active", "Keep Order Active")}
             </button>
             <button
               type="submit"
@@ -129,10 +147,10 @@ export const OrderCancelModal: React.FC<OrderCancelModalProps> = ({
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                  <span>Cancelling...</span>
+                  <span>{t("orders:cancel.cancelling", "Cancelling...")}</span>
                 </>
               ) : (
-                <span>Confirm Cancellation</span>
+                <span>{t("orders:cancel.confirm_btn", "Confirm Cancellation")}</span>
               )}
             </button>
           </div>

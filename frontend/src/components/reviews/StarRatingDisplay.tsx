@@ -1,5 +1,6 @@
 import React from "react";
 import { Star } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface StarRatingDisplayProps {
   rating: number; // 0 to 5
@@ -14,6 +15,7 @@ export const StarRatingDisplay: React.FC<StarRatingDisplayProps> = ({
   size = "md",
   showValue = true,
 }) => {
+  const { t } = useTranslation(["reviews"]);
   const sizeClasses = {
     sm: "w-3 h-3",
     md: "w-4 h-4",
@@ -29,7 +31,10 @@ export const StarRatingDisplay: React.FC<StarRatingDisplayProps> = ({
   const roundedRating = Math.round(rating * 10) / 10;
 
   return (
-    <div className="inline-flex items-center gap-1.5" aria-label={`Rating: ${roundedRating} out of 5 stars`}>
+    <div
+      className="inline-flex items-center gap-1.5"
+      aria-label={t("reviews:rating_aria", "Rating: {{rating}} out of 5 stars", { rating: roundedRating })}
+    >
       <div className="flex items-center gap-0.5">
         {[1, 2, 3, 4, 5].map((star) => {
           const isFilled = star <= Math.round(rating);

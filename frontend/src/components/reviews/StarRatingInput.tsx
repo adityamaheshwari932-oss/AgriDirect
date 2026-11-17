@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Star } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface StarRatingInputProps {
   value: number;
@@ -14,6 +15,7 @@ export const StarRatingInput: React.FC<StarRatingInputProps> = ({
   label,
   required = false,
 }) => {
+  const { t } = useTranslation(["reviews"]);
   const [hovered, setHovered] = useState<number | null>(null);
 
   const activeValue = hovered !== null ? hovered : value;
@@ -25,7 +27,11 @@ export const StarRatingInput: React.FC<StarRatingInputProps> = ({
           {label} {required && <span className="text-destructive">*</span>}
         </label>
       )}
-      <div className="flex items-center gap-1.5" role="radiogroup" aria-label={label || "Rating"}>
+      <div
+        className="flex items-center gap-1.5"
+        role="radiogroup"
+        aria-label={label || t("reviews:rating_label", "Rating")}
+      >
         {[1, 2, 3, 4, 5].map((star) => {
           const isSelected = star <= activeValue;
           return (
@@ -34,7 +40,7 @@ export const StarRatingInput: React.FC<StarRatingInputProps> = ({
               type="button"
               role="radio"
               aria-checked={value === star}
-              aria-label={`${star} star${star > 1 ? "s" : ""}`}
+              aria-label={t("reviews:star_count_aria", "{{count}} star", { count: star })}
               onClick={() => onChange(star)}
               onMouseEnter={() => setHovered(star)}
               onMouseLeave={() => setHovered(null)}
@@ -50,7 +56,7 @@ export const StarRatingInput: React.FC<StarRatingInputProps> = ({
             </button>
           );
         })}
-        <span className="text-xs font-semibold text-muted-foreground ml-2 min-w-[3ch]">
+        <span className="text-xs font-semibold text-muted-foreground ms-2 min-w-[3ch]">
           {activeValue > 0 ? `${activeValue}/5` : "-"}
         </span>
       </div>

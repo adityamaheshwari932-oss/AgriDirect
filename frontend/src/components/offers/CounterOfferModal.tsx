@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { X, Loader2, AlertCircle, ArrowRightLeft } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { offersApi } from "../../api/offers";
 import { ApiError } from "../../api/errors";
 import type {
@@ -21,6 +22,7 @@ export const CounterOfferModal: React.FC<CounterOfferModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { t } = useTranslation(["offers", "validation", "errors", "common"]);
   const [deliveryTerms, setDeliveryTerms] = useState<string>(
     parentOffer.delivery_terms || ""
   );
@@ -75,18 +77,18 @@ export const CounterOfferModal: React.FC<CounterOfferModalProps> = ({
     items.forEach((item, idx) => {
       const qty = Number(item.quantity);
       if (!item.quantity || isNaN(qty) || qty <= 0) {
-        errors[`item_${idx}_quantity`] = "Quantity must be greater than zero.";
+        errors[`item_${idx}_quantity`] = t("validation:quantity_gt_zero", "Quantity must be greater than zero.");
       }
       const price = Number(item.unit_price);
       if (!item.unit_price || isNaN(price) || price <= 0) {
-        errors[`item_${idx}_price`] = "Unit price must be greater than zero.";
+        errors[`item_${idx}_price`] = t("validation:price_gt_zero", "Unit price must be greater than zero.");
       }
     });
 
     if (proposedDeliveryDate) {
       const todayStr = new Date().toISOString().slice(0, 10);
       if (proposedDeliveryDate < todayStr) {
-        errors.proposed_delivery_date = "Delivery date cannot be in the past.";
+        errors.proposed_delivery_date = t("validation:delivery_date_past", "Delivery date cannot be in the past.");
       }
     }
 
@@ -123,10 +125,10 @@ export const CounterOfferModal: React.FC<CounterOfferModalProps> = ({
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         setGeneralError(
-          err.message || "Failed to submit counter-proposal. Please review your terms."
+          err.message || t("errors:counter_offer_failed", "Failed to submit counter-proposal. Please review your terms.")
         );
       } else {
-        setGeneralError("An unexpected network error occurred while submitting counter-offer.");
+        setGeneralError(t("errors:network_error_counter", "An unexpected network error occurred while submitting counter-offer."));
       }
     } finally {
       setIsSubmitting(false);
@@ -134,7 +136,7 @@ export const CounterOfferModal: React.FC<CounterOfferModalProps> = ({
   };
 
   const counterpartyName =
-    parentOffer.sender?.name || parentOffer.sender?.business_name || "Counterparty";
+    parentOffer.sender?.name || parentOffer.sender?.business_name || t("offers:counterparty", "Counterparty");
 
   return (
     <div
@@ -152,10 +154,17 @@ export const CounterOfferModal: React.FC<CounterOfferModalProps> = ({
             </div>
             <div>
               <h2 id="modal-counter-offer-title" className="text-base font-bold text-foreground">
-                Submit Counter-Offer
+                {t("offers:counter_offer", "Submit Counter-Offer")}
               </h2>
               <p className="text-xs text-muted-foreground">
-                Responding to proposal {parentOffer.offer_number} from {counterpartyName}
+                {t(
+                  "offers:responding_to_proposal",
+                  `Responding to proposal ${parentOffer.offer_number} from ${counterpartyName}`,
+                  {
+                    num: parentOffer.offer_number,
+                    name: counterpartyName,
+                  }
+                )}
               </p>
             </div>
           </div>
@@ -163,7 +172,7 @@ export const CounterOfferModal: React.FC<CounterOfferModalProps> = ({
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Close dialog"
+            aria-label={t("common:close_dialog", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -181,15 +190,17 @@ export const CounterOfferModal: React.FC<CounterOfferModalProps> = ({
 
             {/* Explanatory Banner */}
             <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200 text-blue-900 leading-relaxed">
-              Adjust the unit price or quantity to propose amended commercial terms. The existing
-              offer will transition to <strong>Countered</strong>, and this new proposal will be
-              transmitted directly to {counterpartyName}.
+              {t(
+                "offers:counter_offer_banner",
+                `Adjust the unit price or quantity to propose amended commercial terms. The existing offer will transition to Countered, and this new proposal will be transmitted directly to ${counterpartyName}.`,
+                { name: counterpartyName }
+              )}
             </div>
 
             {/* Line Items Modification */}
             <div className="space-y-3">
               <label className="block text-xs font-bold text-foreground uppercase tracking-wider">
-                Produce Line Items
+                {t("offers:produce_line_items", "Produce Line Items")}
               </label>
 
               {items.map((item, idx) => (
@@ -200,7 +211,7 @@ export const CounterOfferModal: React.FC<CounterOfferModalProps> = ({
                   <div className="font-bold text-foreground text-sm flex items-center justify-between">
                     <span>{item.product_name}</span>
                     <span className="text-[11px] text-muted-foreground font-normal">
-                      Item #{idx + 1}
+                      {t("offers:item_n", `Item #${idx + 1}`, { n: idx + 1 })}
                     </span>
                   </div>
 
@@ -210,7 +221,7 @@ export const CounterOfferModal: React.FC<CounterOfferModalProps> = ({
                         htmlFor={`counter-qty-${idx}`}
                         className="block text-[11px] font-semibold text-muted-foreground mb-1"
                       >
-                        Quantity ({item.unit}) <span className="text-destructive">*</span>
+                        {t("offers:quantity_with_unit", `Quantity (${item.unit})`, { unit: item.unit })} <span className="text-destructive">*</span>
                       </label>
                       <input
                         id={`counter-qty-${idx}`}
@@ -232,7 +243,7 @@ export const CounterOfferModal: React.FC<CounterOfferModalProps> = ({
                         htmlFor={`counter-price-${idx}`}
                         className="block text-[11px] font-semibold text-muted-foreground mb-1"
                       >
-                        Unit Price (₹ / {item.unit}) <span className="text-destructive">*</span>
+                        {t("offers:unit_price_with_unit", `Unit Price (₹ / ${item.unit})`, { unit: item.unit })} <span className="text-destructive">*</span>
                       </label>
                       <input
                         id={`counter-price-${idx}`}
@@ -259,14 +270,17 @@ export const CounterOfferModal: React.FC<CounterOfferModalProps> = ({
                 htmlFor="counter-delivery-terms"
                 className="block text-xs font-semibold text-foreground mb-1"
               >
-                Delivery & Transport Terms
+                {t("offers:delivery_transport_terms", "Delivery & Transport Terms")}
               </label>
               <textarea
                 id="counter-delivery-terms"
                 rows={2}
                 value={deliveryTerms}
                 onChange={(e) => setDeliveryTerms(e.target.value)}
-                placeholder="e.g. Farm gate pickup by buyer, or seller delivery to warehouse dock..."
+                placeholder={t(
+                  "offers:delivery_terms_placeholder",
+                  "e.g. Farm gate pickup by buyer, or seller delivery to warehouse dock..."
+                )}
                 className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
@@ -277,7 +291,7 @@ export const CounterOfferModal: React.FC<CounterOfferModalProps> = ({
                 htmlFor="counter-delivery-date"
                 className="block text-xs font-semibold text-foreground mb-1"
               >
-                Target Delivery Date
+                {t("offers:target_delivery_date", "Target Delivery Date")}
               </label>
               <input
                 id="counter-delivery-date"
@@ -303,7 +317,7 @@ export const CounterOfferModal: React.FC<CounterOfferModalProps> = ({
               disabled={isSubmitting}
               className="px-3.5 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors disabled:opacity-50"
             >
-              Cancel
+              {t("common:cancel", "Cancel")}
             </button>
             <button
               type="submit"
@@ -313,10 +327,10 @@ export const CounterOfferModal: React.FC<CounterOfferModalProps> = ({
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
-                  <span>Transmitting Proposal...</span>
+                  <span>{t("offers:transmitting_proposal", "Transmitting Proposal...")}</span>
                 </>
               ) : (
-                <span>Submit Counter-Offer</span>
+                <span>{t("offers:submit_counter_offer_btn", "Submit Counter-Offer")}</span>
               )}
             </button>
           </div>

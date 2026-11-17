@@ -155,4 +155,46 @@ describe("OffersPage", () => {
       expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
   });
+
+  describe("D-4: Mobile offers filter overflow regression tests", () => {
+    it("renders all 6 filter pills inside a max-w-full overflow-x-auto container with shrink-0 buttons", async () => {
+      vi.spyOn(offersApi, "listOffers").mockResolvedValue(mockListResponse);
+
+      render(
+        <MemoryRouter>
+          <OffersPage />
+        </MemoryRouter>
+      );
+
+      const allButton = screen.getByRole("button", { name: /All Statuses/i });
+      const pendingButton = screen.getByRole("button", { name: /^Pending$/i });
+      const counteredButton = screen.getByRole("button", { name: /^Countered$/i });
+      const acceptedButton = screen.getByRole("button", { name: /^Accepted$/i });
+      const rejectedButton = screen.getByRole("button", { name: /^Rejected$/i });
+      const withdrawnButton = screen.getByRole("button", { name: /^Withdrawn$/i });
+
+      expect(allButton).toBeInTheDocument();
+      expect(pendingButton).toBeInTheDocument();
+      expect(counteredButton).toBeInTheDocument();
+      expect(acceptedButton).toBeInTheDocument();
+      expect(rejectedButton).toBeInTheDocument();
+      expect(withdrawnButton).toBeInTheDocument();
+
+      // Check wrapper classes
+      const filterContainer = allButton.parentElement;
+      expect(filterContainer).not.toBeNull();
+      expect(filterContainer?.className).toContain("max-w-full");
+      expect(filterContainer?.className).toContain("overflow-x-auto");
+      expect(filterContainer?.className).not.toContain("w-fit");
+
+      // Check button shrink-0 class
+      expect(allButton.className).toContain("shrink-0");
+      expect(pendingButton.className).toContain("shrink-0");
+
+      // Verify clicking updates filter and active class
+      fireEvent.click(counteredButton);
+      expect(counteredButton.className).toContain("bg-card");
+      expect(counteredButton.className).toContain("shadow-xs");
+    });
+  });
 });

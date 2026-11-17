@@ -9,8 +9,10 @@ import {
   FileText,
   CheckCircle2,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ordersApi } from "../../api/orders";
 import type { OrderDetail, AmendmentType } from "../../types/orders";
+import { formatNumber } from "../../utils/formatters";
 
 interface AmendmentProposalModalProps {
   isOpen: boolean;
@@ -25,6 +27,7 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { t } = useTranslation(["orders", "validation", "common", "errors"]);
   const [amendmentType, setAmendmentType] = useState<AmendmentType>("quantity");
   const [selectedItemId, setSelectedItemId] = useState<string>(
     order?.items && order.items.length > 0 ? order.items[0].id : ""
@@ -48,7 +51,12 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
 
     const trimmedJustification = justification.trim();
     if (trimmedJustification.length < 3) {
-      setError("Please provide a commercial justification with at least 3 characters.");
+      setError(
+        t(
+          "orders:amendment.justification_min",
+          "Please provide a commercial justification with at least 3 characters."
+        )
+      );
       return;
     }
 
@@ -67,38 +75,62 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
 
     if (amendmentType === "quantity") {
       if (!selectedItemId) {
-        setError("Please select the line item to modify.");
+        setError(
+          t("orders:amendment.select_item_required", "Please select the line item to modify.")
+        );
         return;
       }
       const qty = Number(newQuantity);
       if (isNaN(qty) || qty <= 0) {
-        setError("Please enter a valid new quantity greater than 0.");
+        setError(
+          t(
+            "orders:amendment.valid_quantity_required",
+            "Please enter a valid new quantity greater than 0."
+          )
+        );
         return;
       }
       payload.order_item_id = selectedItemId;
       payload.new_quantity = qty;
     } else if (amendmentType === "price") {
       if (!selectedItemId) {
-        setError("Please select the line item to modify.");
+        setError(
+          t("orders:amendment.select_item_required", "Please select the line item to modify.")
+        );
         return;
       }
       const price = Number(newPrice);
       if (isNaN(price) || price <= 0) {
-        setError("Please enter a valid new price greater than 0.");
+        setError(
+          t(
+            "orders:amendment.valid_price_required",
+            "Please enter a valid new price greater than 0."
+          )
+        );
         return;
       }
       payload.order_item_id = selectedItemId;
       payload.new_price = price;
     } else if (amendmentType === "delivery_date") {
       if (!newDeliveryDate) {
-        setError("Please select the new proposed delivery date.");
+        setError(
+          t(
+            "orders:amendment.date_required",
+            "Please select the new proposed delivery date."
+          )
+        );
         return;
       }
       payload.new_delivery_date = newDeliveryDate;
     } else if (amendmentType === "terms") {
       const terms = newTerms.trim();
       if (terms.length < 3) {
-        setError("Please provide new terms with at least 3 characters.");
+        setError(
+          t(
+            "orders:amendment.terms_min",
+            "Please provide new terms with at least 3 characters."
+          )
+        );
         return;
       }
       payload.new_terms = terms;
@@ -110,7 +142,10 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
       onSuccess();
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to propose amendment.";
+      const msg =
+        err instanceof Error
+          ? err.message
+          : t("orders:amendment.failed", "Failed to propose amendment.");
       setError(msg);
     } finally {
       setIsSubmitting(false);
@@ -129,17 +164,21 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
         <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-secondary/40">
           <div>
             <h2 id="modal-amendment-propose-title" className="text-base font-bold text-foreground">
-              Propose Order Amendment
+              {t("orders:amendment.title", "Propose Order Amendment")}
             </h2>
             <p className="text-xs text-muted-foreground">
-              Amendments require counterparty bilateral approval before taking effect on Order {order.order_number}
+              {t(
+                "orders:amendment.subtitle",
+                "Amendments require counterparty bilateral approval before taking effect on Order {{orderNumber}}",
+                { orderNumber: order.order_number }
+              )}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Close dialog"
+            aria-label={t("common:actions.close", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -151,7 +190,7 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
             <div className="p-3.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-2.5">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div>
-                <p className="font-semibold">Amendment Error</p>
+                <p className="font-semibold">{t("orders:amendment.error_title", "Amendment Error")}</p>
                 <p>{error}</p>
               </div>
             </div>
@@ -160,28 +199,28 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
           {/* Type Selector */}
           <div className="space-y-1.5">
             <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Amendment Category
+              {t("orders:amendment.category_label", "Amendment Category")}
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {(
                 [
-                  { id: "quantity", label: "Quantity" },
-                  { id: "price", label: "Unit Price" },
-                  { id: "delivery_date", label: "Delivery Date" },
-                  { id: "terms", label: "Trade Terms" },
+                  { id: "quantity", label: t("orders:amendment.cat_quantity", "Quantity") },
+                  { id: "price", label: t("orders:amendment.cat_price", "Unit Price") },
+                  { id: "delivery_date", label: t("orders:amendment.cat_date", "Delivery Date") },
+                  { id: "terms", label: t("orders:amendment.cat_terms", "Trade Terms") },
                 ] as const
-              ).map((t) => (
+              ).map((tOption) => (
                 <button
-                  key={t.id}
+                  key={tOption.id}
                   type="button"
-                  onClick={() => setAmendmentType(t.id)}
+                  onClick={() => setAmendmentType(tOption.id)}
                   className={`py-2 px-2.5 rounded-xl text-xs font-semibold border transition-all ${
-                    amendmentType === t.id
+                    amendmentType === tOption.id
                       ? "border-primary bg-primary/10 text-primary font-bold shadow-xs"
                       : "border-border bg-card text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {t.label}
+                  {tOption.label}
                 </button>
               ))}
             </div>
@@ -194,7 +233,8 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
                 htmlFor="amendment-item-select"
                 className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
               >
-                Select Line Item <span className="text-destructive">*</span>
+                {t("orders:amendment.select_item_label", "Select Line Item")}{" "}
+                <span className="text-destructive">*</span>
               </label>
               <select
                 id="amendment-item-select"
@@ -205,7 +245,7 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
               >
                 {order.items.map((it) => (
                   <option key={it.id} value={it.id}>
-                    {it.product_name} — Currently {it.quantity} {it.unit} @ ₹{Number(it.unit_price).toLocaleString()}
+                    {it.product_name} — Currently {formatNumber(it.quantity)} {it.unit} @ ₹{formatNumber(Number(it.unit_price))}
                   </option>
                 ))}
               </select>
@@ -219,7 +259,8 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
                 htmlFor="amendment-new-quantity"
                 className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
               >
-                New Proposed Quantity <span className="text-destructive">*</span>
+                {t("orders:amendment.new_quantity_label", "New Proposed Quantity")}{" "}
+                <span className="text-destructive">*</span>
               </label>
               <div className="relative">
                 <input
@@ -231,11 +272,14 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
                   onChange={(e) =>
                     setNewQuantity(e.target.value === "" ? "" : parseFloat(e.target.value))
                   }
-                  placeholder="Enter amended physical quantity"
-                  className="w-full rounded-xl border border-border bg-card pl-9 pr-4 py-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder={t(
+                    "orders:amendment.new_quantity_placeholder",
+                    "Enter amended physical quantity"
+                  )}
+                  className="w-full rounded-xl border border-border bg-card ps-9 pe-4 py-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   required
                 />
-                <Package className="w-4 h-4 text-muted-foreground absolute left-3 top-3" aria-hidden="true" />
+                <Package className="w-4 h-4 text-muted-foreground absolute start-3 top-3" aria-hidden="true" />
               </div>
             </div>
           )}
@@ -246,7 +290,8 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
                 htmlFor="amendment-new-price"
                 className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
               >
-                New Proposed Unit Price (₹) <span className="text-destructive">*</span>
+                {t("orders:amendment.new_price_label", "New Proposed Unit Price (₹)")}{" "}
+                <span className="text-destructive">*</span>
               </label>
               <div className="relative">
                 <input
@@ -258,11 +303,14 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
                   onChange={(e) =>
                     setNewPrice(e.target.value === "" ? "" : parseFloat(e.target.value))
                   }
-                  placeholder="Enter amended unit price"
-                  className="w-full rounded-xl border border-border bg-card pl-9 pr-4 py-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder={t(
+                    "orders:amendment.new_price_placeholder",
+                    "Enter amended unit price"
+                  )}
+                  className="w-full rounded-xl border border-border bg-card ps-9 pe-4 py-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   required
                 />
-                <DollarSign className="w-4 h-4 text-muted-foreground absolute left-3 top-3" aria-hidden="true" />
+                <DollarSign className="w-4 h-4 text-muted-foreground absolute start-3 top-3" aria-hidden="true" />
               </div>
             </div>
           )}
@@ -273,7 +321,8 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
                 htmlFor="amendment-new-date"
                 className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
               >
-                New Proposed Delivery Date <span className="text-destructive">*</span>
+                {t("orders:amendment.new_date_label", "New Proposed Delivery Date")}{" "}
+                <span className="text-destructive">*</span>
               </label>
               <div className="relative">
                 <input
@@ -282,10 +331,10 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
                   min={todayStr}
                   value={newDeliveryDate}
                   onChange={(e) => setNewDeliveryDate(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-card pl-9 pr-4 py-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full rounded-xl border border-border bg-card ps-9 pe-4 py-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   required
                 />
-                <Calendar className="w-4 h-4 text-muted-foreground absolute left-3 top-3" aria-hidden="true" />
+                <Calendar className="w-4 h-4 text-muted-foreground absolute start-3 top-3" aria-hidden="true" />
               </div>
             </div>
           )}
@@ -296,7 +345,11 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
                 htmlFor="amendment-new-terms"
                 className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
               >
-                New Logistics / Commercial Terms <span className="text-destructive">*</span>
+                {t(
+                  "orders:amendment.new_terms_label",
+                  "New Logistics / Commercial Terms"
+                )}{" "}
+                <span className="text-destructive">*</span>
               </label>
               <div className="relative">
                 <textarea
@@ -304,12 +357,15 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
                   rows={3}
                   value={newTerms}
                   onChange={(e) => setNewTerms(e.target.value)}
-                  placeholder="Specify amended trade terms..."
+                  placeholder={t(
+                    "orders:amendment.new_terms_placeholder",
+                    "Specify amended trade terms..."
+                  )}
                   maxLength={2000}
-                  className="w-full rounded-xl border border-border bg-card pl-9 pr-4 py-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full rounded-xl border border-border bg-card ps-9 pe-4 py-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   required
                 />
-                <FileText className="w-4 h-4 text-muted-foreground absolute left-3 top-3" aria-hidden="true" />
+                <FileText className="w-4 h-4 text-muted-foreground absolute start-3 top-3" aria-hidden="true" />
               </div>
             </div>
           )}
@@ -320,14 +376,18 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
               htmlFor="amendment-justification"
               className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
             >
-              Commercial Justification <span className="text-destructive">*</span>
+              {t("orders:amendment.justification_label", "Commercial Justification")}{" "}
+              <span className="text-destructive">*</span>
             </label>
             <textarea
               id="amendment-justification"
               rows={2}
               value={justification}
               onChange={(e) => setJustification(e.target.value)}
-              placeholder="Explain the commercial reason for proposing this post-finalization change..."
+              placeholder={t(
+                "orders:amendment.justification_placeholder",
+                "Explain the commercial reason for proposing this post-finalization change..."
+              )}
               maxLength={1000}
               className="w-full rounded-xl border border-border bg-card px-3.5 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-medium"
               required
@@ -341,7 +401,7 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
               disabled={isSubmitting}
               className="px-4 py-2 rounded-xl border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors disabled:opacity-50"
             >
-              Cancel
+              {t("common:actions.cancel", "Cancel")}
             </button>
             <button
               type="submit"
@@ -351,12 +411,12 @@ export const AmendmentProposalModal: React.FC<AmendmentProposalModalProps> = ({
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                  <span>Submitting Proposal...</span>
+                  <span>{t("orders:amendment.submitting", "Submitting Proposal...")}</span>
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
-                  <span>Submit Amendment</span>
+                  <span>{t("orders:amendment.submit_btn", "Submit Amendment")}</span>
                 </>
               )}
             </button>
