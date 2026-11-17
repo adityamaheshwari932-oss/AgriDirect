@@ -1,6 +1,7 @@
-﻿import React from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { Sprout } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { PageContainer } from "./PageContainer";
 import { cn } from "../../utils/cn";
 
@@ -17,6 +18,8 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   subtitle,
   maxWidth = "default",
 }) => {
+  const { t } = useTranslation(["common"]);
+
   return (
     <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-background">
       <PageContainer size="sm" className={cn(maxWidth === "wide" && "max-w-2xl")}>
@@ -24,7 +27,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
           <Link
             to="/"
             className="inline-flex items-center gap-2 mb-4 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg p-1"
-            aria-label="Back to AgriDirect Home"
+            aria-label={t("common:navigation.back_to_home", "Back to AgriDirect Home")}
           >
             <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground shadow-sm">
               <Sprout className="w-6 h-6" aria-hidden="true" />

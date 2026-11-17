@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Bell,
   CheckCheck,
@@ -12,6 +13,7 @@ import {
 } from "lucide-react";
 import { notificationsApi } from "../../api/notifications";
 import type { NotificationItem } from "../../types/notifications";
+import { formatDateTime } from "../../utils/formatters";
 
 interface NotificationDropdownProps {
   isOpen: boolean;
@@ -24,6 +26,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   onClose,
   onUnreadCountChanged,
 }) => {
+  const { t } = useTranslation(["notifications", "common"]);
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -119,12 +122,14 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   };
 
   return (
-    <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-150">
+    <div className="absolute end-0 mt-2 w-80 sm:w-96 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-150">
       {/* Header */}
       <div className="p-3.5 border-b border-border bg-secondary/30 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Bell className="w-4 h-4 text-primary" />
-          <span className="text-xs font-bold text-foreground">Notifications</span>
+          <span className="text-xs font-bold text-foreground">
+            {t("notifications:title", "Notifications")}
+          </span>
         </div>
         <button
           type="button"
@@ -137,7 +142,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
           ) : (
             <CheckCheck className="w-3 h-3" />
           )}
-          Mark all read
+          {t("notifications:mark_all_read", "Mark all read")}
         </button>
       </div>
 
@@ -146,7 +151,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         {isLoading ? (
           <div className="py-10 flex flex-col items-center justify-center gap-2 text-muted-foreground">
             <Loader2 className="w-5 h-5 animate-spin text-primary" />
-            <span className="text-xs">Loading alerts...</span>
+            <span className="text-xs">{t("common:status.loading", "Loading alerts...")}</span>
           </div>
         ) : error ? (
           <div className="p-4 text-center text-xs text-destructive flex items-center justify-center gap-1.5">
@@ -156,24 +161,23 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         ) : notifications.length === 0 ? (
           <div className="py-12 px-4 text-center text-muted-foreground space-y-1">
             <Bell className="w-8 h-8 opacity-20 mx-auto" />
-            <p className="text-xs font-medium text-foreground">No notifications</p>
-            <p className="text-[11px]">You're all caught up with your orders and offers.</p>
+            <p className="text-xs font-medium text-foreground">
+              {t("notifications:empty_title", "No notifications")}
+            </p>
+            <p className="text-[11px]">
+              {t("notifications:empty_desc", "You're all caught up with your orders and offers.")}
+            </p>
           </div>
         ) : (
           notifications.map((notif) => {
-            const timeAgo = new Date(notif.created_at).toLocaleDateString([], {
-              month: "short",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            });
+            const timeAgo = formatDateTime(notif.created_at);
 
             return (
               <button
                 key={notif.id}
                 type="button"
                 onClick={() => void handleNotificationClick(notif)}
-                className={`w-full text-left p-3.5 flex items-start gap-3 transition-colors hover:bg-secondary/40 focus:outline-none ${
+                className={`w-full text-start p-3.5 flex items-start gap-3 transition-colors hover:bg-secondary/40 focus:outline-none ${
                   !notif.is_read ? "bg-primary-50/40" : ""
                 }`}
               >

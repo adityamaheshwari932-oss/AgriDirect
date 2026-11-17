@@ -1,5 +1,6 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Eye, EyeOff, AlertCircle, CheckCircle2, ArrowRight, Store } from "lucide-react";
 import { useAuth } from "../store/authStore";
 import { AuthLayout } from "../components/layout/AuthLayout";
@@ -17,6 +18,7 @@ const BUSINESS_TYPE_OPTIONS = [
 ];
 
 export const BuyerRegisterPage: React.FC = () => {
+  const { t } = useTranslation(["auth", "validation", "common"]);
   const { registerBuyer } = useAuth();
 
   // Form State
@@ -50,30 +52,30 @@ export const BuyerRegisterPage: React.FC = () => {
     const errors: Record<string, string> = {};
 
     if (!formData.contact_person_name?.trim()) {
-      errors.contact_person_name = "Contact person name is required.";
+      errors.contact_person_name = t("validation:contact_person_name_required", "Contact person name is required.");
     }
 
     const trimmedEmail = formData.email.trim();
     if (!trimmedEmail) {
-      errors.email = "Email address is required.";
+      errors.email = t("validation:email_required", "Email address is required.");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      errors.email = "Please enter a valid email address.";
+      errors.email = t("validation:invalid_email", "Please enter a valid email address.");
     }
 
     if (!formData.password) {
-      errors.password = "Password is required.";
+      errors.password = t("validation:password_required", "Password is required.");
     } else if (formData.password.length < 8) {
-      errors.password = "Password must be at least 8 characters long.";
+      errors.password = t("validation:password_too_short", "Password must be at least 8 characters long.");
     }
 
     if (!formData.password_confirm) {
-      errors.password_confirm = "Please confirm your password.";
+      errors.password_confirm = t("validation:confirm_password_required", "Please confirm your password.");
     } else if (formData.password !== formData.password_confirm) {
-      errors.password_confirm = "Passwords do not match.";
+      errors.password_confirm = t("validation:passwords_dont_match", "Passwords do not match.");
     }
 
     if (!formData.business_type) {
-      errors.business_type = "Please select a commercial business type.";
+      errors.business_type = t("validation:business_type_required", "Please select a commercial business type.");
     }
 
     setFieldErrors(errors);
@@ -155,8 +157,8 @@ export const BuyerRegisterPage: React.FC = () => {
   if (registeredUser) {
     return (
       <AuthLayout
-        title="Commercial Account Created"
-        subtitle="Your commercial buyer registration has been recorded"
+        title={t("auth:buyer_register.account_created_success", "Commercial Account Created")}
+        subtitle={t("auth:buyer_register.success_desc", "Your commercial buyer registration has been recorded")}
       >
         <div className="text-center space-y-6 py-4">
           <div className="w-16 h-16 rounded-full bg-harvest-100 text-harvest-700 flex items-center justify-center mx-auto">
@@ -181,8 +183,8 @@ export const BuyerRegisterPage: React.FC = () => {
               to="/login"
               className="inline-flex items-center justify-center gap-2 py-2.5 px-6 rounded-lg bg-harvest-600 text-white font-semibold text-sm hover:bg-harvest-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-harvest-600 focus:ring-offset-2 w-full sm:w-auto"
             >
-              <span>Sign in to your account</span>
-              <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              <span>{t("auth:buyer_register.sign_in_link", "Sign in to your account")}</span>
+              <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden="true" />
             </Link>
           </div>
         </div>
@@ -192,8 +194,8 @@ export const BuyerRegisterPage: React.FC = () => {
 
   return (
     <AuthLayout
-      title="Commercial Buyer Registration"
-      subtitle="Register your business enterprise to procure bulk agricultural produce directly"
+      title={t("auth:buyer_register.account_title", "Commercial Buyer Registration")}
+      subtitle={t("auth:buyer_register.subtitle", "Register your business enterprise to procure bulk agricultural produce directly")}
       maxWidth="wide"
     >
       <form onSubmit={handleSubmit} className="space-y-6" noValidate>
@@ -212,14 +214,14 @@ export const BuyerRegisterPage: React.FC = () => {
         <div className="space-y-4">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider pb-1 border-b border-border flex items-center gap-2">
             <Store className="w-4 h-4 text-harvest-600" aria-hidden="true" />
-            <span>Account Credentials & Business Type (Required)</span>
+            <span>{t("auth:buyer_register.credentials_section", "Account Credentials & Business Type (Required)")}</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Contact Person Name */}
             <div>
               <label htmlFor="buyer-contact-name" className="block text-xs font-medium text-foreground mb-1">
-                Contact Person Name <span className="text-red-500">*</span>
+                {t("auth:buyer_register.contact_name_label", "Contact Person Name")} <span className="text-red-500">*</span>
               </label>
               <input
                 id="buyer-contact-name"
@@ -232,7 +234,7 @@ export const BuyerRegisterPage: React.FC = () => {
                 className={`w-full px-3 py-2 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
                   fieldErrors.contact_person_name ? "border-red-400 focus:ring-red-400" : "border-border"
                 }`}
-                placeholder="e.g. Sita Sharma"
+                placeholder={t("auth:buyer_register.contact_name_placeholder", "e.g. Sita Sharma")}
                 aria-invalid={Boolean(fieldErrors.contact_person_name)}
                 aria-describedby={fieldErrors.contact_person_name ? "contact-error" : undefined}
               />
@@ -246,7 +248,7 @@ export const BuyerRegisterPage: React.FC = () => {
             {/* Email Address */}
             <div>
               <label htmlFor="buyer-email" className="block text-xs font-medium text-foreground mb-1">
-                Commercial Email <span className="text-red-500">*</span>
+                {t("auth:buyer_register.email_label", "Commercial Email")} <span className="text-red-500">*</span>
               </label>
               <input
                 id="buyer-email"
@@ -259,7 +261,7 @@ export const BuyerRegisterPage: React.FC = () => {
                 className={`w-full px-3 py-2 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
                   fieldErrors.email ? "border-red-400 focus:ring-red-400" : "border-border"
                 }`}
-                placeholder="procurement@enterprise.com"
+                placeholder={t("auth:buyer_register.email_placeholder", "procurement@enterprise.com")}
                 aria-invalid={Boolean(fieldErrors.email)}
                 aria-describedby={fieldErrors.email ? "email-error" : undefined}
               />
@@ -273,7 +275,7 @@ export const BuyerRegisterPage: React.FC = () => {
             {/* Business Type */}
             <div className="sm:col-span-2">
               <label htmlFor="buyer-business-type" className="block text-xs font-medium text-foreground mb-1">
-                Commercial Entity Type <span className="text-red-500">*</span>
+                {t("auth:buyer_register.business_type_label", "Commercial Entity Type")} <span className="text-red-500">*</span>
               </label>
               <select
                 id="buyer-business-type"
@@ -294,7 +296,7 @@ export const BuyerRegisterPage: React.FC = () => {
             {/* Password */}
             <div>
               <label htmlFor="buyer-password" className="block text-xs font-medium text-foreground mb-1">
-                Password <span className="text-red-500">*</span>
+                {t("auth:buyer_register.password_label", "Password")} <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -305,7 +307,7 @@ export const BuyerRegisterPage: React.FC = () => {
                   value={formData.password}
                   onChange={handleChange}
                   disabled={isSubmitting}
-                  className={`w-full px-3 py-2 pr-10 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
+                  className={`w-full px-3 py-2 pe-10 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
                     fieldErrors.password ? "border-red-400 focus:ring-red-400" : "border-border"
                   }`}
                   placeholder="Min. 8 characters"
@@ -315,8 +317,8 @@ export const BuyerRegisterPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 focus:outline-none focus:ring-2 focus:ring-primary rounded"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute end-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                  aria-label={showPassword ? t("auth:login.hide_password", "Hide password") : t("auth:login.show_password", "Show password")}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -331,7 +333,7 @@ export const BuyerRegisterPage: React.FC = () => {
             {/* Confirm Password */}
             <div>
               <label htmlFor="buyer-password-confirm" className="block text-xs font-medium text-foreground mb-1">
-                Confirm Password <span className="text-red-500">*</span>
+                {t("auth:buyer_register.confirm_password_label", "Confirm Password")} <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -342,7 +344,7 @@ export const BuyerRegisterPage: React.FC = () => {
                   value={formData.password_confirm}
                   onChange={handleChange}
                   disabled={isSubmitting}
-                  className={`w-full px-3 py-2 pr-10 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
+                  className={`w-full px-3 py-2 pe-10 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary ${
                     fieldErrors.password_confirm ? "border-red-400 focus:ring-red-400" : "border-border"
                   }`}
                   placeholder="Re-enter password"
@@ -352,7 +354,7 @@ export const BuyerRegisterPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                  className="absolute end-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 focus:outline-none focus:ring-2 focus:ring-primary rounded"
                   aria-label={showConfirmPassword ? "Hide confirmation password" : "Show confirmation password"}
                 >
                   {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -370,7 +372,7 @@ export const BuyerRegisterPage: React.FC = () => {
         {/* Section 2: Business & Receiving Location Details (Optional) */}
         <div className="space-y-4 pt-2">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider pb-1 border-b border-border flex items-center justify-between">
-            <span>Business Entity Details (Optional)</span>
+            <span>{t("auth:buyer_register.business_details_section", "Business Entity Details (Optional)")}</span>
             <span className="text-[11px] font-normal lowercase text-muted-foreground">can be updated later</span>
           </h2>
 
@@ -378,7 +380,7 @@ export const BuyerRegisterPage: React.FC = () => {
             {/* Business Name */}
             <div>
               <label htmlFor="buyer-business-name" className="block text-xs font-medium text-foreground mb-1">
-                Registered Business / Trade Name
+                {t("auth:buyer_register.business_name_label", "Registered Business / Trade Name")}
               </label>
               <input
                 id="buyer-business-name"
@@ -388,14 +390,14 @@ export const BuyerRegisterPage: React.FC = () => {
                 onChange={handleChange}
                 disabled={isSubmitting}
                 className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="e.g. Taj Hospitality Group"
+                placeholder={t("auth:buyer_register.business_name_placeholder", "e.g. Taj Hospitality Group")}
               />
             </div>
 
             {/* Business Registration Number */}
             <div>
               <label htmlFor="buyer-reg-number" className="block text-xs font-medium text-foreground mb-1">
-                Tax / Business Registration ID (GSTIN/CIN)
+                {t("auth:buyer_register.gstin_label", "Tax / Business Registration ID (GSTIN/CIN)")}
               </label>
               <input
                 id="buyer-reg-number"
@@ -421,7 +423,7 @@ export const BuyerRegisterPage: React.FC = () => {
             {/* Phone Number */}
             <div>
               <label htmlFor="buyer-phone" className="block text-xs font-medium text-foreground mb-1">
-                Contact Phone
+                {t("auth:buyer_register.phone_label", "Contact Phone")}
               </label>
               <input
                 id="buyer-phone"
@@ -448,7 +450,7 @@ export const BuyerRegisterPage: React.FC = () => {
             {/* Delivery Receiving Address */}
             <div className="sm:col-span-2">
               <label htmlFor="buyer-delivery-address" className="block text-xs font-medium text-foreground mb-1">
-                Receiving Dock / Delivery Address
+                {t("auth:buyer_register.dock_address_label", "Receiving Dock / Delivery Address")}
               </label>
               <input
                 id="buyer-delivery-address"
@@ -465,7 +467,7 @@ export const BuyerRegisterPage: React.FC = () => {
             {/* City */}
             <div>
               <label htmlFor="buyer-city" className="block text-xs font-medium text-foreground mb-1">
-                City
+                {t("auth:buyer_register.city_label", "City")}
               </label>
               <input
                 id="buyer-city"
@@ -482,7 +484,7 @@ export const BuyerRegisterPage: React.FC = () => {
             {/* State */}
             <div>
               <label htmlFor="buyer-state" className="block text-xs font-medium text-foreground mb-1">
-                State / Province
+                {t("auth:buyer_register.state_label", "State / Province")}
               </label>
               <input
                 id="buyer-state"
@@ -499,7 +501,7 @@ export const BuyerRegisterPage: React.FC = () => {
             {/* Postal Code */}
             <div>
               <label htmlFor="buyer-postal-code" className="block text-xs font-medium text-foreground mb-1">
-                Postal Code
+                {t("auth:buyer_register.postal_code_label", "Postal Code")}
               </label>
               <input
                 id="buyer-postal-code"
@@ -516,7 +518,7 @@ export const BuyerRegisterPage: React.FC = () => {
             {/* Procurement Summary */}
             <div className="sm:col-span-2">
               <label htmlFor="buyer-procurement" className="block text-xs font-medium text-foreground mb-1">
-                Procurement Overview & Produce Interests
+                {t("auth:buyer_register.overview_label", "Procurement Overview & Produce Interests")}
               </label>
               <input
                 id="buyer-procurement"
@@ -542,12 +544,12 @@ export const BuyerRegisterPage: React.FC = () => {
             {isSubmitting ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Creating Commercial Account...</span>
+                <span>{t("auth:buyer_register.submitting", "Creating Commercial Account...")}</span>
               </>
             ) : (
               <>
-                <span>Complete Commercial Buyer Registration</span>
-                <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                <span>{t("auth:buyer_register.submit", "Complete Commercial Buyer Registration")}</span>
+                <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden="true" />
               </>
             )}
           </button>
@@ -555,12 +557,12 @@ export const BuyerRegisterPage: React.FC = () => {
 
         {/* Existing Account Footer Link */}
         <div className="pt-4 border-t border-border text-center text-xs text-muted-foreground">
-          Already have an account?{" "}
+          {t("auth:register.already_registered", "Already have an account?")}{" "}
           <Link
             to="/login"
             className="font-semibold text-primary hover:text-primary-800 underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
           >
-            Sign in
+            {t("auth:login.submit", "Sign in")}
           </Link>
         </div>
       </form>

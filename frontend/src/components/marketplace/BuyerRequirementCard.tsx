@@ -1,6 +1,8 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { MapPin, Clock, Building2, ArrowUpRight } from "lucide-react";
 import type { BuyerRequirementPublicSummary } from "../../types/requirements";
+import { formatNumber } from "../../utils/formatters";
 
 interface BuyerRequirementCardProps {
   requirement: BuyerRequirementPublicSummary;
@@ -11,6 +13,8 @@ export const BuyerRequirementCard: React.FC<BuyerRequirementCardProps> = ({
   requirement,
   onViewDetails,
 }) => {
+  const { t } = useTranslation(["marketplace", "requirements"]);
+
   return (
     <div
       onClick={() => onViewDetails(requirement)}
@@ -27,13 +31,13 @@ export const BuyerRequirementCard: React.FC<BuyerRequirementCardProps> = ({
             )}
             <h3 className="text-base font-bold text-foreground group-hover:text-blue-700 transition-colors flex items-center gap-1">
               <span>{requirement.product_name}</span>
-              <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-blue-600" />
+              <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-blue-600 rtl:-scale-x-100" />
             </h3>
           </div>
 
           <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-800 border border-blue-500/20 flex-shrink-0">
             <Building2 className="w-3 h-3 text-blue-600" />
-            Verified Commercial Buyer
+            {t("marketplace:verified_buyer", "Verified Commercial Buyer")}
           </span>
         </div>
 
@@ -46,24 +50,24 @@ export const BuyerRequirementCard: React.FC<BuyerRequirementCardProps> = ({
       <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-secondary/35 border border-border/70 text-xs">
         <div>
           <span className="text-[10px] uppercase font-bold text-muted-foreground block tracking-wider">
-            Required Volume
+            {t("marketplace:required_volume", "Required Volume")}
           </span>
           <div className="text-base font-extrabold text-foreground tabular">
-            {Number(requirement.remaining_quantity).toLocaleString("en-IN")}
+            {formatNumber(Number(requirement.remaining_quantity))}
             <span className="text-xs font-normal text-muted-foreground"> {requirement.unit}</span>
           </div>
           <span className="text-[10px] text-muted-foreground block mt-0.5">
-            Total Target: {Number(requirement.required_quantity).toLocaleString("en-IN")} {requirement.unit}
+            Total Target: {formatNumber(Number(requirement.required_quantity))} {requirement.unit}
           </span>
         </div>
 
         <div>
           <span className="text-[10px] uppercase font-bold text-muted-foreground block tracking-wider">
-            Target Price
+            {t("marketplace:target_rate", "Target Price")}
           </span>
           <div className="text-base font-extrabold text-blue-700 capitalize tabular">
             {requirement.target_price_per_unit
-              ? `₹${Number(requirement.target_price_per_unit).toLocaleString("en-IN")} / ${requirement.unit}`
+              ? `₹${formatNumber(Number(requirement.target_price_per_unit))} / ${requirement.unit}`
               : requirement.price_condition}
           </div>
           <span className="text-[10px] text-muted-foreground block capitalize mt-0.5">
@@ -91,7 +95,9 @@ export const BuyerRequirementCard: React.FC<BuyerRequirementCardProps> = ({
 
         <div className="flex items-center gap-1.5 text-[11px] text-amber-700 font-medium">
           <Clock className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" aria-hidden="true" />
-          <span>Procurement Deadline: {requirement.required_by_date}</span>
+          <span>
+            {t("requirements:procurement_deadline", "Procurement Deadline")}: {requirement.required_by_date}
+          </span>
         </div>
       </div>
 

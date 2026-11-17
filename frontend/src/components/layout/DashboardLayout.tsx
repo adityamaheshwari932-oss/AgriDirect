@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Sprout,
   Tractor,
@@ -24,11 +25,13 @@ import {
   Handshake,
 } from "lucide-react";
 import { useAuth } from "../../store/authStore";
-import { VERIFICATION_STATUS_CONFIG } from "../../utils/status";
+import { getLocalizedVerificationStatus } from "../../utils/status";
 import { PublicFooter } from "./PublicFooter";
 import { NotificationBell } from "../notifications/NotificationBell";
+import { LanguageSelector } from "../ui/LanguageSelector";
 
 export const DashboardLayout: React.FC = () => {
+  const { t } = useTranslation(["common", "dashboard"]);
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
@@ -49,38 +52,36 @@ export const DashboardLayout: React.FC = () => {
       user.buyer_profile?.business_name ||
       user.email
     : isAdmin
-    ? "Platform Administrator"
+    ? t("dashboard:layout.admin_subtitle", "Platform Administrator")
     : user.email;
 
   const entitySubtitle = isFarmer
     ? user.farmer_profile?.farm_name && user.farmer_profile.farm_name !== displayName
       ? user.farmer_profile.farm_name
-      : "Agricultural Producer"
+      : t("dashboard:layout.producer_subtitle", "Agricultural Producer")
     : isBuyer
     ? user.buyer_profile?.business_name && user.buyer_profile.business_name !== displayName
       ? user.buyer_profile.business_name
-      : "Commercial Buyer"
+      : t("dashboard:layout.buyer_subtitle", "Commercial Buyer")
     : isAdmin
     ? user.email
-    : "AgriDirect User";
+    : t("dashboard:layout.user_subtitle", "AgriDirect User");
 
-  const verificationConfig =
-    VERIFICATION_STATUS_CONFIG[user.verification_status] ||
-    VERIFICATION_STATUS_CONFIG.unverified;
+  const verificationConfig = getLocalizedVerificationStatus(user.verification_status, t);
 
   // Role-specific navigation items
   const navItems = isFarmer
     ? [
-        { label: "Dashboard", to: "/dashboard/farmer", icon: Tractor },
-        { label: "My Listings", to: "/dashboard/listings", icon: Layers },
-        { label: "Offers", to: "/dashboard/offers", icon: Handshake },
-        { label: "Orders", to: "/dashboard/orders", icon: ClipboardList },
-        { label: "Messages", to: "/dashboard/messages", icon: MessageSquare },
-        { label: "Analytics", to: "/dashboard/analytics", icon: BarChart3 },
-        { label: "Reports", to: "/dashboard/reports", icon: ShieldAlert },
-        { label: "Profile", to: "/dashboard/profile", icon: UserIcon },
+        { label: t("common:nav.dashboard", "Dashboard"), to: "/dashboard/farmer", icon: Tractor },
+        { label: t("common:nav.listings", "My Listings"), to: "/dashboard/listings", icon: Layers },
+        { label: t("common:nav.offers", "Offers"), to: "/dashboard/offers", icon: Handshake },
+        { label: t("common:nav.orders", "Orders"), to: "/dashboard/orders", icon: ClipboardList },
+        { label: t("common:nav.messages", "Messages"), to: "/dashboard/messages", icon: MessageSquare },
+        { label: t("common:nav.analytics", "Analytics"), to: "/dashboard/analytics", icon: BarChart3 },
+        { label: t("common:nav.reports", "Reports"), to: "/dashboard/reports", icon: ShieldAlert },
+        { label: t("common:nav.profile", "Profile"), to: "/dashboard/profile", icon: UserIcon },
         {
-          label: "Verification",
+          label: t("common:nav.verification", "Verification"),
           to: "/dashboard/verification",
           icon: ShieldCheck,
           badge: verificationConfig.label,
@@ -89,17 +90,17 @@ export const DashboardLayout: React.FC = () => {
       ]
     : isBuyer
     ? [
-        { label: "Dashboard", to: "/dashboard/buyer", icon: Store },
-        { label: "Marketplace", to: "/dashboard/marketplace", icon: ShoppingBag },
-        { label: "Requirements", to: "/dashboard/requirements", icon: Layers },
-        { label: "Offers", to: "/dashboard/offers", icon: Handshake },
-        { label: "Orders", to: "/dashboard/orders", icon: ClipboardList },
-        { label: "Messages", to: "/dashboard/messages", icon: MessageSquare },
-        { label: "Analytics", to: "/dashboard/analytics", icon: BarChart3 },
-        { label: "Reports", to: "/dashboard/reports", icon: ShieldAlert },
-        { label: "Profile", to: "/dashboard/profile", icon: UserIcon },
+        { label: t("common:nav.dashboard", "Dashboard"), to: "/dashboard/buyer", icon: Store },
+        { label: t("common:nav.marketplace", "Marketplace"), to: "/dashboard/marketplace", icon: ShoppingBag },
+        { label: t("common:nav.requirements", "Requirements"), to: "/dashboard/requirements", icon: Layers },
+        { label: t("common:nav.offers", "Offers"), to: "/dashboard/offers", icon: Handshake },
+        { label: t("common:nav.orders", "Orders"), to: "/dashboard/orders", icon: ClipboardList },
+        { label: t("common:nav.messages", "Messages"), to: "/dashboard/messages", icon: MessageSquare },
+        { label: t("common:nav.analytics", "Analytics"), to: "/dashboard/analytics", icon: BarChart3 },
+        { label: t("common:nav.reports", "Reports"), to: "/dashboard/reports", icon: ShieldAlert },
+        { label: t("common:nav.profile", "Profile"), to: "/dashboard/profile", icon: UserIcon },
         {
-          label: "Verification",
+          label: t("common:nav.verification", "Verification"),
           to: "/dashboard/verification",
           icon: ShieldCheck,
           badge: verificationConfig.label,
@@ -108,14 +109,14 @@ export const DashboardLayout: React.FC = () => {
       ]
     : isAdmin
     ? [
-        { label: "User Moderation", to: "/admin/users", icon: Users },
-        { label: "Content Moderation", to: "/admin/content", icon: ShieldAlert },
-        { label: "Verification Queue", to: "/admin/verification", icon: CheckSquare },
-        { label: "Audit Logs", to: "/admin/audit-logs", icon: History },
-        { label: "Platform Analytics", to: "/admin/analytics", icon: LineChart },
+        { label: t("common:nav.admin_users", "User Moderation"), to: "/admin/users", icon: Users },
+        { label: t("common:nav.admin_content", "Content Moderation"), to: "/admin/content", icon: ShieldAlert },
+        { label: t("common:nav.admin_verification", "Verification Queue"), to: "/admin/verification", icon: CheckSquare },
+        { label: t("common:nav.admin_audit", "Audit Logs"), to: "/admin/audit-logs", icon: History },
+        { label: t("common:nav.admin_analytics", "Platform Analytics"), to: "/admin/analytics", icon: LineChart },
       ]
     : [
-        { label: "Profile", to: "/dashboard/profile", icon: UserIcon },
+        { label: t("common:nav.profile", "Profile"), to: "/dashboard/profile", icon: UserIcon },
       ];
 
   const homeDestination = isFarmer
@@ -143,10 +144,10 @@ export const DashboardLayout: React.FC = () => {
             />
             <span>
               {isAdmin
-                ? "Platform Governance Portal — Administrator Console"
+                ? t("dashboard:layout.admin_banner", "Platform Governance Portal — Administrator Console")
                 : isFarmer
-                ? "Producer Portal — Verification: "
-                : "Commercial Procurement Portal — Verification: "}
+                ? t("dashboard:layout.farmer_banner", "Producer Portal — Verification: ")
+                : t("dashboard:layout.buyer_banner", "Commercial Procurement Portal — Verification: ")}
               {!isAdmin && <span className="font-semibold">{verificationConfig.label}</span>}
             </span>
           </div>
@@ -154,7 +155,7 @@ export const DashboardLayout: React.FC = () => {
             to="/"
             className="hidden sm:inline-flex items-center gap-1 text-primary-200 hover:text-white transition-colors text-[11px]"
           >
-            <span>Public Marketplace</span>
+            <span>{t("dashboard:layout.public_marketplace", "Public Marketplace")}</span>
             <ExternalLink className="w-3 h-3" aria-hidden="true" />
           </Link>
         </div>
@@ -168,8 +169,8 @@ export const DashboardLayout: React.FC = () => {
         >
           <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" aria-hidden="true" />
           <span>
-            <strong>Account Restricted:</strong> Your account is currently in read-only mode. You
-            can view marketplace records, but creating listings, requirements, or offers is disabled.
+            <strong>{t("dashboard:layout.account_restricted_title", "Account Restricted:")}</strong>{" "}
+            {t("dashboard:layout.account_restricted_desc", "Your account is currently in read-only mode. You can view marketplace records, but creating listings, requirements, or offers is disabled.")}
           </span>
         </div>
       )}
@@ -181,8 +182,12 @@ export const DashboardLayout: React.FC = () => {
         >
           <ShieldAlert className="w-4 h-4 text-destructive shrink-0" aria-hidden="true" />
           <span>
-            <strong>Account {user.account_status === "blocked" ? "Blocked" : "Suspended"}:</strong>{" "}
-            Transactional access has been disabled by platform governance. Contact support for assistance.
+            <strong>
+              {user.account_status === "blocked"
+                ? t("dashboard:layout.account_blocked_title", "Account Blocked:")
+                : t("dashboard:layout.account_suspended_title", "Account Suspended:")}
+            </strong>{" "}
+            {t("dashboard:layout.account_disabled_desc", "Transactional access has been disabled by platform governance. Contact support for assistance.")}
           </span>
         </div>
       )}
@@ -196,28 +201,28 @@ export const DashboardLayout: React.FC = () => {
               <Link
                 to={homeDestination}
                 className="flex items-center gap-2.5 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg p-1 shrink-0"
-                aria-label="AgriDirect Dashboard Home"
+                aria-label={t("common:app.dashboard_home_aria", "AgriDirect Dashboard Home")}
               >
                 <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-primary-foreground shadow-sm">
                   <Sprout className="w-5 h-5" aria-hidden="true" />
                 </div>
                 <div>
                   <span className="text-lg font-bold tracking-tight text-primary-900 block leading-tight">
-                    AgriDirect
+                    {t("common:app.name", "AgriDirect")}
                   </span>
                   <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold block">
                     {isAdmin
-                      ? "Admin Console"
+                      ? t("dashboard:layout.admin_badge", "Admin Console")
                       : isFarmer
-                      ? "Farmer Dashboard"
-                      : "Buyer Dashboard"}
+                      ? t("dashboard:layout.farmer_badge", "Farmer Dashboard")
+                      : t("dashboard:layout.buyer_badge", "Buyer Dashboard")}
                   </span>
                 </div>
               </Link>
 
               {/* Desktop Navigation Links */}
               <nav
-                className="hidden lg:flex items-center gap-1 pl-4 border-l border-border overflow-x-auto"
+                className="hidden lg:flex items-center gap-1 ps-4 border-s border-border overflow-x-auto"
                 aria-label="Dashboard Navigation"
               >
                 {navItems.map((item) => {
@@ -242,10 +247,11 @@ export const DashboardLayout: React.FC = () => {
             </div>
 
             {/* Desktop User Info & Sign Out */}
-            <div className="hidden sm:flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-3">
+              <LanguageSelector />
               <NotificationBell />
 
-              <div className="text-right">
+              <div className="text-end">
                 <div className="text-xs font-semibold text-foreground truncate max-w-[160px]">
                   {displayName}
                 </div>
@@ -275,21 +281,22 @@ export const DashboardLayout: React.FC = () => {
                 type="button"
                 onClick={logout}
                 className="inline-flex items-center gap-1 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors px-2.5 py-1.5 rounded-md border border-destructive/20 focus:outline-none focus:ring-2 focus:ring-destructive"
-                aria-label="Sign out of AgriDirect"
+                aria-label={t("common:nav.sign_out_aria", "Sign out of AgriDirect")}
               >
                 <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Sign Out</span>
+                <span>{t("common:nav.sign_out", "Sign Out")}</span>
               </button>
             </div>
 
             {/* Mobile Menu Hamburger */}
             <div className="flex lg:hidden items-center gap-2">
+              <LanguageSelector variant="compact" />
               <NotificationBell />
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-                aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+                aria-label={mobileMenuOpen ? t("common:nav.close_menu", "Close navigation menu") : t("common:nav.open_menu", "Open navigation menu")}
                 aria-expanded={mobileMenuOpen}
               >
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -361,7 +368,7 @@ export const DashboardLayout: React.FC = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center justify-between px-3 py-2 text-xs text-muted-foreground hover:text-foreground"
               >
-                <span>Public Marketplace Home</span>
+                <span>{t("dashboard:layout.public_marketplace_home", "Public Marketplace Home")}</span>
                 <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
               </Link>
             </div>
@@ -376,7 +383,7 @@ export const DashboardLayout: React.FC = () => {
               className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors"
             >
               <LogOut className="w-4 h-4" aria-hidden="true" />
-              <span>Sign Out</span>
+              <span>{t("common:nav.sign_out", "Sign Out")}</span>
             </button>
           </div>
         )}
