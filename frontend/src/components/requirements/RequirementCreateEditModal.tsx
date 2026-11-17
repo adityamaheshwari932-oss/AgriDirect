@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { X, Save, AlertCircle, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { requirementsApi } from "../../api/requirements";
 import { ApiError } from "../../api/errors";
 import type {
@@ -65,6 +66,7 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
   onClose,
   onSuccess,
 }) => {
+  const { t } = useTranslation(["requirements", "validation", "errors", "dashboard", "common"]);
   const isEdit = Boolean(requirementToEdit);
 
   const [productName, setProductName] = useState("");
@@ -136,28 +138,31 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
     const errors: Record<string, string> = {};
 
     if (!productName.trim()) {
-      errors.product_name = "Produce demand name is required (e.g. Processing Potatoes, Basmati Rice).";
+      errors.product_name = t(
+        "validation:produce_demand_name_required",
+        "Produce demand name is required (e.g. Processing Potatoes, Basmati Rice)."
+      );
     }
     if (!title.trim()) {
-      errors.title = "Procurement requirement title is required.";
+      errors.title = t("validation:title_required", "Procurement requirement title is required.");
     }
     const qty = Number(requiredQuantity);
     if (!requiredQuantity || isNaN(qty) || qty <= 0) {
-      errors.required_quantity = "Required quantity must be greater than zero.";
+      errors.required_quantity = t("validation:quantity_gt_zero", "Required quantity must be greater than zero.");
     }
     if (!unit.trim()) {
-      errors.unit = "Measurement unit is required.";
+      errors.unit = t("validation:unit_required", "Measurement unit is required.");
     }
     if (targetPricePerUnit) {
       const price = Number(targetPricePerUnit);
       if (isNaN(price) || price <= 0) {
-        errors.target_price_per_unit = "Target price must be a positive number if provided.";
+        errors.target_price_per_unit = t("validation:target_price_positive", "Target price must be a positive number if provided.");
       }
     }
     if (!requiredByDate) {
-      errors.required_by_date = "Procurement deadline date is required.";
+      errors.required_by_date = t("validation:deadline_required", "Procurement deadline date is required.");
     } else if (requiredByDate < todayStr) {
-      errors.required_by_date = "Procurement deadline cannot be in the past.";
+      errors.required_by_date = t("validation:deadline_past", "Procurement deadline cannot be in the past.");
     }
 
     setFieldErrors(errors);
@@ -214,17 +219,17 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         if (err.isValidationError) {
-          setGeneralError("Validation error: please check highlighted fields.");
+          setGeneralError(t("validation:check_fields", "Validation error: please check highlighted fields."));
           const backendErrors: Record<string, string> = {};
           for (const [key, msgs] of Object.entries(err.fieldErrors)) {
             backendErrors[key] = msgs[0];
           }
           setFieldErrors(backendErrors);
         } else {
-          setGeneralError(err.message || "Failed to save requirement. Please try again.");
+          setGeneralError(err.message || t("errors:save_failed", "Failed to save requirement. Please try again."));
         }
       } else {
-        setGeneralError("An unexpected network error occurred while saving the requirement.");
+        setGeneralError(t("errors:network_error_save", "An unexpected network error occurred while saving the requirement."));
       }
     } finally {
       setIsSubmitting(false);
@@ -243,19 +248,19 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
         <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-secondary/40">
           <div>
             <h2 id="modal-req-title" className="text-lg font-bold text-foreground">
-              {isEdit ? "Edit Procurement Requirement" : "Post Procurement Demand"}
+              {isEdit ? t("requirements:edit_requirement", "Edit Procurement Requirement") : t("requirements:post_new", "Post Procurement Demand")}
             </h2>
             <p className="text-xs text-muted-foreground">
               {isEdit
-                ? "Update procurement specifications or delivery deadlines"
-                : "Post commercial produce requirements to source directly from verified farmers"}
+                ? t("requirements:edit_subtitle", "Update procurement specifications or delivery deadlines")
+                : t("requirements:post_subtitle", "Post commercial produce requirements to source directly from verified farmers")}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Close dialog"
+            aria-label={t("common:close_dialog", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -277,14 +282,14 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="req-product-name" className="block text-xs font-semibold text-foreground mb-1">
-                Produce Demand Name <span className="text-destructive">*</span>
+                {t("requirements:produce_demand_name_label", "Produce Demand Name")} <span className="text-destructive">*</span>
               </label>
               <input
                 id="req-product-name"
                 type="text"
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
-                placeholder="e.g. Processing Potatoes, Basmati Rice"
+                placeholder={t("requirements:produce_demand_name_placeholder", "e.g. Processing Potatoes, Basmati Rice")}
                 className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
               {fieldErrors.product_name && (
@@ -294,7 +299,7 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
 
             <div>
               <label htmlFor="req-category" className="block text-xs font-semibold text-foreground mb-1">
-                Produce Category
+                {t("requirements:produce_category_label", "Produce Category")}
               </label>
               <select
                 id="req-category"
@@ -302,7 +307,7 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
                 onChange={(e) => setCategoryId(e.target.value)}
                 className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                <option value="">Select Category (Optional)</option>
+                <option value="">{t("common:select_category_opt", "Select Category (Optional)")}</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
@@ -314,14 +319,14 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
 
           <div>
             <label htmlFor="req-title" className="block text-xs font-semibold text-foreground mb-1">
-              Headline Title <span className="text-destructive">*</span>
+              {t("requirements:headline_title_label", "Headline Title")} <span className="text-destructive">*</span>
             </label>
             <input
               id="req-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Bulk Weekly Grade-A Processing Potatoes for Industrial Kitchen"
+              placeholder={t("requirements:headline_title_placeholder", "e.g. Bulk Weekly Grade-A Processing Potatoes for Industrial Kitchen")}
               className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
             {fieldErrors.title && (
@@ -331,14 +336,14 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
 
           <div>
             <label htmlFor="req-description" className="block text-xs font-semibold text-foreground mb-1">
-              Procurement Specifications & Receiving Instructions
+              {t("requirements:specifications_instructions_label", "Procurement Specifications & Receiving Instructions")}
             </label>
             <textarea
               id="req-description"
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Detail required packaging, sorting tolerances, receiving dock timing, or quality checks..."
+              placeholder={t("requirements:specifications_instructions_placeholder", "Detail required packaging, sorting tolerances, receiving dock timing, or quality checks...")}
               className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-y"
             />
           </div>
@@ -347,7 +352,7 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-secondary/30 border border-border">
             <div>
               <label htmlFor="req-quantity" className="block text-xs font-semibold text-foreground mb-1">
-                Required Procurement Volume <span className="text-destructive">*</span>
+                {t("requirements:target_quantity", "Required Procurement Volume")} <span className="text-destructive">*</span>
               </label>
               <input
                 id="req-quantity"
@@ -366,7 +371,7 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
 
             <div>
               <label htmlFor="req-unit" className="block text-xs font-semibold text-foreground mb-1">
-                Measurement Unit <span className="text-destructive">*</span>
+                {t("requirements:measurement_unit_label", "Measurement Unit")} <span className="text-destructive">*</span>
               </label>
               <select
                 id="req-unit"
@@ -387,7 +392,7 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="req-price-condition" className="block text-xs font-semibold text-foreground mb-1">
-                Pricing Term <span className="text-destructive">*</span>
+                {t("requirements:pricing_term", "Pricing Term")} <span className="text-destructive">*</span>
               </label>
               <select
                 id="req-price-condition"
@@ -405,7 +410,7 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
 
             <div>
               <label htmlFor="req-target-price" className="block text-xs font-semibold text-foreground mb-1">
-                Target Unit Price (₹) <span className="text-muted-foreground font-normal">(Optional)</span>
+                {t("requirements:max_price", "Target Unit Price (₹)")} <span className="text-muted-foreground font-normal">{t("common:optional_tag", "(Optional)")}</span>
               </label>
               <input
                 id="req-target-price"
@@ -427,7 +432,7 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="req-quality-grade" className="block text-xs font-semibold text-foreground mb-1">
-                Desired Quality Grade
+                {t("requirements:quality_grade", "Desired Quality Grade")}
               </label>
               <select
                 id="req-quality-grade"
@@ -445,7 +450,7 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
 
             <div>
               <label htmlFor="req-deadline" className="block text-xs font-semibold text-foreground mb-1">
-                Procurement Deadline Date <span className="text-destructive">*</span>
+                {t("requirements:procurement_deadline", "Procurement Deadline Date")} <span className="text-destructive">*</span>
               </label>
               <input
                 id="req-deadline"
@@ -465,7 +470,7 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="req-dest-state" className="block text-xs font-semibold text-foreground mb-1">
-                Delivery Destination State
+                {t("requirements:delivery_dest_state", "Delivery Destination State")}
               </label>
               <input
                 id="req-dest-state"
@@ -479,7 +484,7 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
 
             <div>
               <label htmlFor="req-dest-city" className="block text-xs font-semibold text-foreground mb-1">
-                Delivery Destination City / Dock
+                {t("requirements:delivery_dest_city", "Delivery Destination City / Dock")}
               </label>
               <input
                 id="req-dest-city"
@@ -496,9 +501,9 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
           {!isEdit && (
             <div className="p-3 rounded-lg bg-secondary/50 border border-border flex items-center justify-between">
               <div>
-                <span className="text-xs font-bold text-foreground block">Requirement Visibility</span>
+                <span className="text-xs font-bold text-foreground block">{t("requirements:visibility_label", "Requirement Visibility")}</span>
                 <span className="text-xs text-muted-foreground block">
-                  Publish directly to the public demand board or save as an internal procurement draft.
+                  {t("requirements:visibility_desc", "Publish directly to the public demand board or save as an internal procurement draft.")}
                 </span>
               </div>
               <div className="flex items-center gap-3">
@@ -511,7 +516,7 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
                     onChange={() => setStatus("active")}
                     className="text-primary focus:ring-primary"
                   />
-                  <span>Active (Live)</span>
+                  <span>{t("dashboard:status_active_live", "Active (Live)")}</span>
                 </label>
                 <label className="inline-flex items-center gap-1.5 text-xs text-foreground font-medium cursor-pointer">
                   <input
@@ -522,7 +527,7 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
                     onChange={() => setStatus("draft")}
                     className="text-primary focus:ring-primary"
                   />
-                  <span>Save as Draft</span>
+                  <span>{t("dashboard:status_save_draft", "Save as Draft")}</span>
                 </label>
               </div>
             </div>
@@ -536,7 +541,7 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
               disabled={isSubmitting}
               className="px-4 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-secondary text-sm font-medium transition-colors"
             >
-              Cancel
+              {t("common:cancel", "Cancel")}
             </button>
             <button
               type="submit"
@@ -546,12 +551,12 @@ export const RequirementCreateEditModal: React.FC<RequirementCreateEditModalProp
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                  <span>Saving...</span>
+                  <span>{t("common:saving", "Saving...")}</span>
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4" aria-hidden="true" />
-                  <span>{isEdit ? "Update Requirement" : "Publish Requirement"}</span>
+                  <span>{isEdit ? t("requirements:update_requirement_btn", "Update Requirement") : t("requirements:publish_requirement_btn", "Publish Requirement")}</span>
                 </>
               )}
             </button>

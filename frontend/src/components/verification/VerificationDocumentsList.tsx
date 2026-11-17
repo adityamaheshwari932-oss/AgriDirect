@@ -1,5 +1,7 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { Download, FileText, Loader2, AlertCircle, Calendar, Hash } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { formatDate } from "../../utils/formatters";
 import { verificationApi } from "../../api/verification";
 import { ApiError } from "../../api/errors";
 import type { VerificationDocument } from "../../types/verification";
@@ -10,6 +12,7 @@ interface VerificationDocumentsListProps {
 }
 
 export const VerificationDocumentsList: React.FC<VerificationDocumentsListProps> = ({ documents }) => {
+  const { t } = useTranslation(["verification", "common", "errors"]);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
@@ -40,9 +43,9 @@ export const VerificationDocumentsList: React.FC<VerificationDocumentsListProps>
       window.URL.revokeObjectURL(blobUrl);
     } catch (err: unknown) {
       if (err instanceof ApiError) {
-        setDownloadError(err.message || "Failed to download document. Please retry.");
+        setDownloadError(err.message || t("verification:download_failed_error", "Failed to download document. Please retry."));
       } else {
-        setDownloadError("A network error occurred while downloading the document.");
+        setDownloadError(t("verification:download_network_error", "A network error occurred while downloading the document."));
       }
     } finally {
       setDownloadingId(null);
@@ -53,9 +56,11 @@ export const VerificationDocumentsList: React.FC<VerificationDocumentsListProps>
     return (
       <div className="p-8 text-center border rounded-xl bg-card border-border text-muted-foreground space-y-2">
         <FileText className="w-8 h-8 mx-auto text-muted-foreground/60" aria-hidden="true" />
-        <p className="text-sm font-medium text-foreground">No verification evidence documents attached yet.</p>
+        <p className="text-sm font-medium text-foreground">
+          {t("verification:no_documents_attached", "No verification evidence documents attached yet.")}
+        </p>
         <p className="text-xs">
-          Select your required document category above and upload a valid PDF or image file.
+          {t("verification:no_documents_desc", "Select your required document category above and upload a valid PDF or image file.")}
         </p>
       </div>
     );
@@ -76,7 +81,7 @@ export const VerificationDocumentsList: React.FC<VerificationDocumentsListProps>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {documents.map((doc) => {
           const isDownloading = downloadingId === doc.id;
-          const formattedDate = new Date(doc.created_at).toLocaleDateString(undefined, {
+          const formattedDate = formatDate(doc.created_at, {
             year: "numeric",
             month: "short",
             day: "numeric",
@@ -113,7 +118,9 @@ export const VerificationDocumentsList: React.FC<VerificationDocumentsListProps>
                   )}
                   <div className="flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-muted-foreground/70" aria-hidden="true" />
-                    <span>Uploaded on {formattedDate}</span>
+                    <span>
+                      {t("verification:uploaded_on", `Uploaded on ${formattedDate}`, { date: formattedDate })}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -124,17 +131,19 @@ export const VerificationDocumentsList: React.FC<VerificationDocumentsListProps>
                   onClick={() => handleDownload(doc)}
                   disabled={isDownloading}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-secondary/50 text-foreground hover:bg-secondary text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-                  aria-label={`Download ${getDocumentTypeLabel(doc.document_type)}`}
+                  aria-label={t("verification:download_doc_aria", `Download ${getDocumentTypeLabel(doc.document_type)}`, {
+                    type: getDocumentTypeLabel(doc.document_type),
+                  })}
                 >
                   {isDownloading ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
-                      <span>Downloading...</span>
+                      <span>{t("common:downloading", "Downloading...")}</span>
                     </>
                   ) : (
                     <>
                       <Download className="w-3.5 h-3.5" aria-hidden="true" />
-                      <span>Download</span>
+                      <span>{t("common:actions.download", "Download")}</span>
                     </>
                   )}
                 </button>

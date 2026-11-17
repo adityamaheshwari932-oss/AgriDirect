@@ -1,5 +1,6 @@
-﻿import React from "react";
+import React from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ShieldAlert,
   ShieldCheck,
@@ -9,7 +10,7 @@ import {
   FileCheck,
 } from "lucide-react";
 import type { VerificationStatus } from "../../types";
-import { VERIFICATION_STATUS_CONFIG } from "../../utils/status";
+import { getLocalizedVerificationStatus } from "../../utils/status";
 
 interface VerificationSummaryCardProps {
   status: VerificationStatus;
@@ -24,7 +25,8 @@ export const VerificationSummaryCard: React.FC<VerificationSummaryCardProps> = (
   rejectionReason,
   className = "",
 }) => {
-  const config = VERIFICATION_STATUS_CONFIG[status] || VERIFICATION_STATUS_CONFIG.unverified;
+  const { t } = useTranslation(["verification", "common"]);
+  const config = getLocalizedVerificationStatus(status, t);
 
   const getStatusIcon = () => {
     switch (status) {
@@ -125,7 +127,7 @@ export const VerificationSummaryCard: React.FC<VerificationSummaryCardProps> = (
           className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-primary hover:text-primary-800 hover:bg-primary-50 border border-primary/20 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <span>View Verification Details</span>
-          <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+          <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
         </Link>
       </div>
     </div>

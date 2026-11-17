@@ -1,5 +1,6 @@
 ﻿import React, { useState, useRef } from "react";
 import { Upload, FileText, CheckCircle2, AlertCircle, X, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { verificationApi } from "../../api/verification";
 import { ApiError } from "../../api/errors";
 import {
@@ -23,6 +24,7 @@ export const VerificationDocumentUploadForm: React.FC<VerificationDocumentUpload
   onUploadSuccess,
   disabled = false,
 }) => {
+  const { t } = useTranslation(["verification", "common", "errors"]);
   const documentTypeOptions = role === "farmer" ? FARMER_DOCUMENT_TYPES : BUYER_DOCUMENT_TYPES;
 
   const [selectedType, setSelectedType] = useState<string>(documentTypeOptions[0].value);
@@ -51,7 +53,11 @@ export const VerificationDocumentUploadForm: React.FC<VerificationDocumentUpload
     // Frontend validation: file size
     if (file.size > MAX_DOCUMENT_SIZE_BYTES) {
       setValidationError(
-        `File size (${formatFileSize(file.size)}) exceeds the maximum permitted limit of 10 MiB.`
+        t(
+          "verification:file_size_exceeded",
+          `File size (${formatFileSize(file.size)}) exceeds the maximum permitted limit of 10 MiB.`,
+          { size: formatFileSize(file.size) }
+        )
       );
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -66,7 +72,10 @@ export const VerificationDocumentUploadForm: React.FC<VerificationDocumentUpload
 
     if (!hasValidExt || !hasValidMime) {
       setValidationError(
-        "Unsupported file format. Please select a PDF, JPEG, PNG, or WebP document."
+        t(
+          "verification:unsupported_file_format",
+          "Unsupported file format. Please select a PDF, JPEG, PNG, or WebP document."
+        )
       );
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -92,7 +101,7 @@ export const VerificationDocumentUploadForm: React.FC<VerificationDocumentUpload
     setUploadSuccessMessage(null);
 
     if (!selectedFile) {
-      setValidationError("Please select a document file to upload.");
+      setValidationError(t("verification:select_file_validation", "Please select a document file to upload."));
       return;
     }
 
@@ -106,7 +115,11 @@ export const VerificationDocumentUploadForm: React.FC<VerificationDocumentUpload
       );
 
       setUploadSuccessMessage(
-        `Document "${selectedFile.name}" was uploaded successfully and attached to your application.`
+        t(
+          "verification:upload_success_attached",
+          `Document "${selectedFile.name}" was uploaded successfully and attached to your application.`,
+          { filename: selectedFile.name }
+        )
       );
       setSelectedFile(null);
       setDocumentNumber("");
@@ -117,9 +130,9 @@ export const VerificationDocumentUploadForm: React.FC<VerificationDocumentUpload
       onUploadSuccess(doc);
     } catch (err: unknown) {
       if (err instanceof ApiError) {
-        setApiError(err.message || "Failed to upload document. Please verify the file and try again.");
+        setApiError(err.message || t("verification:upload_failed_error", "Failed to upload document. Please verify the file and try again."));
       } else {
-        setApiError("A network error occurred while uploading. Please check your connection and retry.");
+        setApiError(t("common:network_error_retry", "A network error occurred while uploading. Please check your connection and retry."));
       }
     } finally {
       setIsUploading(false);
@@ -142,7 +155,7 @@ export const VerificationDocumentUploadForm: React.FC<VerificationDocumentUpload
             type="button"
             onClick={() => setUploadSuccessMessage(null)}
             className="text-emerald-700 hover:text-emerald-900"
-            aria-label="Dismiss success message"
+            aria-label={t("common:dismiss", "Dismiss success message")}
           >
             <X className="w-4 h-4" />
           </button>
@@ -157,7 +170,11 @@ export const VerificationDocumentUploadForm: React.FC<VerificationDocumentUpload
         >
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
           <div className="flex-1 space-y-1">
-            <p className="font-semibold">{validationError ? "Invalid File Selection" : "Upload Failed"}</p>
+            <p className="font-semibold">
+              {validationError
+                ? t("verification:invalid_file_selection", "Invalid File Selection")
+                : t("verification:upload_failed", "Upload Failed")}
+            </p>
             <p className="text-xs text-red-800">{validationError || apiError}</p>
           </div>
           <button
@@ -167,7 +184,7 @@ export const VerificationDocumentUploadForm: React.FC<VerificationDocumentUpload
               setApiError(null);
             }}
             className="text-red-700 hover:text-red-900"
-            aria-label="Dismiss error"
+            aria-label={t("common:dismiss_error", "Dismiss error")}
           >
             <X className="w-4 h-4" />
           </button>
@@ -178,7 +195,7 @@ export const VerificationDocumentUploadForm: React.FC<VerificationDocumentUpload
         {/* Document Category Select */}
         <div className="space-y-1.5">
           <label htmlFor="document-type-select" className="block text-xs font-semibold text-foreground">
-            Document Category <span className="text-red-500">*</span>
+            {t("verification:document_category_label", "Document Category")} <span className="text-red-500">*</span>
           </label>
           <select
             id="document-type-select"
@@ -201,7 +218,8 @@ export const VerificationDocumentUploadForm: React.FC<VerificationDocumentUpload
         {/* Document / Registration Number Input */}
         <div className="space-y-1.5">
           <label htmlFor="document-number-input" className="block text-xs font-semibold text-foreground">
-            Document / Certificate Number <span className="text-xs text-muted-foreground font-normal">(Optional)</span>
+            {t("verification:document_number_label", "Document / Certificate Number")}{" "}
+            <span className="text-xs text-muted-foreground font-normal">({t("common:optional", "Optional")})</span>
           </label>
           <input
             id="document-number-input"
@@ -210,31 +228,30 @@ export const VerificationDocumentUploadForm: React.FC<VerificationDocumentUpload
             onChange={(e) => setDocumentNumber(e.target.value)}
             placeholder={
               role === "farmer"
-                ? "e.g. KCC-987654 or Land Deed # 124"
-                : "e.g. 27AAAAA0000A1Z5 or FSSAI # 1001"
+                ? t("verification:number_placeholder_farmer", "e.g. KCC-987654 or Land Deed # 124")
+                : t("verification:number_placeholder_buyer", "e.g. 27AAAAA0000A1Z5 or FSSAI # 1001")
             }
             maxLength={64}
             disabled={disabled || isUploading}
             className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60 disabled:cursor-not-allowed"
           />
-          <p className="text-xs text-muted-foreground">Identifying registration number if visible on the document</p>
+          <p className="text-xs text-muted-foreground">{t("verification:number_hint", "Identifying registration number if visible on the document")}</p>
         </div>
       </div>
 
       {/* File Drop / Select Area */}
       <div className="space-y-1.5">
         <label className="block text-xs font-semibold text-foreground">
-          Document File <span className="text-red-500">*</span>
+          {t("verification:document_file_label", "Document File")} <span className="text-red-500">*</span>
         </label>
 
         {!selectedFile ? (
           <div
             onClick={() => !disabled && !isUploading && fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${
-              disabled || isUploading
-                ? "opacity-60 cursor-not-allowed border-border bg-muted/20"
-                : "border-border hover:border-primary/60 hover:bg-primary/5 bg-card"
-            }`}
+            className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${disabled || isUploading
+              ? "opacity-60 cursor-not-allowed border-border bg-muted/20"
+              : "border-border hover:border-primary/60 hover:bg-primary/5 bg-card"
+              }`}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
@@ -243,16 +260,16 @@ export const VerificationDocumentUploadForm: React.FC<VerificationDocumentUpload
                 fileInputRef.current?.click();
               }
             }}
-            aria-label="Click or press enter to select verification document file"
+            aria-label={t("verification:select_file_cta_aria", "Click or press enter to select verification document file")}
           >
             <div className="w-10 h-10 rounded-full bg-secondary mx-auto flex items-center justify-center text-primary mb-2">
               <Upload className="w-5 h-5" aria-hidden="true" />
             </div>
             <div className="text-sm font-medium text-foreground">
-              Click to choose a verification document file
+              {t("verification:click_choose_file", "Click to choose a verification document file")}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Accepted formats: PDF, JPEG, PNG, or WebP (Maximum size: 10 MiB)
+              {t("verification:accepted_formats", "Accepted formats: PDF, JPEG, PNG, or WebP (Maximum size: 10 MiB)")}
             </p>
           </div>
         ) : (
@@ -264,7 +281,7 @@ export const VerificationDocumentUploadForm: React.FC<VerificationDocumentUpload
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground truncate">{selectedFile.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  Size: {formatFileSize(selectedFile.size)} • Type: {selectedFile.type || "Document file"}
+                  {t("common:size", "Size")}: {formatFileSize(selectedFile.size)} • {t("common:type", "Type")}: {selectedFile.type || t("verification:document_file", "Document file")}
                 </p>
               </div>
             </div>
@@ -274,7 +291,7 @@ export const VerificationDocumentUploadForm: React.FC<VerificationDocumentUpload
               onClick={handleRemoveFile}
               disabled={isUploading}
               className="p-1.5 rounded-md text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
-              aria-label="Remove selected file"
+              aria-label={t("verification:remove_selected_file", "Remove selected file")}
             >
               <X className="w-5 h-5" aria-hidden="true" />
             </button>
@@ -302,12 +319,12 @@ export const VerificationDocumentUploadForm: React.FC<VerificationDocumentUpload
           {isUploading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-              <span>Uploading Evidence...</span>
+              <span>{t("verification:uploading_evidence", "Uploading Evidence...")}</span>
             </>
           ) : (
             <>
               <Upload className="w-4 h-4" aria-hidden="true" />
-              <span>Upload Document</span>
+              <span>{t("verification:upload_document", "Upload Document")}</span>
             </>
           )}
         </button>

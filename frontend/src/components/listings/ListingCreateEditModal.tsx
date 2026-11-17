@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { X, Save, AlertCircle, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { listingsApi } from "../../api/listings";
 import { ApiError } from "../../api/errors";
 import type {
@@ -46,6 +47,7 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { t } = useTranslation(["dashboard", "validation", "errors", "common"]);
   const isEdit = Boolean(listingToEdit);
 
   const [productName, setProductName] = useState("");
@@ -106,21 +108,30 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
     const errors: Record<string, string> = {};
 
     if (!productName.trim()) {
-      errors.product_name = "Produce name is required (e.g. Sharbati Wheat, Alphonso Mango).";
+      errors.product_name = t(
+        "validation:produce_name_required",
+        "Produce name is required (e.g. Sharbati Wheat, Alphonso Mango)."
+      );
     }
     if (!title.trim()) {
-      errors.title = "Listing title is required.";
+      errors.title = t("validation:title_required", "Listing title is required.");
     }
     const qty = Number(initialQuantity);
     if (!initialQuantity || isNaN(qty) || qty <= 0) {
-      errors.initial_quantity = "Initial supply quantity must be greater than zero.";
+      errors.initial_quantity = t(
+        "validation:quantity_gt_zero",
+        "Initial supply quantity must be greater than zero."
+      );
     }
     const price = Number(pricePerUnit);
     if (!pricePerUnit || isNaN(price) || price <= 0) {
-      errors.price_per_unit = "Price per unit must be greater than zero.";
+      errors.price_per_unit = t(
+        "validation:price_gt_zero",
+        "Price per unit must be greater than zero."
+      );
     }
     if (!unit.trim()) {
-      errors.unit = "Measurement unit is required.";
+      errors.unit = t("validation:unit_required", "Measurement unit is required.");
     }
 
     setFieldErrors(errors);
@@ -177,17 +188,17 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         if (err.isValidationError) {
-          setGeneralError("Validation error: please check highlighted fields.");
+          setGeneralError(t("validation:check_fields", "Validation error: please check highlighted fields."));
           const backendErrors: Record<string, string> = {};
           for (const [key, msgs] of Object.entries(err.fieldErrors)) {
             backendErrors[key] = msgs[0];
           }
           setFieldErrors(backendErrors);
         } else {
-          setGeneralError(err.message || "Failed to save listing. Please try again.");
+          setGeneralError(err.message || t("errors:save_failed", "Failed to save listing. Please try again."));
         }
       } else {
-        setGeneralError("An unexpected network error occurred while saving the listing.");
+        setGeneralError(t("errors:network_error_save", "An unexpected network error occurred while saving the listing."));
       }
     } finally {
       setIsSubmitting(false);
@@ -206,19 +217,19 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
         <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-secondary/40">
           <div>
             <h2 id="modal-listing-title" className="text-lg font-bold text-foreground">
-              {isEdit ? "Edit Produce Listing" : "Create New Produce Listing"}
+              {isEdit ? t("dashboard:edit_listing", "Edit Produce Listing") : t("dashboard:create_listing", "Create New Produce Listing")}
             </h2>
             <p className="text-xs text-muted-foreground">
               {isEdit
-                ? "Update pricing, specifications, or harvest details for this produce lot"
-                : "Publish an agricultural produce lot to the direct B2B wholesale marketplace"}
+                ? t("dashboard:edit_listing_subtitle", "Update pricing, specifications, or harvest details for this produce lot")
+                : t("dashboard:create_listing_subtitle", "Publish an agricultural produce lot to the direct B2B wholesale marketplace")}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Close dialog"
+            aria-label={t("common:close_dialog", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -240,14 +251,14 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="listing-product-name" className="block text-xs font-semibold text-foreground mb-1">
-                Produce Name <span className="text-destructive">*</span>
+                {t("dashboard:produce_name_label", "Produce Name")} <span className="text-destructive">*</span>
               </label>
               <input
                 id="listing-product-name"
                 type="text"
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
-                placeholder="e.g. Sharbati Wheat, Alphonso Mango"
+                placeholder={t("dashboard:produce_name_placeholder", "e.g. Sharbati Wheat, Alphonso Mango")}
                 className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
               {fieldErrors.product_name && (
@@ -257,7 +268,7 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
 
             <div>
               <label htmlFor="listing-category" className="block text-xs font-semibold text-foreground mb-1">
-                Produce Category
+                {t("dashboard:produce_category_label", "Produce Category")}
               </label>
               <select
                 id="listing-category"
@@ -265,7 +276,7 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
                 onChange={(e) => setCategoryId(e.target.value)}
                 className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                <option value="">Select Category (Optional)</option>
+                <option value="">{t("dashboard:select_category_opt", "Select Category (Optional)")}</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
@@ -277,14 +288,14 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
 
           <div>
             <label htmlFor="listing-title" className="block text-xs font-semibold text-foreground mb-1">
-              Headline Title <span className="text-destructive">*</span>
+              {t("dashboard:headline_title_label", "Headline Title")} <span className="text-destructive">*</span>
             </label>
             <input
               id="listing-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Farm Fresh Certified Sharbati Wheat — 2026 Harvest"
+              placeholder={t("dashboard:headline_title_placeholder", "e.g. Farm Fresh Certified Sharbati Wheat — 2026 Harvest")}
               className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
             {fieldErrors.title && (
@@ -294,14 +305,14 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
 
           <div>
             <label htmlFor="listing-description" className="block text-xs font-semibold text-foreground mb-1">
-              Produce Description & Storage Notes
+              {t("dashboard:description_notes_label", "Produce Description & Storage Notes")}
             </label>
             <textarea
               id="listing-description"
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe moisture content, packaging, storage conditions, or sorting specifications..."
+              placeholder={t("dashboard:description_notes_placeholder", "Describe moisture content, packaging, storage conditions, or sorting specifications...")}
               className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-y"
             />
           </div>
@@ -310,7 +321,7 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-secondary/30 border border-border">
             <div>
               <label htmlFor="listing-initial-quantity" className="block text-xs font-semibold text-foreground mb-1">
-                Total Supply Quantity <span className="text-destructive">*</span>
+                {t("dashboard:total_supply_quantity_label", "Total Supply Quantity")} <span className="text-destructive">*</span>
               </label>
               <input
                 id="listing-initial-quantity"
@@ -329,7 +340,7 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
 
             <div>
               <label htmlFor="listing-unit" className="block text-xs font-semibold text-foreground mb-1">
-                Measurement Unit <span className="text-destructive">*</span>
+                {t("dashboard:measurement_unit_label", "Measurement Unit")} <span className="text-destructive">*</span>
               </label>
               <select
                 id="listing-unit"
@@ -347,7 +358,7 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
 
             <div>
               <label htmlFor="listing-price-per-unit" className="block text-xs font-semibold text-foreground mb-1">
-                Price per Unit (₹) <span className="text-destructive">*</span>
+                {t("dashboard:price_per_unit_inr_label", "Price per Unit (₹)")} <span className="text-destructive">*</span>
               </label>
               <input
                 id="listing-price-per-unit"
@@ -369,7 +380,7 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label htmlFor="listing-quality-grade" className="block text-xs font-semibold text-foreground mb-1">
-                Quality Grade
+                {t("dashboard:quality_grade_label", "Quality Grade")}
               </label>
               <select
                 id="listing-quality-grade"
@@ -387,7 +398,7 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
 
             <div>
               <label htmlFor="listing-harvest-date" className="block text-xs font-semibold text-foreground mb-1">
-                Harvest Date
+                {t("dashboard:harvest_date_label", "Harvest Date")}
               </label>
               <input
                 id="listing-harvest-date"
@@ -400,7 +411,7 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
 
             <div>
               <label htmlFor="listing-available-from" className="block text-xs font-semibold text-foreground mb-1">
-                Ready for Dispatch From
+                {t("dashboard:ready_dispatch_label", "Ready for Dispatch From")}
               </label>
               <input
                 id="listing-available-from"
@@ -416,7 +427,7 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="listing-location-state" className="block text-xs font-semibold text-foreground mb-1">
-                Sourcing State
+                {t("dashboard:sourcing_state_label", "Sourcing State")}
               </label>
               <input
                 id="listing-location-state"
@@ -430,7 +441,7 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
 
             <div>
               <label htmlFor="listing-location-city" className="block text-xs font-semibold text-foreground mb-1">
-                Sourcing City / District
+                {t("dashboard:sourcing_city_label", "Sourcing City / District")}
               </label>
               <input
                 id="listing-location-city"
@@ -447,9 +458,9 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
           {!isEdit && (
             <div className="p-3 rounded-lg bg-secondary/50 border border-border flex items-center justify-between">
               <div>
-                <span className="text-xs font-bold text-foreground block">Listing Publication Status</span>
+                <span className="text-xs font-bold text-foreground block">{t("dashboard:publication_status_label", "Listing Publication Status")}</span>
                 <span className="text-xs text-muted-foreground block">
-                  Choose whether this lot becomes immediately visible on the public marketplace.
+                  {t("dashboard:publication_status_desc", "Choose whether this lot becomes immediately visible on the public marketplace.")}
                 </span>
               </div>
               <div className="flex items-center gap-3">
@@ -462,7 +473,7 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
                     onChange={() => setStatus("active")}
                     className="text-primary focus:ring-primary"
                   />
-                  <span>Active (Live)</span>
+                  <span>{t("dashboard:status_active_live", "Active (Live)")}</span>
                 </label>
                 <label className="inline-flex items-center gap-1.5 text-xs text-foreground font-medium cursor-pointer">
                   <input
@@ -473,7 +484,7 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
                     onChange={() => setStatus("draft")}
                     className="text-primary focus:ring-primary"
                   />
-                  <span>Save as Draft</span>
+                  <span>{t("dashboard:status_save_draft", "Save as Draft")}</span>
                 </label>
               </div>
             </div>
@@ -487,7 +498,7 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
               disabled={isSubmitting}
               className="px-4 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-secondary text-sm font-medium transition-colors"
             >
-              Cancel
+              {t("common:cancel", "Cancel")}
             </button>
             <button
               type="submit"
@@ -497,12 +508,12 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                  <span>Saving...</span>
+                  <span>{t("common:saving", "Saving...")}</span>
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4" aria-hidden="true" />
-                  <span>{isEdit ? "Update Listing" : "Publish Listing"}</span>
+                  <span>{isEdit ? t("dashboard:update_listing_btn", "Update Listing") : t("dashboard:publish_listing_btn", "Publish Listing")}</span>
                 </>
               )}
             </button>

@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ShieldCheck,
   ShieldAlert,
@@ -30,12 +31,14 @@ import type {
   VerificationDocument,
   VerificationSubmission,
 } from "../types/verification";
+import { formatDate, formatDateTime } from "../utils/formatters";
 import { VerificationDocumentUploadForm } from "../components/verification/VerificationDocumentUploadForm";
 import { VerificationApplicationForm } from "../components/verification/VerificationApplicationForm";
 import { VerificationDocumentsList } from "../components/verification/VerificationDocumentsList";
 import { VerificationHistoryList } from "../components/verification/VerificationHistoryList";
 
 export const VerificationPage: React.FC = () => {
+  const { t } = useTranslation(["verification", "common"]);
   const { user, refreshUser } = useAuth();
   const toast = useContext(ToastContext);
 
@@ -158,16 +161,22 @@ export const VerificationPage: React.FC = () => {
             to={isFarmer ? "/dashboard/farmer" : "/dashboard/buyer"}
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary-800 transition-colors mb-1"
           >
-            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-            <span>Back to Dashboard</span>
+            <ArrowLeft className="w-4 h-4 rtl:rotate-180" aria-hidden="true" />
+            <span>{t("common:actions.back", "Back to Dashboard")}</span>
           </Link>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            Account Verification
+            {t("verification:page_title", "Account Verification")}
           </h1>
           <p className="text-sm text-muted-foreground">
             {isFarmer
-              ? "Validate your agricultural producer credentials to publish produce listings and conduct direct wholesale trade"
-              : "Validate your commercial business entity credentials to issue trade inquiries and place direct farm orders"}
+              ? t(
+                  "verification:farmer_subtitle",
+                  "Validate your agricultural producer credentials to publish produce listings and conduct direct wholesale trade"
+                )
+              : t(
+                  "verification:buyer_subtitle",
+                  "Validate your commercial business entity credentials to issue trade inquiries and place direct farm orders"
+                )}
           </p>
         </div>
 
@@ -179,7 +188,7 @@ export const VerificationPage: React.FC = () => {
           aria-label="Refresh verification status"
         >
           <RotateCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} aria-hidden="true" />
-          <span>Refresh Status</span>
+          <span>{t("common:actions.refresh", "Refresh Status")}</span>
         </button>
       </div>
 
@@ -192,7 +201,7 @@ export const VerificationPage: React.FC = () => {
           <div className="flex items-start gap-2.5">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
             <div className="space-y-1">
-              <p className="font-semibold">Unable to Load Verification Records</p>
+              <p className="font-semibold">{t("errors:generic", "Unable to Load Verification Records")}</p>
               <p className="text-xs text-red-800">{fetchError}</p>
             </div>
           </div>
@@ -201,7 +210,7 @@ export const VerificationPage: React.FC = () => {
             onClick={loadVerificationData}
             className="px-3 py-1 rounded bg-red-100 hover:bg-red-200 text-red-950 font-semibold text-xs transition-colors"
           >
-            Retry
+            {t("common:actions.retry", "Retry")}
           </button>
         </div>
       )}
@@ -215,7 +224,7 @@ export const VerificationPage: React.FC = () => {
             </div>
             <div>
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block">
-                Current Verification Status
+                {t("verification:status_card_title", "Current Verification Status")}
               </span>
               <div className="text-xl font-bold text-foreground">
                 {statusConfig.label}
@@ -245,10 +254,10 @@ export const VerificationPage: React.FC = () => {
               <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" aria-hidden="true" />
               <span>Administrative Rejection Rationale:</span>
             </div>
-            <p className="pl-7 text-xs leading-relaxed text-red-800">
+            <p className="ps-7 text-xs leading-relaxed text-red-800">
               {currentSubmission.rejection_reason}
             </p>
-            <p className="pl-7 text-xs font-medium text-red-900 pt-1">
+            <p className="ps-7 text-xs font-medium text-red-900 pt-1">
               You may submit a revised application or upload updated evidence documents below.
             </p>
           </div>
@@ -283,7 +292,7 @@ export const VerificationPage: React.FC = () => {
           }`}
         >
           <FileCheck2 className="w-4 h-4" />
-          <span>Active Application</span>
+          <span>{t("verification:tab_active", "Active Application")}</span>
         </button>
 
         {!isVerified && (
@@ -299,7 +308,7 @@ export const VerificationPage: React.FC = () => {
             }`}
           >
             <UploadCloud className="w-4 h-4" />
-            <span>Upload Evidence</span>
+            <span>{t("verification:tab_upload", "Upload Evidence")}</span>
           </button>
         )}
 
@@ -315,7 +324,9 @@ export const VerificationPage: React.FC = () => {
           }`}
         >
           <History className="w-4 h-4" />
-          <span>Submission History ({history.length})</span>
+          <span>
+            {t("verification:tab_history", "Submission History ({{count}})", { count: history.length })}
+          </span>
         </button>
       </div>
 
@@ -366,13 +377,7 @@ export const VerificationPage: React.FC = () => {
                       Date Submitted
                     </span>
                     <span className="text-foreground">
-                      {new Date(currentSubmission.created_at).toLocaleDateString(undefined, {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {formatDateTime(currentSubmission.created_at)}
                     </span>
                   </div>
 
@@ -382,12 +387,8 @@ export const VerificationPage: React.FC = () => {
                     </span>
                     <span className="text-foreground">
                       {currentSubmission.reviewed_at
-                        ? new Date(currentSubmission.reviewed_at).toLocaleDateString(undefined, {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })
-                        : "Pending review"}
+                        ? formatDate(currentSubmission.reviewed_at)
+                        : t("verification:pending_review", "Pending review")}
                     </span>
                   </div>
 
@@ -470,8 +471,8 @@ export const VerificationPage: React.FC = () => {
               )}
               <h3 className="text-sm font-bold text-foreground">
                 {isFarmer
-                  ? "Producer Verification Requirements & Accepted Evidence"
-                  : "Commercial Buyer Verification Requirements & Accepted Evidence"}
+                  ? t("verification:farmer_guide_title", "Producer Verification Requirements & Accepted Evidence")
+                  : t("verification:buyer_guide_title", "Commercial Buyer Verification Requirements & Accepted Evidence")}
               </h3>
             </div>
 

@@ -8,6 +8,7 @@ import {
   Info,
   ShieldCheck,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ordersApi } from "../../api/orders";
 import type { FulfillmentApproval } from "../../types/orders";
 
@@ -24,6 +25,7 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
   onClose,
   onSuccess,
 }) => {
+  const { t } = useTranslation(["requirements", "common", "errors"]);
   const [activeTab, setActiveTab] = useState<"approve" | "reject">("approve");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,11 +48,17 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
     if (useCustomQty) {
       const num = Number(customQuantity);
       if (isNaN(num) || num <= 0) {
-        setError("Please enter a valid approved quantity greater than 0.");
+        setError(t("validation:valid_approved_qty", "Please enter a valid approved quantity greater than 0."));
         return;
       }
       if (num > Number(approval.proposed_quantity)) {
-        setError(`Approved quantity cannot exceed the proposed quantity of ${approval.proposed_quantity}.`);
+        setError(
+          t(
+            "validation:approved_qty_exceed",
+            `Approved quantity cannot exceed the proposed quantity of ${approval.proposed_quantity}.`,
+            { max: approval.proposed_quantity }
+          )
+        );
         return;
       }
       approvedQty = num;
@@ -65,7 +73,7 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
       onSuccess();
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to approve requirement fulfillment.";
+      const msg = err instanceof Error ? err.message : t("errors:failed_approve_fulfillment", "Failed to approve requirement fulfillment.");
       setError(msg);
     } finally {
       setIsSubmitting(false);
@@ -84,7 +92,7 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
       onSuccess();
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to reject requirement fulfillment.";
+      const msg = err instanceof Error ? err.message : t("errors:failed_reject_fulfillment", "Failed to reject requirement fulfillment.");
       setError(msg);
     } finally {
       setIsSubmitting(false);
@@ -104,17 +112,17 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
           <div>
             <h2 id="modal-fulfillment-title" className="text-lg font-bold text-foreground flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-primary" aria-hidden="true" />
-              <span>Review Demand Fulfillment</span>
+              <span>{t("requirements:review_fulfillment_title", "Review Demand Fulfillment")}</span>
             </h2>
             <p className="text-xs text-muted-foreground">
-              Authorize requirement remaining demand deduction for farmer-accepted supply
+              {t("requirements:review_fulfillment_subtitle", "Authorize requirement remaining demand deduction for farmer-accepted supply")}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Close dialog"
+            aria-label={t("common:close_dialog", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -126,7 +134,7 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
             <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-3">
               <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div>
-                <p className="font-semibold">Review Error</p>
+                <p className="font-semibold">{t("requirements:review_error", "Review Error")}</p>
                 <p className="text-xs">{error}</p>
               </div>
             </div>
@@ -136,25 +144,25 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
           <div className="p-4 rounded-xl bg-secondary/40 border border-border space-y-2 text-xs">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <span className="text-muted-foreground block text-[11px]">Proposed Volume</span>
+                <span className="text-muted-foreground block text-[11px]">{t("requirements:proposed_volume", "Proposed Volume")}</span>
                 <span className="text-base font-bold text-primary">
-                  {approval.proposed_quantity} units
+                  {approval.proposed_quantity} {t("requirements:units", "units")}
                 </span>
               </div>
               <div>
-                <span className="text-muted-foreground block text-[11px]">Current Status</span>
+                <span className="text-muted-foreground block text-[11px]">{t("requirements:current_status", "Current Status")}</span>
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 capitalize">
                   {approval.status}
                 </span>
               </div>
               <div>
-                <span className="text-muted-foreground block text-[11px]">Requirement ID</span>
+                <span className="text-muted-foreground block text-[11px]">{t("requirements:requirement_id", "Requirement ID")}</span>
                 <span className="font-mono text-muted-foreground truncate block">
                   {approval.requirement_id}
                 </span>
               </div>
               <div>
-                <span className="text-muted-foreground block text-[11px]">Commercial Order ID</span>
+                <span className="text-muted-foreground block text-[11px]">{t("requirements:commercial_order_id", "Commercial Order ID")}</span>
                 <span className="font-mono text-muted-foreground truncate block">
                   {approval.order_id}
                 </span>
@@ -173,7 +181,7 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Approve Deduction
+              {t("requirements:approve_deduction", "Approve Deduction")}
             </button>
             <button
               type="button"
@@ -184,7 +192,7 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Reject Deduction
+              {t("requirements:reject_deduction", "Reject Deduction")}
             </button>
           </div>
 
@@ -192,7 +200,7 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
             <form onSubmit={handleApprove} className="space-y-4">
               <div className="space-y-3">
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
-                  Deduction Volume Strategy
+                  {t("requirements:deduction_strategy", "Deduction Volume Strategy")}
                 </label>
 
                 <div className="space-y-2">
@@ -206,10 +214,12 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
                     />
                     <div>
                       <span className="font-semibold text-foreground">
-                        Full Proposed Quantity ({approval.proposed_quantity} units)
+                        {t("requirements:full_proposed_quantity", `Full Proposed Quantity (${approval.proposed_quantity} units)`, {
+                          qty: approval.proposed_quantity,
+                        })}
                       </span>
                       <p className="text-[11px] text-muted-foreground">
-                        Deducts the entire order volume from the requirement remaining demand.
+                        {t("requirements:full_proposed_desc", "Deducts the entire order volume from the requirement remaining demand.")}
                       </p>
                     </div>
                   </label>
@@ -224,7 +234,7 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
                     />
                     <div className="flex-1 space-y-2">
                       <span className="font-semibold text-foreground">
-                        Custom Partial Deduction
+                        {t("requirements:custom_partial_deduction", "Custom Partial Deduction")}
                       </span>
                       {useCustomQty && (
                         <input
@@ -238,7 +248,9 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
                               e.target.value === "" ? "" : parseFloat(e.target.value)
                             )
                           }
-                          placeholder={`Enter amount (max ${approval.proposed_quantity})`}
+                          placeholder={t("requirements:enter_amount_placeholder", `Enter amount (max ${approval.proposed_quantity})`, {
+                            max: approval.proposed_quantity,
+                          })}
                           className="w-full rounded-lg border border-border bg-secondary/50 px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-medium"
                           required
                         />
@@ -257,7 +269,7 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
                     className="rounded border-border text-primary focus:ring-primary h-4 w-4"
                   />
                   <span className="font-semibold text-foreground">
-                    Close requirement upon approval (mark as completely fulfilled)
+                    {t("requirements:close_upon_approval", "Close requirement upon approval (mark as completely fulfilled)")}
                   </span>
                 </label>
               </div>
@@ -265,8 +277,10 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
               <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-700 text-xs flex items-start gap-2">
                 <Info className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <p className="text-[11px] leading-relaxed">
-                  Approving decrements the requirement&apos;s remaining demand without modifying the
-                  commercial order quantity or pricing.
+                  {t(
+                    "requirements:approve_info_note",
+                    "Approving decrements the requirement's remaining demand without modifying the commercial order quantity or pricing."
+                  )}
                 </p>
               </div>
 
@@ -277,7 +291,7 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
                   disabled={isSubmitting}
                   className="px-4 py-2 rounded-xl border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors disabled:opacity-50"
                 >
-                  Cancel
+                  {t("common:cancel", "Cancel")}
                 </button>
                 <button
                   type="submit"
@@ -287,12 +301,12 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                      <span>Approving...</span>
+                      <span>{t("requirements:approving", "Approving...")}</span>
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
-                      <span>Confirm Approval</span>
+                      <span>{t("requirements:confirm_approval", "Confirm Approval")}</span>
                     </>
                   )}
                 </button>
@@ -305,14 +319,17 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
                   htmlFor="reject-reason-input"
                   className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
                 >
-                  Reason for Rejection (Optional)
+                  {t("requirements:reject_reason_label", "Reason for Rejection (Optional)")}
                 </label>
                 <textarea
                   id="reject-reason-input"
                   rows={3}
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder="Explain why this order should not decrement open requirement demand..."
+                  placeholder={t(
+                    "requirements:reject_reason_placeholder",
+                    "Explain why this order should not decrement open requirement demand..."
+                  )}
                   maxLength={500}
                   className="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 />
@@ -321,8 +338,10 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
               <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 text-xs flex items-start gap-2">
                 <Info className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <p className="text-[11px] leading-relaxed">
-                  Rejecting demand deduction preserves your open requirement demand so other farmers
-                  can fulfill it. The underlying commercial order will continue normally.
+                  {t(
+                    "requirements:reject_info_note",
+                    "Rejecting demand deduction preserves your open requirement demand so other farmers can fulfill it. The underlying commercial order will continue normally."
+                  )}
                 </p>
               </div>
 
@@ -333,7 +352,7 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
                   disabled={isSubmitting}
                   className="px-4 py-2 rounded-xl border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors disabled:opacity-50"
                 >
-                  Cancel
+                  {t("common:cancel", "Cancel")}
                 </button>
                 <button
                   type="submit"
@@ -343,12 +362,12 @@ export const FulfillmentApprovalModal: React.FC<FulfillmentApprovalModalProps> =
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                      <span>Rejecting...</span>
+                      <span>{t("requirements:rejecting", "Rejecting...")}</span>
                     </>
                   ) : (
                     <>
                       <XCircle className="w-4 h-4" aria-hidden="true" />
-                      <span>Reject Demand Deduction</span>
+                      <span>{t("requirements:reject_demand_deduction", "Reject Demand Deduction")}</span>
                     </>
                   )}
                 </button>
