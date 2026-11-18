@@ -1,0 +1,20 @@
+{
+  "arrange_title": "লট প্ৰেৰণ ও লজিস্টিকস নিৰ্ধাৰণ কৰুন",
+  "method_label": "পৰিবহন ও ৰসদ পদ্ধতি",
+  "method_direct": "বিবাণিজ্যিক ক্ৰেতা কৰ্তৃক সৰাসৰি সড়ক পৰিবহন",
+  "method_pickup": "বাণিজ্যিক ক্ৰেতাৰ ট্ৰাক পিকআপ",
+  "method_third_party": "তৃতীয় পক্ষেৰ পৰিবহন",
+  "destination_label": "ডেলিভাৰী ডক গন্তব্য ঠিকানহয়",
+  "date_label": "প্ৰত্যাশিত প্ৰেৰণ / পৌঁছানোৰ তাৰিখ",
+  "notes_label": "পণ্য গ্ৰহণ সংক্ৰান্ত নিৰ্দেশনহয়",
+  "confirm_dispatch": "প্ৰেৰণ ৰসদ নিশ্চিত কৰক",
+  "mark_completed_button": "ডেলিভাৰী সম্পন্ন চিহ্নিত কৰুন",
+  "mark_completed_desc": "পণ্য ডকে পৌঁছেছে তা প্ৰত্যয়িত কৰুন।",
+  "acknowledge_receipt_button": "ডেলিভাৰী প্ৰাপ্তি স্বীকাৰ কৰুন",
+  "acknowledge_receipt_desc": "পণ্য প্ৰাপ্তিৰ দ্বিপাক্ষিক স্বীকৃতি।",
+  "awaiting_ack": "অপৰ পক্ষেৰ স্বীকৃতিৰ অপেক্ষায়।",
+  "status_not_arranged": "প্ৰেৰণ অপেক্ষমাণ",
+  "status_arranged": "ব্যবস্থাপিত ও পৰিবহনে",
+  "status_completion_marked": "বিবাণিজ্যিক ক্ৰেতা কৰ্তৃক সম্পন্ন চিহ্নিত",
+  "status_completed": "ডেলিভাৰকৃত ও নিশ্চিত"
+}

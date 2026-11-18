@@ -1,0 +1,21 @@
+{
+  "title": "প্ল্যাটফৰ্ম-বহিৰ্ভূত সৰাসৰি ব্যাংক নিষ্পত্তি",
+  "subtitle": "ব্যাংক ট্ৰান্সফাৰেৰ (RTGS/NEFT/UPI) বাবে দ্বিপাক্ষিক ৰেকৰ্ড সংৰক্ষণ। এগ্ৰিডাইৰেক্ট কোনো তহবিল মধ্যস্থতা বা এসক্ৰো কৰে নহয়।",
+  "record_payment_button": "সৰাসৰি ব্যাংক পৰিশোধ ৰেকৰ্ড কৰুন",
+  "history_button": "পৰিশোধ খতিয়ান ইতিহাস",
+  "method_label": "সৰাসৰি স্থানহয়ন্তৰেৰ মাধ্যম",
+  "method_bank_transfer": "সৰাসৰি ব্যাংক ট্ৰান্সফাৰ (NEFT / RTGS / IMPS)",
+  "method_upi": "ইউপিআই (UPI)",
+  "method_cash": "ক্যাশ অন ডেলিভাৰী / নগদ",
+  "method_other": "অন্যান্য মাধ্যম",
+  "amount_label": "নিষ্পত্তিকৃত পৰিমাণ (₹)",
+  "reference_number_label": "ব্যাংক লেনদেন UTR / ৰেফাৰেন্স নম্বৰ",
+  "reference_placeholder": "যেমন: UTR1234567890",
+  "payment_date_label": "লেনদেনেৰ তাৰিখ",
+  "proof_file_label": "ব্যাংক ট্ৰান্সফাৰেৰ ৰসিদ / প্ৰমাণ",
+  "summary_total_contract": "সম্মত মোট চুক্তি:",
+  "summary_recorded": "বাণিজ্যিক ক্ৰেতা কৰ্তৃক ৰেকৰ্ডকৃত:",
+  "summary_confirmed": "কৃষক কৰ্তৃক নিশ্চিতকৃত:",
+  "summary_outstanding": "অবশিষ্ট বকেয়া:",
+  "toast_payment_recorded": "পৰিশোধ ৰেকৰ্ড জমা হয়েছে।"
+}

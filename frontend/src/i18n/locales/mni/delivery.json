@@ -1,0 +1,20 @@
+{
+  "arrange_title": "ꯂꯇ ꯄ꯭ꯔꯦꯔꯅ ꯑꯣ ꯂꯖꯤꯁ꯭ꯇꯤꯀꯁ ꯅꯤꯔ꯭ꯙꯥꯔꯅ ꯀꯔꯨꯅ",
+  "method_label": "ꯄꯔꯤꯕꯍꯅ ꯑꯣ ꯔꯁꯗ ꯄꯗ꯭ꯙꯇꯤ",
+  "method_direct": "ꯕꯤꯀꯣꯃꯔꯁꯤꯌꯦꯜ ꯂꯩꯔꯣꯏ ꯀꯔ꯭ꯇৃꯀ ꯁꯔꯥꯁꯔꯤ ꯁꯗ়ꯀ ꯄꯔꯤꯕꯍꯅ",
+  "method_pickup": "ꯀꯣꯃꯔꯁꯤꯌꯦꯜ ꯂꯩꯔꯣꯏꯔ ꯇ꯭ꯔꯥꯀ ꯄꯤꯀꯑꯥꯄ",
+  "method_third_party": "ꯇৃꯇꯤꯌ় ꯄꯀ꯭ꯁꯦꯔ ꯄꯔꯤꯕꯍꯅ",
+  "destination_label": "ꯄꯤꯕ ꯗꯀ ꯒꯅ꯭ꯇꯕ꯭ꯌ ꯊꯤꯀꯥꯅꯥ",
+  "date_label": "ꯄ꯭ꯔꯇ꯭ꯌꯥꯁꯤꯇ ꯄ꯭ꯔꯦꯔꯅ / ꯄꯧঁꯆꯥꯅꯣꯔ ꯇꯥꯔꯤꯈ",
+  "notes_label": "ꯄꯅ꯭ꯌ ꯒ꯭ꯔꯍꯅ ꯁꯡꯀ꯭ꯔꯥꯅ꯭ꯇ ꯅꯤꯔ꯭ꯗꯦꯁꯅꯥ",
+  "confirm_dispatch": "ꯄ꯭ꯔꯦꯔꯅ ꯔꯁꯗ ꯆꯨꯝꯃꯤ ꯍꯥꯌꯅ ꯌꯥꯕ",
+  "mark_completed_button": "ꯄꯤꯕ ꯁꯃ꯭ꯄꯅ꯭ꯅ ꯆꯤꯍ꯭ꯅꯤꯇ ꯀꯔꯨꯅ",
+  "mark_completed_desc": "ꯄꯅ꯭ꯌ ꯗꯀꯦ ꯄꯧঁꯆꯦꯆꯦ ꯇꯥ ꯄ꯭ꯔꯇ꯭ꯌꯌ়ꯤꯇ ꯀꯔꯨꯅ।",
+  "acknowledge_receipt_button": "ꯄꯤꯕ ꯄ꯭ꯔꯥꯄ꯭ꯇꯤ ꯁ꯭ꯕꯤꯀꯥꯔ ꯀꯔꯨꯅ",
+  "acknowledge_receipt_desc": "ꯄꯅ꯭ꯌ ꯄ꯭ꯔꯥꯄ꯭ꯇꯤꯔ ꯗ꯭ꯕꯤꯄꯥꯀ꯭ꯁꯤꯀ ꯁ꯭ꯕꯤꯀৃꯇꯤ।",
+  "awaiting_ack": "ꯑꯄꯔ ꯄꯀ꯭ꯁꯦꯔ ꯁ꯭ꯕꯤꯀৃꯇꯤꯔ ꯑꯄꯦꯀ꯭ꯁꯥꯌ়।",
+  "status_not_arranged": "ꯄ꯭ꯔꯦꯔꯅ ꯑꯄꯦꯀ꯭ꯁꯃꯥꯅ",
+  "status_arranged": "ꯕ꯭ꯌꯕꯁ꯭ꯊꯥꯄꯤꯇ ꯑꯣ ꯄꯔꯤꯕꯍꯅꯦ",
+  "status_completion_marked": "ꯕꯤꯀꯣꯃꯔꯁꯤꯌꯦꯜ ꯂꯩꯔꯣꯏ ꯀꯔ꯭ꯇৃꯀ ꯁꯃ꯭ꯄꯅ꯭ꯅ ꯆꯤꯍ꯭ꯅꯤꯇ",
+  "status_completed": "ꯗꯦꯂꯤꯚꯥꯔꯀৃꯇ ꯑꯣ ꯅꯤꯁ꯭ꯆꯤꯇ"
+}

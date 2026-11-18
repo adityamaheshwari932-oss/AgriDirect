@@ -19,6 +19,19 @@ import te from "./locales/te";
 import kn from "./locales/kn";
 import pa from "./locales/pa";
 import ml from "./locales/ml";
+import as from "./locales/as";
+import or from "./locales/or";
+import sa from "./locales/sa";
+import ne from "./locales/ne";
+import kok from "./locales/kok";
+import mai from "./locales/mai";
+import doi from "./locales/doi";
+import brx from "./locales/brx";
+import mni from "./locales/mni";
+import sat from "./locales/sat";
+import sd from "./locales/sd";
+import ur from "./locales/ur";
+import ks from "./locales/ks";
 
 export const NAMESPACES = [
   "common",
@@ -57,6 +70,19 @@ export const resources = {
   kn,
   pa,
   ml,
+  as,
+  or,
+  sa,
+  ne,
+  kok,
+  mai,
+  doi,
+  brx,
+  mni,
+  sat,
+  sd,
+  ur,
+  ks,
 };
 
 export const enResources = en;

@@ -1,0 +1,20 @@
+{
+  "arrange_title": "ଲଟ ପ୍ରେରଣ ଓ ଲଜିସ୍ଟିକସ ନିର୍ଧାରଣ କରୁନ",
+  "method_label": "ପରିବହନ ଓ ରସଦ ପଦ୍ଧତି",
+  "method_direct": "ବିବାଣିଜ୍ୟିକ କ୍ରେତା କର୍ତୃକ ସରାସରି ସଡ়କ ପରିବହନ",
+  "method_pickup": "ବାଣିଜ୍ୟିକ କ୍ରେତାର ଟ୍ରାକ ପିକଆପ",
+  "method_third_party": "ତୃତୀଯ় ପକ୍ଷେର ପରିବହନ",
+  "destination_label": "ଡେଲିଭରୀ ଡକ ଗନ୍ତବ୍ଯ ଠିକାନା",
+  "date_label": "ପ୍ରତ୍ଯାଶିତ ପ୍ରେରଣ / ପୌଁଛାନୋର ତାରିଖ",
+  "notes_label": "ପଣ୍ଯ ଗ୍ରହଣ ସଂକ୍ରାନ୍ତ ନିର୍ଦେଶନା",
+  "confirm_dispatch": "ପ୍ରେରଣ ରସଦ ନିଶ୍ଚିତ କରନ୍ତୁ",
+  "mark_completed_button": "ଡେଲିଭରୀ ସମ୍ପନ୍ନ ଚିହ୍ନିତ କରୁନ",
+  "mark_completed_desc": "ପଣ୍ଯ ଡକେ ପୌଁଛେଛେ ତା ପ୍ରତ୍ଯଯ়ିତ କରୁନ।",
+  "acknowledge_receipt_button": "ଡେଲିଭରୀ ପ୍ରାପ୍ତି ସ୍ବୀକାର କରୁନ",
+  "acknowledge_receipt_desc": "ପଣ୍ଯ ପ୍ରାପ୍ତିର ଦ୍ବିପାକ୍ଷିକ ସ୍ବୀକୃତି।",
+  "awaiting_ack": "ଅପର ପକ୍ଷେର ସ୍ବୀକୃତିର ଅପେକ୍ଷାଯ়।",
+  "status_not_arranged": "ପ୍ରେରଣ ଅପେକ୍ଷମାଣ",
+  "status_arranged": "ବ୍ଯବସ୍থାପିତ ଓ ପରିବହନେ",
+  "status_completion_marked": "ବିବାଣିଜ୍ୟିକ କ୍ରେତା କର୍ତୃକ ସମ୍ପନ୍ନ ଚିହ୍ନିତ",
+  "status_completed": "ଡେଲିଭାରକୃତ ଓ ନିଶ୍ଚିତ"
+}
