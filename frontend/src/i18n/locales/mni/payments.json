@@ -1,0 +1,21 @@
+{
+  "title": "ꯄ꯭ꯂ꯭ꯌꯥꯇꯐꯔ꯭ꯃ-ꯕꯍꯤꯔ꯭ꯚꯨꯇ ꯁꯔꯥꯁꯔꯤ ꯕ꯭ꯌꯥꯡꯀ ꯅꯤꯁ꯭ꯄꯇ꯭ꯇꯤ",
+  "subtitle": "ꯕ꯭ꯌꯥꯡꯀ ꯇ꯭ꯔꯥꯅ꯭ꯁꯐꯥꯔꯦꯔ (RTGS/NEFT/UPI) ꯖꯅ꯭ꯌ ꯗ꯭ꯕꯤꯄꯥꯀ꯭ꯁꯤꯀ ꯔꯦꯀꯔ꯭ꯗ ꯁꯡꯔꯀ꯭ꯁꯅ। ꯑꯦꯒ꯭ꯔꯤꯗꯥꯏꯔꯦꯛꯠ ꯀꯣꯅꯣ ꯇꯍꯕꯤꯂ ꯃꯙ꯭ꯌꯁ꯭ꯊꯇꯥ ꯕꯥ ꯑꯦꯁꯀ꯭ꯔꯣ ꯀꯔꯦ ꯅꯥ।",
+  "record_payment_button": "ꯁꯔꯥꯁꯔꯤ ꯕ꯭ꯌꯥꯡꯀ ꯁꯦꯜ ꯊꯤꯕ ꯔꯦꯀꯔ꯭ꯗ ꯀꯔꯨꯅ",
+  "history_button": "ꯁꯦꯜ ꯊꯤꯕ ꯈꯇꯤꯌ়ꯥꯅ ꯏꯇꯤꯍꯥꯁ",
+  "method_label": "ꯁꯔꯥꯁꯔꯤ ꯁ꯭ꯊꯥꯅꯥꯅ꯭ꯇꯔꯦꯔ ꯃꯥꯙ꯭ꯌꯃ",
+  "method_bank_transfer": "ꯁꯔꯥꯁꯔꯤ ꯕ꯭ꯌꯥꯡꯀ ꯇ꯭ꯔꯥꯅ꯭ꯁꯐꯥꯔ (NEFT / RTGS / IMPS)",
+  "method_upi": "ꯏꯎꯄꯤꯑꯥꯏ (UPI)",
+  "method_cash": "ꯀ꯭ꯌꯥꯁ ꯑꯅ ꯄꯤꯕ / ꯅꯒꯗ",
+  "method_other": "ꯑꯅ꯭ꯌꯥꯅ꯭ꯌ ꯃꯥꯙ꯭ꯌꯃ",
+  "amount_label": "ꯅꯤꯁ꯭ꯄꯇ꯭ꯇꯤꯀৃꯇ ꯄꯔꯤꯃꯥꯅ (₹)",
+  "reference_number_label": "ꯕ꯭ꯌꯥꯡꯀ ꯂꯦꯅꯗꯦꯅ UTR / ꯔꯦꯐꯥꯔꯦꯅ꯭ꯁ ꯅꯃ꯭ꯕꯔ",
+  "reference_placeholder": "ꯌꯦꯃꯅ: UTR1234567890",
+  "payment_date_label": "ꯂꯦꯅꯗꯦꯅꯦꯔ ꯇꯥꯔꯤꯈ",
+  "proof_file_label": "ꯕ꯭ꯌꯥꯡꯀ ꯇ꯭ꯔꯥꯅ꯭ꯁꯐꯥꯔꯦꯔ ꯔꯁꯤꯗ / ꯄ꯭ꯔꯃꯥꯅ",
+  "summary_total_contract": "ꯁꯃ꯭ꯃꯇ ꯃꯣꯇ ꯆꯨꯀ꯭ꯇꯤ:",
+  "summary_recorded": "ꯀꯣꯃꯔꯁꯤꯌꯦꯜ ꯂꯩꯔꯣꯏ ꯀꯔ꯭ꯇৃꯀ ꯔꯦꯀꯔ꯭ꯗꯀৃꯇ:",
+  "summary_confirmed": "ꯂꯧꯃꯤ ꯀꯔ꯭ꯇৃꯀ ꯅꯤꯁ꯭ꯆꯤꯇꯀৃꯇ:",
+  "summary_outstanding": "ꯑꯕꯁꯤꯁ꯭ꯇ ꯕꯀꯦꯌ়ꯥ:",
+  "toast_payment_recorded": "ꯁꯦꯜ ꯊꯤꯕ ꯔꯦꯀꯔ꯭ꯗ ꯖꯃꯥ ꯍꯌ়ꯦꯆꯦ।"
+}

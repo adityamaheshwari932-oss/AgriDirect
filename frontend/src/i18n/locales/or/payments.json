@@ -1,0 +1,21 @@
+{
+  "title": "ପ୍ଲ୍ଯାଟଫର୍ମ-ବହିର୍ଭୂତ ସରାସରି ବ୍ଯାଂକ ନିଷ୍ପତ୍ତି",
+  "subtitle": "ବ୍ଯାଂକ ଟ୍ରାନ୍ସଫାରେର (RTGS/NEFT/UPI) ଜନ୍ଯ ଦ୍ବିପାକ୍ଷିକ ରେକର୍ଡ ସଂରକ୍ଷଣ। ଏଗ୍ରିଡାଇରେକ୍ଟ କୋନୋ ତହବିଲ ମଧ୍ଯସ୍থତା ବା ଏସକ୍ରୋ କରେ ନା।",
+  "record_payment_button": "ସରାସରି ବ୍ଯାଂକ ପେମେଣ୍ଟ ରେକର୍ଡ କରୁନ",
+  "history_button": "ପେମେଣ୍ଟ ଖତିଯ়ାନ ଇତିହାସ",
+  "method_label": "ସରାସରି ସ୍থାନାନ୍ତରେର ମାଧ୍ଯମ",
+  "method_bank_transfer": "ସରାସରି ବ୍ଯାଂକ ଟ୍ରାନ୍ସଫାର (NEFT / RTGS / IMPS)",
+  "method_upi": "ଇଉପିଆଇ (UPI)",
+  "method_cash": "କ୍ଯାଶ ଅନ ଡେଲିଭରୀ / ନଗଦ",
+  "method_other": "ଅନ୍ଯାନ୍ଯ ମାଧ୍ଯମ",
+  "amount_label": "ନିଷ୍ପତ୍ତିକୃତ ପରିମାଣ (₹)",
+  "reference_number_label": "ବ୍ଯାଂକ ଲେନଦେନ UTR / ରେଫାରେନ୍ସ ନମ୍ବର",
+  "reference_placeholder": "ଯେମନ: UTR1234567890",
+  "payment_date_label": "ଲେନଦେନେର ତାରିଖ",
+  "proof_file_label": "ବ୍ଯାଂକ ଟ୍ରାନ୍ସଫାରେର ରସିଦ / ପ୍ରମାଣ",
+  "summary_total_contract": "ସମ୍ମତ ମୋଟ ଚୁକ୍ତି:",
+  "summary_recorded": "ବାଣିଜ୍ୟିକ କ୍ରେତା କର୍ତୃକ ରେକର୍ଡକୃତ:",
+  "summary_confirmed": "କୃଷକ କର୍ତୃକ ନିଶ୍ଚିତକୃତ:",
+  "summary_outstanding": "ଅବଶିଷ୍ଟ ବକେଯ়ା:",
+  "toast_payment_recorded": "ପେମେଣ୍ଟ ରେକର୍ଡ ଜମା ହଯ়େଛେ।"
+}

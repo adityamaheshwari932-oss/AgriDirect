@@ -1,0 +1,21 @@
+{
+  "title": "प्लेटफ़ॉर्म-बाह्य सीधा बैंक निपटान",
+  "subtitle": "बैंक ट्रांसफर (RTGS/NEFT/UPI) हेतु द्विपक्षीय रिकॉर्ड कीपिंग। ايگري ڊائريڪٽ फंड्स को अपने पास या एस्क्रो में नहीं रखता है।",
+  "record_payment_button": "सीधा बैंक ادائيگي شرح्ज करें",
+  "history_button": "ادائيگي बहीखाता इतिहास",
+  "method_label": "प्रत्यक्ष स्هوनांतरण माध्यम",
+  "method_bank_transfer": "सीधा बैंक ट्रांसफर (NEFT / RTGS / IMPS)",
+  "method_upi": "यूनिफाइड पेमेंट्स इंटरफेस (UPI)",
+  "method_cash": "कैश ऑन डिलीवरी / स्पॉट निपटान",
+  "method_other": "अन्य द्विपक्षीय माध्यम",
+  "amount_label": "निपटाई गई राशि (₹)",
+  "reference_number_label": "बैंक लेनदेन UTR / संشرح्भ संख्या",
+  "reference_placeholder": "उदा. UTR1234567890",
+  "payment_date_label": "स्هوनांतरण निष्पादन तिथि",
+  "proof_file_label": "बैंक ट्रांसफर रसीद / स्टेटमेंट प्रमाण",
+  "summary_total_contract": "सहमत अनुबंध ڪل:",
+  "summary_recorded": "خريدار द्वारा شرح्ज ڪل:",
+  "summary_confirmed": "उत्पादक द्वारा पुष्ट:",
+  "summary_outstanding": "शेष बकाया:",
+  "toast_payment_recorded": "ادائيگي रिकॉर्ड जमा किया गया। दूसरा पक्ष प्राप्ति स्वीकार कर सकता है।"
+}

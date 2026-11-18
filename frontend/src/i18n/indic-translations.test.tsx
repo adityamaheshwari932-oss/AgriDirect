@@ -20,7 +20,32 @@ const TARGET_LANGUAGES = [
   "ml",
 ] as const;
 
-describe("Stage 3: 9 Indian Language Translations & Application Localization", () => {
+const ALL_INDIAN_LANGUAGES = [
+  "hi",
+  "mr",
+  "gu",
+  "bn",
+  "ta",
+  "te",
+  "kn",
+  "pa",
+  "ml",
+  "as",
+  "or",
+  "sa",
+  "ne",
+  "kok",
+  "mai",
+  "doi",
+  "brx",
+  "mni",
+  "sat",
+  "sd",
+  "ur",
+  "ks",
+] as const;
+
+describe("Stage 3 & Complete 23-Language Application Localization", () => {
   beforeEach(async () => {
     localStorage.clear();
     await setLanguage("en");
@@ -31,16 +56,17 @@ describe("Stage 3: 9 Indian Language Translations & Application Localization", (
   });
 
   describe("A. Translation Resource Registration & Parity", () => {
-    it("registers all 9 Indian languages plus English in resources", () => {
+    it("registers all 22 Indian languages plus English in resources (23 total)", () => {
       const registeredLangs = Object.keys(resources);
       expect(registeredLangs).toContain("en");
-      for (const lang of TARGET_LANGUAGES) {
+      for (const lang of ALL_INDIAN_LANGUAGES) {
         expect(registeredLangs).toContain(lang);
       }
+      expect(registeredLangs.length).toBe(23);
     });
 
-    it("registers all 21 namespaces for each of the 9 Indian languages", () => {
-      for (const lang of TARGET_LANGUAGES) {
+    it("registers all 21 namespaces for each of the 22 Indian languages", () => {
+      for (const lang of ALL_INDIAN_LANGUAGES) {
         const langResources = resources[lang as keyof typeof resources] as Record<string, unknown>;
         expect(langResources).toBeDefined();
 
@@ -51,11 +77,11 @@ describe("Stage 3: 9 Indian Language Translations & Application Localization", (
       }
     });
 
-    it("verifies key structure parity between English and all 9 languages for critical namespaces", () => {
+    it("verifies key structure parity between English and all 22 languages for critical namespaces", () => {
       const enCommon = resources.en.common as Record<string, Record<string, string>>;
       const enActions = Object.keys(enCommon.actions);
 
-      for (const lang of TARGET_LANGUAGES) {
+      for (const lang of ALL_INDIAN_LANGUAGES) {
         const langCommon = (resources[lang as keyof typeof resources] as typeof resources.en).common as Record<string, Record<string, string>>;
         expect(Object.keys(langCommon.actions)).toEqual(enActions);
       }
