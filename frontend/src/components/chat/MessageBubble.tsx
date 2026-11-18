@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Check, CheckCheck, FileText, Image, Download, Loader2, AlertCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { formatDate } from "../../utils/formatters";
 import { chatApi } from "../../api/chat";
 import type { Message } from "../../types/chat";
 
@@ -12,6 +14,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   message,
   isCurrentUser,
 }) => {
+  const { t } = useTranslation(["messaging", "common"]);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
@@ -21,7 +24,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     try {
       await chatApi.downloadAttachment(attachmentId, filename);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Download failed";
+      const msg = err instanceof Error ? err.message : t("messaging:download_failed", "Download failed");
       setDownloadError(msg);
     } finally {
       setDownloadingId(null);
@@ -39,7 +42,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     );
   }
 
-  const formattedTime = new Date(message.created_at).toLocaleTimeString([], {
+  const formattedTime = formatDate(message.created_at, {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -53,11 +56,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       <div
         className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-xs shadow-xs space-y-1.5 ${
           isCurrentUser
-            ? "bg-primary text-primary-foreground rounded-br-xs"
-            : "bg-secondary text-foreground rounded-bl-xs border border-border"
+            ? "bg-primary text-primary-foreground rounded-br-xs rtl:rounded-br-2xl rtl:rounded-bl-xs"
+            : "bg-secondary text-foreground rounded-bl-xs rtl:rounded-bl-2xl rtl:rounded-br-xs border border-border"
         }`}
       >
-        <p className="whitespace-pre-wrap break-words leading-relaxed">
+        <p dir="auto" className="whitespace-pre-wrap break-words leading-relaxed text-start">
           {message.content}
         </p>
 
@@ -91,7 +94,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                     disabled={downloadingId === att.id}
                     onClick={() => void handleDownload(att.id, att.file_name)}
                     className="p-1 rounded-lg hover:bg-black/10 shrink-0 text-current disabled:opacity-50 transition-colors"
-                    aria-label={`Download ${att.file_name}`}
+                    aria-label={t("messaging:download_file", `Download ${att.file_name}`, { filename: att.file_name })}
                   >
                     {downloadingId === att.id ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
@@ -117,15 +120,15 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             isCurrentUser ? "text-primary-foreground/75" : "text-muted-foreground"
           }`}
         >
-          <span>{formattedTime}</span>
+          <span dir="ltr" className="bdi-isolate">{formattedTime}</span>
           {isCurrentUser && (
             <span>
               {message.delivery_status === "read" || message.is_read ? (
-                <CheckCheck className="w-3.5 h-3.5 text-blue-300" aria-label="Read" />
+                <CheckCheck className="w-3.5 h-3.5 text-blue-300" aria-label={t("messaging:status_read", "Read")} />
               ) : message.delivery_status === "delivered" ? (
-                <CheckCheck className="w-3.5 h-3.5 text-primary-foreground/80" aria-label="Delivered" />
+                <CheckCheck className="w-3.5 h-3.5 text-primary-foreground/80" aria-label={t("messaging:status_delivered", "Delivered")} />
               ) : (
-                <Check className="w-3.5 h-3.5 text-primary-foreground/80" aria-label="Sent" />
+                <Check className="w-3.5 h-3.5 text-primary-foreground/80" aria-label={t("messaging:status_sent", "Sent")} />
               )}
             </span>
           )}

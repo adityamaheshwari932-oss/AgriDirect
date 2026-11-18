@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   BarChart3,
   RotateCw,
@@ -21,6 +22,7 @@ import type {
 type AnalyticsTab = "performance" | "market" | "demand";
 
 export const AnalyticsDashboardPage: React.FC = () => {
+  const { t } = useTranslation(["analytics", "common"]);
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<AnalyticsTab>("performance");
 
@@ -48,12 +50,12 @@ export const AnalyticsDashboardPage: React.FC = () => {
       const data = await analyticsApi.getMyPerformance();
       setPerformance(data);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to load performance metrics.";
+      const msg = err instanceof Error ? err.message : t("analytics:perf_error", "Failed to load performance metrics.");
       setPerfError(msg);
     } finally {
       setIsPerfLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const loadMarketSummary = useCallback(async () => {
     setIsMarketLoading(true);
@@ -62,12 +64,12 @@ export const AnalyticsDashboardPage: React.FC = () => {
       const data = await analyticsApi.getMarketSummary({});
       setMarketSummary(data);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to load market summary.";
+      const msg = err instanceof Error ? err.message : t("analytics:market_error", "Failed to load market summary.");
       setMarketError(msg);
     } finally {
       setIsMarketLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const loadDemandSummary = useCallback(async () => {
     setIsDemandLoading(true);
@@ -76,12 +78,12 @@ export const AnalyticsDashboardPage: React.FC = () => {
       const data = await analyticsApi.getDemandSummary({});
       setDemandSummary(data);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to load demand summary.";
+      const msg = err instanceof Error ? err.message : t("analytics:demand_error", "Failed to load demand summary.");
       setDemandError(msg);
     } finally {
       setIsDemandLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (activeTab === "performance") {
@@ -113,10 +115,10 @@ export const AnalyticsDashboardPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <BarChart3 className="w-6 h-6 text-primary" aria-hidden="true" />
-            Market & Operational Analytics
+            <span>{t("analytics:dashboard_title", "Market & Operational Analytics")}</span>
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Descriptive volume, price benchmark indices and personal fulfillment metrics.
+            {t("analytics:dashboard_subtitle", "Descriptive volume, price benchmark indices and personal fulfillment metrics.")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -127,7 +129,7 @@ export const AnalyticsDashboardPage: React.FC = () => {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border bg-card text-foreground hover:bg-secondary/60 disabled:opacity-50 transition-colors shadow-sm"
           >
             <RotateCw className={`w-3.5 h-3.5 ${isCurrentLoading ? "animate-spin text-primary" : ""}`} />
-            Refresh
+            {t("common:actions.refresh", "Refresh")}
           </button>
         </div>
       </div>
@@ -144,7 +146,7 @@ export const AnalyticsDashboardPage: React.FC = () => {
           }`}
         >
           <UserCheck className="w-4 h-4" />
-          My Operational Performance
+          {t("analytics:tab_performance", "My Operational Performance")}
         </button>
         <button
           type="button"
@@ -156,7 +158,7 @@ export const AnalyticsDashboardPage: React.FC = () => {
           }`}
         >
           <TrendingUp className="w-4 h-4" />
-          Market Supply & Price Index
+          {t("analytics:tab_market", "Market Supply & Price Index")}
         </button>
         <button
           type="button"
@@ -168,7 +170,7 @@ export const AnalyticsDashboardPage: React.FC = () => {
           }`}
         >
           <Layers className="w-4 h-4" />
-          Commercial Demand Trends
+          {t("analytics:tab_demand", "Commercial Demand Trends")}
         </button>
       </div>
 
@@ -185,7 +187,7 @@ export const AnalyticsDashboardPage: React.FC = () => {
                   onClick={() => void loadPerformance()}
                   className="text-xs text-primary underline"
                 >
-                  Retry
+                  {t("common:actions.retry", "Retry")}
                 </button>
               </div>
             ) : performance ? (
@@ -195,7 +197,7 @@ export const AnalyticsDashboardPage: React.FC = () => {
               />
             ) : (
               <div className="py-12 text-center text-xs text-muted-foreground">
-                Loading personal metrics...
+                {t("analytics:loading_metrics", "Loading personal metrics...")}
               </div>
             )}
           </div>
@@ -212,7 +214,7 @@ export const AnalyticsDashboardPage: React.FC = () => {
                   onClick={() => void loadMarketSummary()}
                   className="text-xs text-primary underline"
                 >
-                  Retry
+                  {t("common:actions.retry", "Retry")}
                 </button>
               </div>
             ) : (
@@ -235,7 +237,7 @@ export const AnalyticsDashboardPage: React.FC = () => {
                   onClick={() => void loadDemandSummary()}
                   className="text-xs text-primary underline"
                 >
-                  Retry
+                  {t("common:actions.retry", "Retry")}
                 </button>
               </div>
             ) : (

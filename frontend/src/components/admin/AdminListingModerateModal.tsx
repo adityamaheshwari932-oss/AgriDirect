@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { X, Layers, Loader2, AlertCircle, AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { adminApi } from "../../api/admin";
 import type { AdminCatalogAction, AdminListingSummary } from "../../types/admin";
 import { useToast } from "../ui/toast";
@@ -17,6 +18,7 @@ export const AdminListingModerateModal: React.FC<AdminListingModerateModalProps>
   onClose,
   onSuccess,
 }) => {
+  const { t } = useTranslation(["admin", "common", "errors"]);
   const { success: toastSuccess, error: toastError } = useToast();
 
   const [action, setAction] = useState<AdminCatalogAction>("close");
@@ -43,7 +45,12 @@ export const AdminListingModerateModal: React.FC<AdminListingModerateModalProps>
     e.preventDefault();
 
     if (!isValidReason) {
-      setErrorMessage("Administrative justification must be at least 10 non-whitespace characters.");
+      setErrorMessage(
+        t(
+          "admin:justification_min_length",
+          "Administrative justification must be at least 10 non-whitespace characters."
+        )
+      );
       return;
     }
 
@@ -60,13 +67,16 @@ export const AdminListingModerateModal: React.FC<AdminListingModerateModalProps>
         action,
         reason: reason.trim(),
       });
-      toastSuccess(`Listing action '${action}' applied successfully.`, "Listing Moderated");
+      toastSuccess(
+        t("admin:toast_listing_action_applied", `Listing action '${action}' applied successfully.`, { action }),
+        t("admin:listing_moderated_title", "Listing Moderated")
+      );
       onSuccess();
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to apply moderation action to listing.";
+      const msg = err instanceof Error ? err.message : t("admin:listing_moderate_failed", "Failed to apply moderation action to listing.");
       setErrorMessage(msg);
-      toastError(msg, "Moderation Error");
+      toastError(msg, t("admin:moderation_error", "Moderation Error"));
       setConfirmStep(false);
     } finally {
       setIsSubmitting(false);
@@ -87,10 +97,10 @@ export const AdminListingModerateModal: React.FC<AdminListingModerateModalProps>
             <Layers className="w-5 h-5 text-primary" aria-hidden="true" />
             <div>
               <h2 id="modal-listing-moderate-title" className="text-base font-bold text-foreground">
-                Moderate Produce Listing
+                {t("admin:moderate_listing_title", "Moderate Produce Listing")}
               </h2>
               <p className="text-[11px] text-muted-foreground">
-                Catalog Governance & Compliance Action
+                {t("admin:catalog_governance_subtitle", "Catalog Governance & Compliance Action")}
               </p>
             </div>
           </div>
@@ -99,7 +109,7 @@ export const AdminListingModerateModal: React.FC<AdminListingModerateModalProps>
             onClick={onClose}
             disabled={isSubmitting}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-            aria-label="Close dialog"
+            aria-label={t("common:close_dialog", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -124,17 +134,17 @@ export const AdminListingModerateModal: React.FC<AdminListingModerateModalProps>
               <span className="font-mono text-muted-foreground">{listing.price_per_unit} / {listing.unit}</span>
             </div>
             <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1">
-              <span>Farmer: <strong>{listing.farmer_name}</strong></span>
-              <span>Available: <strong>{listing.available_quantity} {listing.unit}</strong></span>
-              <span>Status: <strong className="uppercase">{listing.status}</strong></span>
-              {listing.is_deleted && <span className="text-destructive font-bold">(Soft-Deleted)</span>}
+              <span>{t("admin:farmer_label", "Farmer")}: <strong>{listing.farmer_name}</strong></span>
+              <span>{t("admin:available_label", "Available")}: <strong>{listing.available_quantity} {listing.unit}</strong></span>
+              <span>{t("admin:status_label", "Status")}: <strong className="uppercase">{listing.status}</strong></span>
+              {listing.is_deleted && <span className="text-destructive font-bold">{t("admin:soft_deleted", "(Soft-Deleted)")}</span>}
             </div>
           </div>
 
           {/* Moderation Action */}
           <div className="space-y-1.5">
             <label htmlFor="listing-moderate-action" className="block text-xs font-bold text-foreground">
-              Moderation Action
+              {t("admin:moderation_action_label", "Moderation Action")}
             </label>
             <select
               id="listing-moderate-action"
@@ -146,16 +156,16 @@ export const AdminListingModerateModal: React.FC<AdminListingModerateModalProps>
               }}
               className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
             >
-              <option value="close">Close Listing (Mark status as closed)</option>
-              <option value="remove">Remove Listing (Soft-delete from marketplace)</option>
-              <option value="restore">Restore Listing (Un-delete / reopen active listing)</option>
+              <option value="close">{t("admin:opt_close_listing", "Close Listing (Mark status as closed)")}</option>
+              <option value="remove">{t("admin:opt_remove_listing", "Remove Listing (Soft-delete from marketplace)")}</option>
+              <option value="restore">{t("admin:opt_restore_listing", "Restore Listing (Un-delete / reopen active listing)")}</option>
             </select>
           </div>
 
           {/* Mandatory Reason */}
           <div className="space-y-1.5">
             <label htmlFor="listing-moderate-reason" className="block text-xs font-bold text-foreground">
-              Administrative Justification <span className="text-destructive">*</span>
+              {t("admin:admin_justification_label", "Administrative Justification")} <span className="text-destructive">*</span>
             </label>
             <textarea
               id="listing-moderate-reason"
@@ -163,11 +173,14 @@ export const AdminListingModerateModal: React.FC<AdminListingModerateModalProps>
               value={reason}
               disabled={isSubmitting}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Provide a mandatory administrative reason for this catalog action (minimum 10 characters)..."
+              placeholder={t(
+                "admin:listing_reason_placeholder",
+                "Provide a mandatory administrative reason for this catalog action (minimum 10 characters)..."
+              )}
               className="w-full p-3 text-xs rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 resize-none"
             />
             <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-              <span>Min 10 characters</span>
+              <span>{t("admin:min_10_chars", "Min 10 characters")}</span>
               <span className={reason.trim().length < 10 ? "text-amber-600 font-medium" : "text-muted-foreground"}>
                 {reason.trim().length} / 1000
               </span>
@@ -182,10 +195,14 @@ export const AdminListingModerateModal: React.FC<AdminListingModerateModalProps>
             >
               <div className="flex items-center gap-1.5 font-bold">
                 <AlertTriangle className="w-4 h-4 text-amber-600" />
-                <span>Confirm Listing Moderation</span>
+                <span>{t("admin:confirm_listing_moderation", "Confirm Listing Moderation")}</span>
               </div>
               <p>
-                You are about to execute action <strong>{action}</strong> on listing "{listing.product_name}". Click "Confirm & Apply" to enforce this decision.
+                {t(
+                  "admin:confirm_listing_moderation_desc",
+                  `You are about to execute action ${action} on listing "${listing.product_name}". Click "Confirm & Apply" to enforce this decision.`,
+                  { action, product: listing.product_name }
+                )}
               </p>
             </div>
           )}
@@ -198,7 +215,7 @@ export const AdminListingModerateModal: React.FC<AdminListingModerateModalProps>
               disabled={isSubmitting}
               className="px-4 py-2 rounded-xl bg-secondary text-foreground hover:bg-secondary/80 text-xs font-semibold border border-border transition-colors disabled:opacity-50"
             >
-              Cancel
+              {t("common:cancel", "Cancel")}
             </button>
             <button
               type="submit"
@@ -206,7 +223,11 @@ export const AdminListingModerateModal: React.FC<AdminListingModerateModalProps>
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold shadow-xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>{confirmStep ? "Confirm & Apply" : "Apply Moderation"}</span>
+              <span>
+                {confirmStep
+                  ? t("admin:confirm_and_apply", "Confirm & Apply")
+                  : t("admin:apply_moderation", "Apply Moderation")}
+              </span>
             </button>
           </div>
         </form>

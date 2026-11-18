@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   MessageSquare,
   Search,
@@ -13,6 +14,7 @@ import { ConversationThreadList } from "../components/chat/ConversationThreadLis
 import { ChatConversationView } from "../components/chat/ChatConversationView";
 
 export const MessagesPage: React.FC = () => {
+  const { t } = useTranslation(["messaging", "common"]);
   const [searchParams, setSearchParams] = useSearchParams();
   const activeConversationId = searchParams.get("conversationId");
 
@@ -35,12 +37,12 @@ export const MessagesPage: React.FC = () => {
       });
       setConversations(data.items);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to load conversations.";
+      const msg = err instanceof Error ? err.message : t("messaging:load_error", "Failed to load conversations.");
       setError(msg);
     } finally {
       setIsLoading(false);
     }
-  }, [contextFilter]);
+  }, [contextFilter, t]);
 
   useEffect(() => {
     void loadConversations();
@@ -66,9 +68,9 @@ export const MessagesPage: React.FC = () => {
     setSearchParams(newParams);
   };
 
-  const handleConversationUpdated = () => {
+  const handleConversationUpdated = useCallback(() => {
     void loadConversations();
-  };
+  }, [loadConversations]);
 
   return (
     <div className="space-y-4 max-w-7xl mx-auto">
@@ -77,10 +79,10 @@ export const MessagesPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <MessageSquare className="w-6 h-6 text-primary" aria-hidden="true" />
-            Direct Messages
+            <span>{t("messaging:page_title", "Direct Messages")}</span>
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Contextual negotiation and deal coordination between verified participants.
+            {t("messaging:page_subtitle", "Contextual negotiation and deal coordination between verified participants.")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -91,7 +93,7 @@ export const MessagesPage: React.FC = () => {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border bg-card text-foreground hover:bg-secondary/60 disabled:opacity-50 transition-colors shadow-sm"
           >
             <RotateCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-primary" : ""}`} />
-            Refresh
+            {t("common:actions.refresh", "Refresh")}
           </button>
         </div>
       </div>
@@ -107,23 +109,23 @@ export const MessagesPage: React.FC = () => {
           {/* Filter Bar & Search */}
           <div className="p-3 border-b border-border space-y-2.5">
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Search className="w-3.5 h-3.5 absolute start-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search conversations..."
+                placeholder={t("messaging:search_placeholder", "Search conversations...")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full ps-8 pe-3 py-1.5 text-xs rounded-lg border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
 
             {/* Context type filter tabs */}
             <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[11px]">
               {[
-                { id: "all", label: "All" },
-                { id: "listing", label: "Listings" },
-                { id: "requirement", label: "Requirements" },
-                { id: "order", label: "Orders" },
+                { id: "all", label: t("common:filters.all", "All") },
+                { id: "listing", label: t("messaging:tab_listings", "Listings") },
+                { id: "requirement", label: t("messaging:tab_requirements", "Requirements") },
+                { id: "order", label: t("messaging:tab_orders", "Orders") },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -151,7 +153,7 @@ export const MessagesPage: React.FC = () => {
                 onClick={() => void loadConversations()}
                 className="text-xs text-primary underline"
               >
-                Try again
+                {t("common:actions.retry", "Try again")}
               </button>
             </div>
           ) : (
@@ -184,14 +186,16 @@ export const MessagesPage: React.FC = () => {
                 <MessageSquare className="w-7 h-7 text-primary/70" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-semibold text-sm text-foreground">Select a Conversation</h3>
+                <h3 className="font-semibold text-sm text-foreground">
+                  {t("messaging:select_conversation_title", "Select a Conversation")}
+                </h3>
                 <p className="text-xs max-w-sm text-muted-foreground">
-                  Choose a conversation from the left thread list, or initiate a chat directly from a produce listing, requirement, or order.
+                  {t("messaging:select_conversation_desc", "Choose a conversation from the left thread list, or initiate a chat directly from a produce listing, requirement, or order.")}
                 </p>
               </div>
               <div className="flex items-center gap-2 text-[11px] text-muted-foreground/80 bg-secondary/40 px-3 py-1.5 rounded-full border border-border">
                 <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-                Contact information is shielded until mutual consent is exchanged
+                {t("messaging:shield_note", "Contact information is shielded until mutual consent is exchanged")}
               </div>
             </div>
           )}

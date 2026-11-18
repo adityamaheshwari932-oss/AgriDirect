@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { X, Upload, AlertCircle, FileText, Image } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { formatNumber } from "../../utils/formatters";
 
 interface AttachmentModalProps {
   isOpen: boolean;
@@ -28,6 +30,7 @@ export const AttachmentModal: React.FC<AttachmentModalProps> = ({
   onClose,
   onAttach,
 }) => {
+  const { t } = useTranslation(["messaging", "common"]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [caption, setCaption] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -40,14 +43,18 @@ export const AttachmentModal: React.FC<AttachmentModalProps> = ({
       const file = e.target.files[0];
 
       if (file.size > MAX_SIZE_BYTES) {
-        setError("File size exceeds 10 MB limit.");
+        setError(t("messaging:file_size_error", "File size exceeds 10 MB limit."));
         return;
       }
 
       const ext = "." + (file.name.split(".").pop()?.toLowerCase() || "");
       if (!ALLOWED_EXTENSIONS.includes(ext)) {
         setError(
-          `Unsupported file type. Allowed: ${ALLOWED_EXTENSIONS.join(", ")}`
+          t(
+            "messaging:unsupported_file_error",
+            `Unsupported file type. Allowed: ${ALLOWED_EXTENSIONS.join(", ")}`,
+            { allowed: ALLOWED_EXTENSIONS.join(", ") }
+          )
         );
         return;
       }
@@ -59,7 +66,7 @@ export const AttachmentModal: React.FC<AttachmentModalProps> = ({
   const handleConfirm = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile) {
-      setError("Please select a file to attach.");
+      setError(t("messaging:select_file_error", "Please select a file to attach."));
       return;
     }
 
@@ -83,14 +90,14 @@ export const AttachmentModal: React.FC<AttachmentModalProps> = ({
           <div className="flex items-center gap-2">
             <Upload className="w-5 h-5 text-primary" aria-hidden="true" />
             <h2 id="modal-attachment-title" className="text-base font-bold text-foreground">
-              Attach File to Message
+              {t("messaging:attach_modal_title", "Attach File to Message")}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Close dialog"
+            aria-label={t("common:close_dialog", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -106,13 +113,13 @@ export const AttachmentModal: React.FC<AttachmentModalProps> = ({
 
           <div className="space-y-1.5">
             <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Select Image or Document (Max 10MB)
+              {t("messaging:select_file_label", "Select Image or Document (Max 10MB)")}
             </label>
             <input
               type="file"
               accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
               onChange={handleFileChange}
-              className="text-xs text-muted-foreground file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border file:border-border file:text-xs file:font-bold file:bg-secondary file:text-foreground hover:file:bg-secondary/80 cursor-pointer w-full"
+              className="text-xs text-muted-foreground file:me-3 file:py-2 file:px-3.5 file:rounded-xl file:border file:border-border file:text-xs file:font-bold file:bg-secondary file:text-foreground hover:file:bg-secondary/80 cursor-pointer w-full"
             />
           </div>
 
@@ -126,7 +133,7 @@ export const AttachmentModal: React.FC<AttachmentModalProps> = ({
               <div className="truncate">
                 <p className="font-bold text-foreground truncate">{selectedFile.name}</p>
                 <p className="text-[11px] text-muted-foreground">
-                  {(selectedFile.size / 1024).toFixed(1)} KB
+                  {formatNumber(selectedFile.size / 1024, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} KB
                 </p>
               </div>
             </div>
@@ -137,14 +144,14 @@ export const AttachmentModal: React.FC<AttachmentModalProps> = ({
               htmlFor="attachment-caption-input"
               className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
             >
-              Accompanying Message Caption
+              {t("messaging:caption_label", "Accompanying Message Caption")}
             </label>
             <input
               id="attachment-caption-input"
               type="text"
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
-              placeholder="Add an optional comment..."
+              placeholder={t("messaging:caption_placeholder", "Add an optional comment...")}
               maxLength={500}
               className="w-full rounded-xl border border-border bg-card px-3.5 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-medium"
             />
@@ -156,14 +163,14 @@ export const AttachmentModal: React.FC<AttachmentModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 rounded-xl border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors"
             >
-              Cancel
+              {t("common:cancel", "Cancel")}
             </button>
             <button
               type="submit"
               disabled={!selectedFile}
               className="px-5 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold shadow-xs transition-colors disabled:opacity-50"
             >
-              Send Attachment
+              {t("messaging:send_attachment", "Send Attachment")}
             </button>
           </div>
         </form>
