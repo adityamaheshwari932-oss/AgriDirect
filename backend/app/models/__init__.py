@@ -187,7 +187,15 @@ from app.models.requirement_approval import (
     RequirementFulfillmentApproval,
 )
 from app.models.review import RatingReview
-from app.models.user import BuyerProfile, FarmerProfile, User
+from app.models.user import (
+    BuyerProfile,
+    FarmerProfile,
+    ServiceArea,
+    TransporterProfile,
+    User,
+    VALID_COVERAGE_TYPES,
+    VALID_TRANSPORT_TYPES,
+)
 from app.models.verification import (
     MAX_DOCUMENT_SIZE_BYTES,
     VALID_SUBMISSION_STATUSES,
@@ -201,6 +209,10 @@ __all__ = [
     "User",
     "FarmerProfile",
     "BuyerProfile",
+    "TransporterProfile",
+    "ServiceArea",
+    "VALID_TRANSPORT_TYPES",
+    "VALID_COVERAGE_TYPES",
     "VerificationSubmission",
     "VerificationDocument",
     "VALID_SUBMISSION_STATUSES",

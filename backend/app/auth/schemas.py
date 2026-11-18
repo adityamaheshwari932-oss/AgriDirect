@@ -187,6 +187,12 @@ class BuyerProfileRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+from app.transporters.schemas import (
+    TransporterProfileRead,
+    TransporterRegisterRequest,
+)
+
+
 class UserRead(BaseModel):
     """Public read model for user account, excluding password hash."""
 
@@ -201,6 +207,7 @@ class UserRead(BaseModel):
 
     farmer_profile: Optional[FarmerProfileRead] = None
     buyer_profile: Optional[BuyerProfileRead] = None
+    transporter_profile: Optional[TransporterProfileRead] = None
 
     model_config = ConfigDict(from_attributes=True)
 

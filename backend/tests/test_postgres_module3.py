@@ -300,7 +300,7 @@ def test_00_verify_postgres_environment(db_session: Session):
 
     # Check Alembic revision head (at least Module 3 revision)
     alembic_rev = db_session.execute(text("SELECT version_num FROM alembic_version")).scalar()
-    assert alembic_rev in ("d4e5f6a1b2c3", "e5f6a1b2c3d4", "f6a1b2c3d4e5", "a1b2c3d4e5f6")
+    assert alembic_rev in ("d4e5f6a1b2c3", "e5f6a1b2c3d4", "f6a1b2c3d4e5", "a1b2c3d4e5f6", "b2c3d4e5f6a1")
 
 
 # ===========================================================================

@@ -15,6 +15,7 @@ from app.auth.schemas import (
     FarmerRegisterRequest,
     LoginRequest,
     TokenResponse,
+    TransporterRegisterRequest,
     UserRead,
 )
 from app.auth.service import AuthService
@@ -63,6 +64,27 @@ def register_buyer(
     """Register a new commercial buyer."""
     service = AuthService(AuthRepository(db))
     user = service.register_buyer(payload)
+    return UserRead.model_validate(user)
+
+
+@router.post(
+    "/register/transporter",
+    response_model=UserRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Register a new transportation provider account",
+    description=(
+        "Registers a transportation provider account, initializes their transporter profile "
+        "and fleet details, and hashes their password using Argon2id. Server sets role to 'transporter', "
+        "verification_status to 'unverified', and account_status to 'active'."
+    ),
+)
+def register_transporter(
+    payload: TransporterRegisterRequest,
+    db: Session = Depends(get_db),
+) -> UserRead:
+    """Register a new transporter."""
+    service = AuthService(AuthRepository(db))
+    user = service.register_transporter(payload)
     return UserRead.model_validate(user)
 
 

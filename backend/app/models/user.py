@@ -23,12 +23,15 @@ if TYPE_CHECKING:
     from app.models.verification import VerificationSubmission
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     ForeignKey,
     Index,
+    Integer,
     Numeric,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
@@ -36,7 +39,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 from app.db.base import Base
 from app.models.base import TimestampMixin, UUIDPrimaryKeyMixin
 
-VALID_USER_ROLES = ("farmer", "buyer", "admin")
+VALID_USER_ROLES = ("farmer", "buyer", "admin", "transporter")
 VALID_VERIFICATION_STATUSES = ("unverified", "pending", "verified", "rejected")
 VALID_ACCOUNT_STATUSES = ("active", "restricted", "suspended", "blocked")
 VALID_BUYER_TYPES = (
@@ -48,6 +51,16 @@ VALID_BUYER_TYPES = (
     "caterer",
     "other",
 )
+VALID_TRANSPORT_TYPES = (
+    "mini_truck",
+    "open_body",
+    "refrigerated",
+    "covered_truck",
+    "tempo",
+    "trailer",
+    "other",
+)
+VALID_COVERAGE_TYPES = ("pickup_only", "delivery_only", "both")
 
 
 class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
@@ -100,6 +113,12 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     )
     buyer_profile: Mapped[Optional["BuyerProfile"]] = relationship(
         "BuyerProfile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    transporter_profile: Mapped[Optional["TransporterProfile"]] = relationship(
+        "TransporterProfile",
         back_populates="user",
         uselist=False,
         cascade="all, delete-orphan",
@@ -183,6 +202,12 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         back_populates="farmer",
         order_by="Order.created_at.desc()",
     )
+    orders_as_transporter: Mapped[List["Order"]] = relationship(
+        "Order",
+        foreign_keys="[Order.transporter_id]",
+        back_populates="transporter",
+        order_by="Order.created_at.desc()",
+    )
     reviews_given: Mapped[List["RatingReview"]] = relationship(
         "RatingReview",
         foreign_keys="[RatingReview.reviewer_id]",
@@ -218,7 +243,7 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
     __table_args__ = (
         CheckConstraint(
-            "role IN ('farmer', 'buyer', 'admin')",
+            "role IN ('farmer', 'buyer', 'admin', 'transporter')",
             name="chk_users_role",
         ),
         CheckConstraint(
@@ -251,6 +276,10 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         if value != "buyer" and getattr(self, "buyer_profile", None) is not None:
             raise ValueError(
                 f"Cannot change role to '{value}' while BuyerProfile is attached."
+            )
+        if value != "transporter" and getattr(self, "transporter_profile", None) is not None:
+            raise ValueError(
+                f"Cannot change role to '{value}' while TransporterProfile is attached."
             )
         return value
 
@@ -295,6 +324,18 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
             raise ValueError(
                 f"Cannot attach BuyerProfile to user with role '{self.role}'. "
                 "BuyerProfile requires role='buyer'."
+            )
+        return profile
+
+    @validates("transporter_profile")
+    def validate_transporter_profile(
+        self, key: str, profile: Optional["TransporterProfile"]
+    ) -> Optional["TransporterProfile"]:
+        """Enforce role/profile consistency: only transporters may have a TransporterProfile."""
+        if profile is not None and self.role != "transporter":
+            raise ValueError(
+                f"Cannot attach TransporterProfile to user with role '{self.role}'. "
+                "TransporterProfile requires role='transporter'."
             )
         return profile
 
@@ -438,4 +479,143 @@ class BuyerProfile(Base, UUIDPrimaryKeyMixin, TimestampMixin):
             f"<BuyerProfile id={self.id} user_id={self.user_id} "
             f"business_name={self.business_name!r} business_type={self.business_type!r} "
             f"city={self.city!r} state={self.state!r}>"
+        )
+
+
+class TransporterProfile(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """Maintains commercial transportation service provider profile and fleet details.
+
+    Associated 1:1 with a User whose role is 'transporter'.
+    """
+
+    __tablename__ = "transporter_profiles"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        unique=True,
+        nullable=False,
+    )
+    business_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    contact_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    phone_number: Mapped[str] = mapped_column(String(32), nullable=False)
+    transport_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    vehicle_capacity_kg: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    vehicle_registration_number: Mapped[str] = mapped_column(String(64), nullable=False)
+    is_available: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true", nullable=False)
+    experience_years: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
+    operating_states: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # 1:1 Back-reference to User
+    user: Mapped["User"] = relationship("User", back_populates="transporter_profile")
+
+    # 1:N Relationship to ServiceArea
+    service_areas: Mapped[List["ServiceArea"]] = relationship(
+        "ServiceArea",
+        back_populates="transporter_profile",
+        cascade="all, delete-orphan",
+        order_by="ServiceArea.created_at.desc()",
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "vehicle_capacity_kg > 0",
+            name="chk_transporter_capacity_positive",
+        ),
+        CheckConstraint(
+            "experience_years >= 0",
+            name="chk_transporter_exp_non_negative",
+        ),
+        Index("idx_transporter_profiles_type_available", "transport_type", "is_available"),
+    )
+
+    @validates("user")
+    def validate_user_role(self, key: str, user: Optional["User"]) -> Optional["User"]:
+        """Enforce role/profile consistency when user is assigned to TransporterProfile."""
+        if user is not None and user.role != "transporter":
+            raise ValueError(
+                f"TransporterProfile can only be associated with a user having role='transporter', "
+                f"got role='{user.role}'."
+            )
+        return user
+
+    @validates("vehicle_capacity_kg")
+    def validate_vehicle_capacity(
+        self, key: str, value: Decimal
+    ) -> Decimal:
+        if value is not None and value <= 0:
+            raise ValueError("vehicle_capacity_kg must be strictly positive.")
+        return value
+
+    def __repr__(self) -> str:
+        return (
+            f"<TransporterProfile id={self.id} user_id={self.user_id} "
+            f"business_name={self.business_name!r} transport_type={self.transport_type!r} "
+            f"capacity={self.vehicle_capacity_kg}kg>"
+        )
+
+
+class ServiceArea(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """Geographic service area serviceable by a transporter.
+
+    Allows transporters to declare pickup and/or delivery coverage by state, district,
+    taluka, village/town, and pincode.
+    """
+
+    __tablename__ = "service_areas"
+
+    transporter_profile_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("transporter_profiles.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    state: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    district: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    taluka_subdistrict: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    village_town: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    pincode: Mapped[Optional[str]] = mapped_column(String(16), nullable=True, index=True)
+    coverage_type: Mapped[str] = mapped_column(
+        String(32),
+        default="both",
+        server_default="both",
+        nullable=False,
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true", nullable=False)
+
+    # N:1 Back-reference to TransporterProfile
+    transporter_profile: Mapped["TransporterProfile"] = relationship(
+        "TransporterProfile",
+        back_populates="service_areas",
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "coverage_type IN ('pickup_only', 'delivery_only', 'both')",
+            name="chk_service_area_coverage_type",
+        ),
+        UniqueConstraint(
+            "transporter_profile_id",
+            "state",
+            "district",
+            "coverage_type",
+            name="uq_service_area_profile_location",
+        ),
+        Index("idx_service_areas_state_district", "state", "district"),
+    )
+
+    @validates("coverage_type")
+    def validate_coverage_type(self, key: str, value: str) -> str:
+        valid_types = ("pickup_only", "delivery_only", "both")
+        if value not in valid_types:
+            raise ValueError(
+                f"Invalid coverage_type '{value}'. Must be one of: {', '.join(valid_types)}"
+            )
+        return value
+
+    def __repr__(self) -> str:
+        return (
+            f"<ServiceArea id={self.id} transporter_id={self.transporter_profile_id} "
+            f"state={self.state!r} district={self.district!r} type={self.coverage_type!r}>"
         )

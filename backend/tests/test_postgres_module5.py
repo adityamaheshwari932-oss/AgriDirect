@@ -306,7 +306,7 @@ def test_01_verify_postgres_environment_and_revision(db_session: Session):
     assert db_name == "agridirect_module3_test"
 
     alembic_rev = db_session.execute(text("SELECT version_num FROM alembic_version")).scalar()
-    assert alembic_rev in ("f6a1b2c3d4e5", "a1b2c3d4e5f6"), f"Expected revision f6a1b2c3d4e5 or a1b2c3d4e5f6, got {alembic_rev}"
+    assert alembic_rev in ("f6a1b2c3d4e5", "a1b2c3d4e5f6", "b2c3d4e5f6a1"), f"Expected revision f6a1b2c3d4e5, a1b2c3d4e5f6, or b2c3d4e5f6a1, got {alembic_rev}"
 
     # Verify contact_share_requests table exists
     table_exists = db_session.execute(

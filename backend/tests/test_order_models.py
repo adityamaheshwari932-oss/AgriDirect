@@ -269,10 +269,12 @@ class TestOrderMetadata:
             "cancelled_by_user_id": True,
             "cancelled_at": True,
             "completed_at": True,
+            "transporter_id": True,
+            "transport_status": False,
             "created_at": False,
             "updated_at": False,
         }
-        assert len(table.columns) == 22
+        assert len(table.columns) == 24
         for col_name, nullable in expected.items():
             assert col_name in table.c, f"Column {col_name} missing from orders"
             assert table.c[col_name].nullable == nullable

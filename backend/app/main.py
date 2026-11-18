@@ -110,11 +110,13 @@ def create_app() -> FastAPI:
     from app.reports.routes import router as reports_router
     from app.requirements.routes import router as requirements_router
     from app.reviews.routes import router as reviews_router
+    from app.transporters.routes import router as transporters_router
     from app.users.routes import router as users_router
     from app.verification.routes import router as verification_router
 
     app.include_router(auth_router, prefix="/api/v1")
     app.include_router(users_router, prefix="/api/v1")
+    app.include_router(transporters_router, prefix="/api/v1")
     app.include_router(listings_router, prefix="/api/v1")
     app.include_router(requirements_router, prefix="/api/v1")
     app.include_router(offers_router, prefix="/api/v1")

@@ -18,11 +18,12 @@ from app.auth.schemas import (
     FarmerRegisterRequest,
     LoginRequest,
     TokenResponse,
+    TransporterRegisterRequest,
     UserRead,
 )
 from app.core.security import hash_password, verify_password
 from app.dependencies import create_access_token
-from app.models.user import BuyerProfile, FarmerProfile, User
+from app.models.user import BuyerProfile, FarmerProfile, ServiceArea, TransporterProfile, User
 
 
 class AuthService:
@@ -153,6 +154,79 @@ class AuthService:
 
         try:
             return self.repository.create_buyer(user, profile)
+        except DuplicateEntityException as exc:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=str(exc),
+            ) from exc
+
+    def register_transporter(self, payload: TransporterRegisterRequest) -> User:
+        """Register a new transporter account and initialize their profile.
+
+        Args:
+            payload: Validated transporter registration data.
+
+        Returns:
+            The newly created User model instance.
+
+        Raises:
+            HTTPException: 409 Conflict if email or phone number already exists.
+        """
+        normalized_email = payload.email.strip().lower()
+
+        if self.repository.get_user_by_email(normalized_email) is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="An account with this email address already exists",
+            )
+
+        if payload.phone_number and self.repository.get_user_by_phone(payload.phone_number) is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="An account with this phone number already exists",
+            )
+
+        hashed_password = hash_password(payload.password)
+
+        user = User(
+            email=normalized_email,
+            phone_number=payload.phone_number,
+            password_hash=hashed_password,
+            role="transporter",
+            verification_status="unverified",
+            account_status="active",
+        )
+
+        profile = TransporterProfile(
+            business_name=payload.business_name,
+            contact_name=payload.contact_name,
+            phone_number=payload.phone_number,
+            transport_type=payload.transport_type,
+            vehicle_capacity_kg=payload.vehicle_capacity_kg,
+            vehicle_registration_number=payload.vehicle_registration_number,
+            is_available=True,
+            experience_years=payload.experience_years,
+            operating_states=payload.operating_states,
+            bio=payload.bio,
+        )
+
+        service_areas = []
+        if payload.initial_service_areas:
+            for sa in payload.initial_service_areas:
+                service_areas.append(
+                    ServiceArea(
+                        state=sa.state,
+                        district=sa.district,
+                        taluka_subdistrict=sa.taluka_subdistrict,
+                        village_town=sa.village_town,
+                        pincode=sa.pincode,
+                        coverage_type=sa.coverage_type,
+                        is_active=sa.is_active,
+                    )
+                )
+
+        try:
+            return self.repository.create_transporter(user, profile, service_areas)
         except DuplicateEntityException as exc:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
