@@ -23,6 +23,7 @@ import {
   LineChart,
   AlertTriangle,
   Handshake,
+  Truck,
 } from "lucide-react";
 import { useAuth } from "../../store/authStore";
 import { getLocalizedVerificationStatus } from "../../utils/status";
@@ -42,6 +43,7 @@ export const DashboardLayout: React.FC = () => {
 
   const isFarmer = user.role === "farmer";
   const isBuyer = user.role === "buyer";
+  const isTransporter = user.role === "transporter";
   const isAdmin = user.role === "admin";
 
   // Role-appropriate display names
@@ -50,6 +52,10 @@ export const DashboardLayout: React.FC = () => {
     : isBuyer
     ? user.buyer_profile?.contact_person_name ||
       user.buyer_profile?.business_name ||
+      user.email
+    : isTransporter
+    ? user.transporter_profile?.business_name ||
+      user.transporter_profile?.contact_name ||
       user.email
     : isAdmin
     ? t("dashboard:layout.admin_subtitle", "Platform Administrator")
@@ -63,6 +69,10 @@ export const DashboardLayout: React.FC = () => {
     ? user.buyer_profile?.business_name && user.buyer_profile.business_name !== displayName
       ? user.buyer_profile.business_name
       : t("dashboard:layout.buyer_subtitle", "Commercial Buyer")
+    : isTransporter
+    ? user.transporter_profile?.transport_type
+      ? `${user.transporter_profile.transport_type.replace("_", " ")} (${user.transporter_profile.vehicle_capacity_kg} kg)`
+      : t("dashboard:layout.transporter_subtitle", "Transportation Provider")
     : isAdmin
     ? user.email
     : t("dashboard:layout.user_subtitle", "AgriDirect User");
@@ -107,6 +117,14 @@ export const DashboardLayout: React.FC = () => {
           badgeClass: verificationConfig.badgeClass,
         },
       ]
+    : isTransporter
+    ? [
+        { label: t("common:nav.dashboard", "Dashboard"), to: "/dashboard/transporter", icon: Truck },
+        { label: t("common:nav.find_loads", "Find Cargo"), to: "/dashboard/transporters", icon: ShoppingBag },
+        { label: t("common:nav.orders", "Orders"), to: "/dashboard/orders", icon: ClipboardList },
+        { label: t("common:nav.messages", "Messages"), to: "/dashboard/messages", icon: MessageSquare },
+        { label: t("common:nav.profile", "Profile"), to: "/dashboard/profile", icon: UserIcon },
+      ]
     : isAdmin
     ? [
         { label: t("common:nav.admin_users", "User Moderation"), to: "/admin/users", icon: Users },
@@ -123,6 +141,8 @@ export const DashboardLayout: React.FC = () => {
     ? "/dashboard/farmer"
     : isBuyer
     ? "/dashboard/buyer"
+    : isTransporter
+    ? "/dashboard/transporter"
     : isAdmin
     ? "/admin/analytics"
     : "/dashboard";
@@ -147,7 +167,9 @@ export const DashboardLayout: React.FC = () => {
                 ? t("dashboard:layout.admin_banner", "Platform Governance Portal — Administrator Console")
                 : isFarmer
                 ? t("dashboard:layout.farmer_banner", "Producer Portal — Verification: ")
-                : t("dashboard:layout.buyer_banner", "Commercial Procurement Portal — Verification: ")}
+                : isBuyer
+                ? t("dashboard:layout.buyer_banner", "Commercial Procurement Portal — Verification: ")
+                : t("dashboard:layout.transporter_banner", "Transporter Portal — Verification: ")}
               {!isAdmin && <span className="font-semibold">{verificationConfig.label}</span>}
             </span>
           </div>
@@ -195,9 +217,9 @@ export const DashboardLayout: React.FC = () => {
       {/* Main Authenticated Header */}
       <header className="border-b border-border bg-card/95 backdrop-blur sticky top-0 z-40 transition-colors shadow-xs">
         <div className="mx-auto px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
-          <div className="h-16 flex items-center justify-between gap-4">
-            {/* Logo / Home */}
-            <div className="flex items-center gap-4 sm:gap-6">
+          <div className="h-16 flex items-center justify-between gap-3 min-w-0">
+            {/* Logo / Home + Nav */}
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
               <Link
                 to={homeDestination}
                 className="flex items-center gap-2.5 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg p-1 shrink-0"
@@ -215,14 +237,16 @@ export const DashboardLayout: React.FC = () => {
                       ? t("dashboard:layout.admin_badge", "Admin Console")
                       : isFarmer
                       ? t("dashboard:layout.farmer_badge", "Farmer Dashboard")
-                      : t("dashboard:layout.buyer_badge", "Buyer Dashboard")}
+                      : isBuyer
+                      ? t("dashboard:layout.buyer_badge", "Buyer Dashboard")
+                      : t("dashboard:layout.transporter_badge", "Transporter Dashboard")}
                   </span>
                 </div>
               </Link>
 
               {/* Desktop Navigation Links */}
               <nav
-                className="hidden lg:flex items-center gap-1 ps-4 border-s border-border overflow-x-auto"
+                className="hidden lg:flex items-center gap-1 ps-3 border-s border-border min-w-0 flex-1 overflow-x-auto"
                 aria-label="Dashboard Navigation"
               >
                 {navItems.map((item) => {
@@ -247,15 +271,15 @@ export const DashboardLayout: React.FC = () => {
             </div>
 
             {/* Desktop User Info & Sign Out */}
-            <div className="hidden lg:flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-2.5 shrink-0">
               <LanguageSelector />
               <NotificationBell />
 
               <div className="text-end">
-                <div className="text-xs font-semibold text-foreground truncate max-w-[160px]">
+                <div className="text-xs font-semibold text-foreground truncate max-w-[130px]">
                   {displayName}
                 </div>
-                <div className="text-[10px] text-muted-foreground truncate max-w-[160px]">
+                <div className="text-[10px] text-muted-foreground truncate max-w-[130px]">
                   {entitySubtitle}
                 </div>
               </div>

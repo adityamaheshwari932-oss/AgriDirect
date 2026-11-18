@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Authentication and current-user API endpoints.
  * Interacts with backend FastAPI endpoints defined in app.auth.routes and app.users.routes.
  */
@@ -9,6 +9,7 @@ import type {
   FarmerRegisterRequest,
   LoginRequest,
   TokenResponse,
+  TransporterRegisterRequest,
   User,
 } from "../types";
 
@@ -42,6 +43,15 @@ export class AuthApi {
    */
   public async registerBuyer(payload: BuyerRegisterRequest): Promise<User> {
     return this.client.post<User>("/auth/register/buyer", payload, { skipAuth: true });
+  }
+
+  /**
+   * Register a new transportation service provider account and initial fleet profile.
+   * Note: Registration creates the user and profile, returning UserRead with HTTP 201.
+   * It does not automatically issue a token or log the user in.
+   */
+  public async registerTransporter(payload: TransporterRegisterRequest): Promise<User> {
+    return this.client.post<User>("/auth/register/transporter", payload, { skipAuth: true });
   }
 
   /**

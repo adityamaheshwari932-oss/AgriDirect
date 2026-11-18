@@ -1,9 +1,9 @@
-﻿/**
+/**
  * Domain types for AgriDirect users and role-specific profiles.
  * Aligned with backend Pydantic models in app.auth.schemas and app.models.user.
  */
 
-export type UserRole = "farmer" | "buyer" | "admin";
+export type UserRole = "farmer" | "buyer" | "admin" | "transporter";
 
 export type VerificationStatus = "unverified" | "pending" | "verified" | "rejected";
 
@@ -45,6 +45,22 @@ export interface BuyerProfile {
   updated_at: string;
 }
 
+export interface TransporterProfile {
+  id: string;
+  business_name: string;
+  contact_name: string;
+  phone_number: string;
+  transport_type: string;
+  vehicle_capacity_kg: number;
+  vehicle_registration_number: string;
+  is_available: boolean;
+  experience_years: number;
+  operating_states?: string | null;
+  bio?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -56,6 +72,7 @@ export interface User {
   updated_at: string;
   farmer_profile?: FarmerProfile | null;
   buyer_profile?: BuyerProfile | null;
+  transporter_profile?: TransporterProfile | null;
 }
 
 export interface FarmerProfileUpdate {
