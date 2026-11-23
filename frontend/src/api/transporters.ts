@@ -14,6 +14,10 @@ import type {
   TransporterProfileUpdate,
   TransporterSearchParams,
   TransporterSearchResponse,
+  TransportConnectionRequest,
+  TransportConnectionRequestCreate,
+  TransportConnectionRequestListResponse,
+  TransportConnectionRequestResponse,
 } from "../types/transporter";
 
 export class TransportersApi {
@@ -116,6 +120,88 @@ export class TransportersApi {
     return this.client.post<OrderTransportCoordinationResponse>(
       `/orders/${orderId}/transport-coordination`,
       payload
+    );
+  }
+
+  /**
+   * Create a new transportation connection request.
+   */
+  public async createConnectionRequest(
+    payload: TransportConnectionRequestCreate
+  ): Promise<TransportConnectionRequest> {
+    return this.client.post<TransportConnectionRequest>(
+      "/transporters/connection-requests",
+      payload
+    );
+  }
+
+  /**
+   * List transportation connection requests.
+   */
+  public async listConnectionRequests(params: {
+    status?: string;
+    order_id?: string;
+    offer_id?: string;
+    page?: number;
+    page_size?: number;
+  } = {}): Promise<TransportConnectionRequestListResponse> {
+    const query = new URLSearchParams();
+    if (params.status) query.set("status", params.status);
+    if (params.order_id) query.set("order_id", params.order_id);
+    if (params.offer_id) query.set("offer_id", params.offer_id);
+    if (params.page !== undefined) query.set("page", String(params.page));
+    if (params.page_size !== undefined) query.set("page_size", String(params.page_size));
+
+    const qs = query.toString();
+    const endpoint = `/transporters/connection-requests${qs ? `?${qs}` : ""}`;
+    return this.client.get<TransportConnectionRequestListResponse>(endpoint);
+  }
+
+  /**
+   * Get single transportation connection request.
+   */
+  public async getConnectionRequest(
+    requestId: string
+  ): Promise<TransportConnectionRequest> {
+    return this.client.get<TransportConnectionRequest>(
+      `/transporters/connection-requests/${requestId}`
+    );
+  }
+
+  /**
+   * Transporter accepts connection request.
+   */
+  public async acceptConnectionRequest(
+    requestId: string,
+    payload: TransportConnectionRequestResponse = {}
+  ): Promise<TransportConnectionRequest> {
+    return this.client.post<TransportConnectionRequest>(
+      `/transporters/connection-requests/${requestId}/accept`,
+      payload
+    );
+  }
+
+  /**
+   * Transporter declines connection request.
+   */
+  public async declineConnectionRequest(
+    requestId: string,
+    payload: TransportConnectionRequestResponse = {}
+  ): Promise<TransportConnectionRequest> {
+    return this.client.post<TransportConnectionRequest>(
+      `/transporters/connection-requests/${requestId}/decline`,
+      payload
+    );
+  }
+
+  /**
+   * Requester cancels connection request.
+   */
+  public async cancelConnectionRequest(
+    requestId: string
+  ): Promise<TransportConnectionRequest> {
+    return this.client.post<TransportConnectionRequest>(
+      `/transporters/connection-requests/${requestId}/cancel`
     );
   }
 }

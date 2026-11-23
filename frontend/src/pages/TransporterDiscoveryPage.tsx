@@ -1,34 +1,53 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import {
   Truck,
-  MapPin,
   Search,
-  Phone,
-  Weight,
-  Calendar,
   AlertCircle,
   RefreshCw,
-  MessageSquare,
+  CheckCircle2,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { transportersApi } from "../api/transporters";
 import type {
   TransporterSearchResult,
   TransporterSearchParams,
+  TransportConnectionRequest,
 } from "../types/transporter";
+import { TransporterCard } from "../components/transport/TransporterCard";
+import { TransporterDetailModal } from "../components/transport/TransporterDetailModal";
+import { TransportConnectionModal } from "../components/transport/TransportConnectionModal";
 
 export const TransporterDiscoveryPage: React.FC = () => {
+  const { t } = useTranslation(["delivery", "common"]);
+  const [searchParams] = useSearchParams();
+
+  // URL query context (e.g. from an active deal or order)
+  const initialOrderId = searchParams.get("order_id");
+  const initialOrderNumber = searchParams.get("order_number");
+  const initialOfferId = searchParams.get("offer_id");
+  const initialOfferNumber = searchParams.get("offer_number");
+  const initialPickupState = searchParams.get("pickup_state") || "";
+  const initialPickupDistrict = searchParams.get("pickup_district") || "";
+  const initialDeliveryState = searchParams.get("delivery_state") || "";
+  const initialDeliveryDistrict = searchParams.get("delivery_district") || "";
+
   const [transporters, setTransporters] = useState<TransporterSearchResult[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Selected modals
+  const [detailTransporter, setDetailTransporter] = useState<TransporterSearchResult | null>(null);
+  const [connectTransporter, setConnectTransporter] = useState<TransporterSearchResult | null>(null);
 
   // Filter state
   const [filters, setFilters] = useState<TransporterSearchParams>({
-    pickup_state: "",
-    pickup_district: "",
-    delivery_state: "",
-    delivery_district: "",
+    pickup_state: initialPickupState,
+    pickup_district: initialPickupDistrict,
+    delivery_state: initialDeliveryState,
+    delivery_district: initialDeliveryDistrict,
     transport_type: "",
     min_capacity_kg: undefined,
     only_available: true,
@@ -50,7 +69,7 @@ export const TransporterDiscoveryPage: React.FC = () => {
       setTransporters(res.items);
       setTotal(res.total);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to load transporters");
+      setError(err instanceof Error ? err.message : t("delivery:load_failed", "Failed to load transporters"));
     } finally {
       setLoading(false);
     }
@@ -58,6 +77,7 @@ export const TransporterDiscoveryPage: React.FC = () => {
 
   useEffect(() => {
     fetchTransporters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -77,9 +97,19 @@ export const TransporterDiscoveryPage: React.FC = () => {
     });
   };
 
+  const handleConnectionSuccess = (req: TransportConnectionRequest) => {
+    setSuccessMessage(
+      t(
+        "delivery:request_sent_success",
+        `Transport request sent to ${req.transporter_business_name}! You can monitor status in your dashboard.`
+      )
+    );
+    setTimeout(() => setSuccessMessage(null), 8000);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Top Header */}
+      {/* Top Banner */}
       <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 text-white shadow-md relative overflow-hidden">
         <div className="absolute end-0 bottom-0 rtl:-translate-x-8 translate-x-8 translate-y-8 opacity-10 pointer-events-none">
           <Truck className="w-64 h-64" aria-hidden="true" />
@@ -88,16 +118,36 @@ export const TransporterDiscoveryPage: React.FC = () => {
         <div className="relative z-10 max-w-3xl space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-800/60 text-xs font-semibold text-blue-300">
             <Truck className="w-4 h-4" />
-            <span>Agricultural Logistics Network</span>
+            <span>{t("delivery:logistics_network", "Agricultural Logistics Network")}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Find Transportation Providers
+            {t("delivery:marketplace_heading", "Connected Transportation Marketplace")}
           </h1>
           <p className="text-xs sm:text-sm text-blue-200/90 leading-relaxed">
-            Connect directly with verified independent haulers and fleet operators to transport produce between farm gates and commercial facilities.
+            {t(
+              "delivery:marketplace_description",
+              "Connect directly with verified independent haulers and fleet operators to transport produce between farm gates and commercial facilities."
+            )}
           </p>
         </div>
       </div>
+
+      {/* Success alert banner */}
+      {successMessage && (
+        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs flex items-center justify-between gap-3 animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            <span className="font-semibold">{successMessage}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSuccessMessage(null)}
+            className="text-xs hover:underline text-emerald-700 dark:text-emerald-400 font-bold"
+          >
+            {t("common:actions.dismiss", "Dismiss")}
+          </button>
+        </div>
+      )}
 
       {/* Filter Card */}
       <form
@@ -106,7 +156,7 @@ export const TransporterDiscoveryPage: React.FC = () => {
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
           <div>
-            <label className="block font-semibold text-foreground mb-1">Pickup State</label>
+            <label className="block font-semibold text-foreground mb-1">{t("delivery:pickup_state", "Pickup State")}</label>
             <input
               type="text"
               value={filters.pickup_state}
@@ -117,7 +167,7 @@ export const TransporterDiscoveryPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block font-semibold text-foreground mb-1">Pickup District</label>
+            <label className="block font-semibold text-foreground mb-1">{t("delivery:pickup_district", "Pickup District")}</label>
             <input
               type="text"
               value={filters.pickup_district}
@@ -128,7 +178,7 @@ export const TransporterDiscoveryPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block font-semibold text-foreground mb-1">Delivery State</label>
+            <label className="block font-semibold text-foreground mb-1">{t("delivery:delivery_state", "Delivery State")}</label>
             <input
               type="text"
               value={filters.delivery_state}
@@ -139,7 +189,7 @@ export const TransporterDiscoveryPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block font-semibold text-foreground mb-1">Delivery District</label>
+            <label className="block font-semibold text-foreground mb-1">{t("delivery:delivery_district", "Delivery District")}</label>
             <input
               type="text"
               value={filters.delivery_district}
@@ -150,13 +200,13 @@ export const TransporterDiscoveryPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block font-semibold text-foreground mb-1">Vehicle Type</label>
+            <label className="block font-semibold text-foreground mb-1">{t("delivery:vehicle_type", "Vehicle Type")}</label>
             <select
               value={filters.transport_type}
               onChange={(e) => setFilters({ ...filters, transport_type: e.target.value })}
               className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none"
             >
-              <option value="">All Vehicle Types</option>
+              <option value="">{t("delivery:all_vehicle_types", "All Vehicle Types")}</option>
               <option value="mini_truck">Mini Truck</option>
               <option value="open_body">Open Body</option>
               <option value="refrigerated">Refrigerated / Cold-Chain</option>
@@ -167,7 +217,7 @@ export const TransporterDiscoveryPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block font-semibold text-foreground mb-1">Min Capacity (kg)</label>
+            <label className="block font-semibold text-foreground mb-1">{t("delivery:min_capacity", "Min Capacity (kg)")}</label>
             <input
               type="number"
               value={filters.min_capacity_kg ?? ""}
@@ -191,7 +241,7 @@ export const TransporterDiscoveryPage: React.FC = () => {
               className="w-4 h-4 rounded text-primary focus:ring-primary border-input"
             />
             <label htmlFor="only_available" className="font-semibold text-foreground cursor-pointer">
-              Only Available Fleets
+              {t("delivery:only_available_fleets", "Only Available Fleets")}
             </label>
           </div>
 
@@ -201,24 +251,26 @@ export const TransporterDiscoveryPage: React.FC = () => {
               className="flex-1 px-4 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary-700 transition-colors flex items-center justify-center gap-1.5 shadow-xs"
             >
               <Search className="w-4 h-4" />
-              <span>Search</span>
+              <span>{t("common:actions.search", "Search")}</span>
             </button>
             <button
               type="button"
               onClick={handleResetFilters}
               className="px-3 py-2 border border-border text-foreground hover:bg-secondary rounded-lg font-semibold"
             >
-              Reset
+              {t("common:actions.reset", "Reset")}
             </button>
           </div>
         </div>
       </form>
 
-      {/* Results Header */}
+      {/* Results Count Header */}
       <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
         <span>
-          Showing <strong className="text-foreground">{transporters.length}</strong> of{" "}
-          <strong className="text-foreground">{total}</strong> transportation providers
+          {t("delivery:showing_providers", "Showing {{count}} of {{total}} verified transportation providers", {
+            count: transporters.length,
+            total,
+          })}
         </span>
       </div>
 
@@ -240,9 +292,14 @@ export const TransporterDiscoveryPage: React.FC = () => {
       {!loading && !error && transporters.length === 0 && (
         <div className="p-12 text-center border border-dashed border-border rounded-xl space-y-2">
           <Truck className="w-10 h-10 text-muted-foreground mx-auto opacity-40" />
-          <p className="text-sm font-semibold text-foreground">No transporters matched your search</p>
+          <p className="text-sm font-semibold text-foreground">
+            {t("delivery:no_transporters_matched", "No verified transporters matched your search")}
+          </p>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            Try broadening your pickup or delivery location, or removing specific vehicle type constraints.
+            {t(
+              "delivery:no_transporters_hint",
+              "Try broadening your pickup or delivery location, or removing specific vehicle type constraints."
+            )}
           </p>
         </div>
       )}
@@ -250,91 +307,39 @@ export const TransporterDiscoveryPage: React.FC = () => {
       {!loading && !error && transporters.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {transporters.map((t) => (
-            <div
+            <TransporterCard
               key={t.id}
-              className="bg-card border border-border rounded-xl p-5 shadow-xs hover:border-primary/50 transition-all flex flex-col justify-between space-y-4"
-            >
-              <div className="space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h3 className="font-bold text-sm text-foreground">{t.business_name}</h3>
-                    <p className="text-xs text-muted-foreground">{t.contact_name}</p>
-                  </div>
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                      t.is_available
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                        : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                    }`}
-                  >
-                    {t.is_available ? "Available" : "In Transit"}
-                  </span>
-                </div>
-
-                {/* Specs Pills */}
-                <div className="flex flex-wrap gap-2 text-xs">
-                  <span className="px-2 py-1 rounded-md bg-secondary text-secondary-foreground font-medium capitalize flex items-center gap-1">
-                    <Truck className="w-3.5 h-3.5 text-primary" />
-                    {t.transport_type.replace("_", " ")}
-                  </span>
-                  <span className="px-2 py-1 rounded-md bg-secondary text-secondary-foreground font-medium flex items-center gap-1">
-                    <Weight className="w-3.5 h-3.5 text-emerald-600" />
-                    {t.vehicle_capacity_kg.toLocaleString()} kg
-                  </span>
-                  <span className="px-2 py-1 rounded-md bg-secondary text-secondary-foreground font-medium flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-amber-600" />
-                    {t.experience_years}y Exp
-                  </span>
-                </div>
-
-                {/* Service Areas Coverage Tags */}
-                {t.service_areas.length > 0 && (
-                  <div className="pt-2 border-t border-border/60">
-                    <p className="text-[11px] font-semibold text-muted-foreground mb-1.5 flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Declared Coverage ({t.service_areas.length})</span>
-                    </p>
-                    <div className="flex flex-wrap gap-1.5 max-h-16 overflow-y-auto">
-                      {t.service_areas.slice(0, 4).map((area) => (
-                        <span
-                          key={area.id}
-                          className="px-2 py-0.5 rounded bg-muted text-[10px] text-muted-foreground font-mono"
-                        >
-                          {area.state} &bull; {area.district}
-                        </span>
-                      ))}
-                      {t.service_areas.length > 4 && (
-                        <span className="text-[10px] text-muted-foreground font-medium self-center">
-                          +{t.service_areas.length - 4} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Action: Direct Phone & Coordination */}
-              <div className="pt-3 border-t border-border flex items-center justify-between text-xs">
-                <a
-                  href={`tel:${t.phone_number}`}
-                  className="font-semibold text-primary hover:underline flex items-center gap-1.5"
-                >
-                  <Phone className="w-3.5 h-3.5" />
-                  <span>{t.phone_number}</span>
-                </a>
-
-                <Link
-                  to="/messages"
-                  className="px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 text-foreground font-semibold inline-flex items-center gap-1.5 transition-colors"
-                >
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  <span>Message</span>
-                </Link>
-              </div>
-            </div>
+              transporter={t}
+              onViewDetails={(item) => setDetailTransporter(item)}
+              onRequestConnect={(item) => setConnectTransporter(item)}
+            />
           ))}
         </div>
       )}
+
+      {/* Transporter Details Modal */}
+      <TransporterDetailModal
+        transporter={detailTransporter}
+        isOpen={!!detailTransporter}
+        onClose={() => setDetailTransporter(null)}
+        onRequestConnect={(item) => setConnectTransporter(item)}
+      />
+
+      {/* Transport Connection Request Modal */}
+      <TransportConnectionModal
+        transporter={connectTransporter}
+        orderId={initialOrderId}
+        orderNumber={initialOrderNumber}
+        offerId={initialOfferId}
+        offerNumber={initialOfferNumber}
+        initialPickupState={filters.pickup_state}
+        initialPickupDistrict={filters.pickup_district}
+        initialDeliveryState={filters.delivery_state}
+        initialDeliveryDistrict={filters.delivery_district}
+        isOpen={!!connectTransporter}
+        onClose={() => setConnectTransporter(null)}
+        onSuccess={handleConnectionSuccess}
+      />
     </div>
   );
 };

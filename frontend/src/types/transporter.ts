@@ -93,6 +93,7 @@ export interface TransporterDetail {
   experience_years: number;
   operating_states?: string | null;
   bio?: string | null;
+  verification_status: string;
   created_at: string;
   updated_at: string;
   service_areas: ServiceArea[];
@@ -111,6 +112,7 @@ export interface TransporterSearchResult {
   experience_years: number;
   operating_states?: string | null;
   bio?: string | null;
+  verification_status: string;
   service_areas: ServiceArea[];
 }
 
@@ -145,4 +147,62 @@ export interface OrderTransportCoordinationResponse {
   transporter_phone?: string | null;
   transport_status: string;
   delivery_notes?: string | null;
+}
+
+export type TransportRequestStatus = "pending" | "accepted" | "declined" | "cancelled";
+
+export interface TransportConnectionRequestCreate {
+  transporter_user_id: string;
+  order_id?: string;
+  offer_id?: string;
+  pickup_state?: string;
+  pickup_district?: string;
+  pickup_address?: string;
+  delivery_state?: string;
+  delivery_district?: string;
+  delivery_address?: string;
+  cargo_description?: string;
+  weight_kg?: number;
+  required_delivery_date?: string;
+  notes?: string;
+}
+
+export interface TransportConnectionRequestResponse {
+  response_notes?: string;
+  rejection_reason?: string;
+}
+
+export interface TransportConnectionRequest {
+  id: string;
+  requester_id: string;
+  transporter_id: string;
+  order_id?: string | null;
+  offer_id?: string | null;
+  order_number?: string | null;
+  offer_number?: string | null;
+  requester_name: string;
+  requester_role: string;
+  transporter_business_name: string;
+  transporter_contact_name: string;
+  transporter_phone: string;
+  pickup_state?: string | null;
+  pickup_district?: string | null;
+  pickup_address?: string | null;
+  delivery_state?: string | null;
+  delivery_district?: string | null;
+  delivery_address?: string | null;
+  cargo_description?: string | null;
+  weight_kg?: number | null;
+  required_delivery_date?: string | null;
+  notes?: string | null;
+  status: TransportRequestStatus;
+  rejection_reason?: string | null;
+  response_notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TransportConnectionRequestListResponse {
+  total: number;
+  items: TransportConnectionRequest[];
 }
