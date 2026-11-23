@@ -31,6 +31,7 @@ describe("TransporterDashboardPage", () => {
     experience_years: 6,
     operating_states: "Maharashtra, Goa",
     bio: "Refrigerated transport for perishable vegetables.",
+    verification_status: "verified",
     created_at: "2026-11-18T10:00:00Z",
     updated_at: "2026-11-18T10:00:00Z",
     service_areas: [

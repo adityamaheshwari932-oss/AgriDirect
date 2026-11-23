@@ -25,19 +25,27 @@ import { verificationApi } from "../api/verification";
 import type {
   ServiceAreaCreate,
   TransporterDetail,
+  TransportConnectionRequest,
 } from "../types/transporter";
 import type { VerificationSubmission } from "../types/verification";
 import {
   calculateProfileCompletion,
   getDocumentTypeLabel,
 } from "../utils/status";
-import { formatDate } from "../utils/formatters";
+import { formatDate, formatNumber } from "../utils/formatters";
 
 export const TransporterDashboardPage: React.FC = () => {
   const { user } = useAuth();
 
   const [detail, setDetail] = useState<TransporterDetail | null>(null);
   const [verificationSubmission, setVerificationSubmission] = useState<VerificationSubmission | null>(null);
+  const [incomingRequests, setIncomingRequests] = useState<TransportConnectionRequest[]>([]);
+  const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "declined">("all");
+  const [respondingRequestId, setRespondingRequestId] = useState<string | null>(null);
+  const [decliningRequestId, setDecliningRequestId] = useState<string | null>(null);
+  const [responseText, setResponseText] = useState("");
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,16 +69,53 @@ export const TransporterDashboardPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const [profileData, verData] = await Promise.all([
+      const [profileData, verData, reqsData] = await Promise.all([
         transportersApi.getMyProfile(),
         verificationApi.getMyVerification(),
+        transportersApi.listConnectionRequests().catch(() => ({ total: 0, items: [] })),
       ]);
       setDetail(profileData);
       setVerificationSubmission(verData);
+      setIncomingRequests(reqsData.items || []);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to load transporter profile");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAcceptRequest = async (requestId: string, notes?: string) => {
+    try {
+      setActionLoading(true);
+      const updated = await transportersApi.acceptConnectionRequest(requestId, {
+        response_notes: notes || undefined,
+      });
+      setIncomingRequests((prev) =>
+        prev.map((r) => (r.id === requestId ? updated : r))
+      );
+      setRespondingRequestId(null);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to accept request");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeclineRequest = async (requestId: string, reason: string, notes?: string) => {
+    try {
+      setActionLoading(true);
+      const updated = await transportersApi.declineConnectionRequest(requestId, {
+        rejection_reason: reason,
+        response_notes: notes || undefined,
+      });
+      setIncomingRequests((prev) =>
+        prev.map((r) => (r.id === requestId ? updated : r))
+      );
+      setDecliningRequestId(null);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to decline request");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -442,6 +487,294 @@ export const TransporterDashboardPage: React.FC = () => {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Incoming Service Requests & Active Cargo Connections */}
+      <div className="bg-card border border-border rounded-xl p-5 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
+          <div>
+            <h2 className="font-bold text-foreground text-sm flex items-center gap-2">
+              <Truck className="w-4 h-4 text-primary" />
+              <span>Transportation Service Requests & Active Cargo</span>
+              <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary">
+                {incomingRequests.length}
+              </span>
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Review and coordinate freight haulage requests directly with farmers and commercial buyers.
+            </p>
+          </div>
+
+          {/* Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+            {(["all", "pending", "accepted", "declined"] as const).map((status) => {
+              const count =
+                status === "all"
+                  ? incomingRequests.length
+                  : incomingRequests.filter((r) => r.status === status).length;
+              return (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => setRequestFilter(status)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold capitalize transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+                    requestFilter === status
+                      ? "bg-primary text-primary-foreground shadow-xs"
+                      : "bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  }`}
+                >
+                  <span>{status}</span>
+                  <span
+                    className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                      requestFilter === status
+                        ? "bg-white/20 text-white"
+                        : "bg-background text-foreground"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Request List or Empty State */}
+        {(() => {
+          const filtered = incomingRequests.filter(
+            (r) => requestFilter === "all" || r.status === requestFilter
+          );
+
+          if (filtered.length === 0) {
+            return (
+              <div className="text-center py-8 px-4 rounded-xl border border-dashed border-border bg-secondary/10">
+                <Truck className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-foreground">
+                  No {requestFilter !== "all" ? requestFilter : ""} requests found
+                </p>
+                <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                  When farmers or buyers request your haulage services for active deals, their requests will appear here.
+                </p>
+              </div>
+            );
+          }
+
+          return (
+            <div className="space-y-3">
+              {filtered.map((req) => (
+                <div
+                  key={req.id}
+                  className="p-4 rounded-xl border border-border bg-card/50 hover:bg-card transition-all space-y-3"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-sm text-foreground">
+                        {req.requester_name || "Procurement Counterparty"}
+                      </span>
+                      {req.requester_role && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-secondary text-secondary-foreground uppercase">
+                          {req.requester_role}
+                        </span>
+                      )}
+                      {req.order_id && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                          Order #{req.order_id.slice(0, 8)}
+                        </span>
+                      )}
+                      {req.offer_id && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                          Offer #{req.offer_id.slice(0, 8)}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold capitalize ${
+                          req.status === "accepted"
+                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                            : req.status === "declined"
+                            ? "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
+                            : req.status === "cancelled"
+                            ? "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300"
+                            : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                        }`}
+                      >
+                        {req.status}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">
+                        {formatDate(req.created_at)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Route & Cargo Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 text-xs bg-secondary/30 p-3 rounded-lg border border-border/40">
+                    <div>
+                      <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Pickup Location</span>
+                      <p className="font-medium text-foreground truncate mt-0.5">
+                        {req.pickup_district && req.pickup_state
+                          ? `${req.pickup_district}, ${req.pickup_state}`
+                          : req.pickup_state || "As negotiated"}
+                      </p>
+                      {req.pickup_address && (
+                        <p className="text-[11px] text-muted-foreground truncate">{req.pickup_address}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Delivery Destination</span>
+                      <p className="font-medium text-foreground truncate mt-0.5">
+                        {req.delivery_district && req.delivery_state
+                          ? `${req.delivery_district}, ${req.delivery_state}`
+                          : req.delivery_state || "As negotiated"}
+                      </p>
+                      {req.delivery_address && (
+                        <p className="text-[11px] text-muted-foreground truncate">{req.delivery_address}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Cargo & Weight</span>
+                      <p className="font-medium text-foreground truncate mt-0.5">
+                        {req.cargo_description || "Produce freight"}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {req.weight_kg ? `${formatNumber(req.weight_kg)} kg` : "Custom weight"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Required Schedule</span>
+                      <p className="font-medium text-foreground mt-0.5">
+                        {req.required_delivery_date || "Flexible / Immediate"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {req.notes && (
+                    <div className="text-xs text-muted-foreground bg-muted/30 px-3 py-2 rounded-lg border border-border/40">
+                      <span className="font-semibold text-foreground">Requester Notes: </span>
+                      {req.notes}
+                    </div>
+                  )}
+
+                  {req.response_notes && (
+                    <div className="text-xs text-muted-foreground bg-emerald-500/5 px-3 py-2 rounded-lg border border-emerald-500/20">
+                      <span className="font-semibold text-emerald-700 dark:text-emerald-400">Your Response: </span>
+                      {req.response_notes}
+                    </div>
+                  )}
+
+                  {req.rejection_reason && (
+                    <div className="text-xs text-muted-foreground bg-rose-500/5 px-3 py-2 rounded-lg border border-rose-500/20">
+                      <span className="font-semibold text-rose-700 dark:text-rose-400">Decline Reason: </span>
+                      {req.rejection_reason}
+                    </div>
+                  )}
+
+                  {/* Actions for Pending Requests */}
+                  {req.status === "pending" && (
+                    <div className="pt-2 border-t border-border flex flex-col gap-2">
+                      {respondingRequestId === req.id ? (
+                        <div className="p-3 rounded-lg border border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 space-y-2">
+                          <label className="text-xs font-semibold text-foreground block">
+                            Acceptance Message / Loading Instructions (Optional):
+                          </label>
+                          <textarea
+                            value={responseText}
+                            onChange={(e) => setResponseText(e.target.value)}
+                            placeholder="e.g. Can dispatch vehicle tomorrow 8 AM. Driver will call before arrival."
+                            className="w-full text-xs p-2 rounded border border-border bg-background focus:ring-1 focus:ring-primary outline-hidden"
+                            rows={2}
+                          />
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setRespondingRequestId(null);
+                                setResponseText("");
+                              }}
+                              className="px-3 py-1.5 rounded text-xs font-medium text-muted-foreground hover:bg-secondary"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              disabled={actionLoading}
+                              onClick={() => handleAcceptRequest(req.id, responseText)}
+                              className="px-3 py-1.5 rounded text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
+                            >
+                              {actionLoading ? "Accepting..." : "Confirm Acceptance"}
+                            </button>
+                          </div>
+                        </div>
+                      ) : decliningRequestId === req.id ? (
+                        <div className="p-3 rounded-lg border border-rose-500/30 bg-rose-50/50 dark:bg-rose-950/20 space-y-2">
+                          <label className="text-xs font-semibold text-foreground block">
+                            Decline Reason (Required):
+                          </label>
+                          <input
+                            type="text"
+                            value={rejectionReason}
+                            onChange={(e) => setRejectionReason(e.target.value)}
+                            placeholder="e.g. Vehicle already fully booked on requested date."
+                            className="w-full text-xs p-2 rounded border border-border bg-background focus:ring-1 focus:ring-rose-500 outline-hidden"
+                          />
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDecliningRequestId(null);
+                                setRejectionReason("");
+                              }}
+                              className="px-3 py-1.5 rounded text-xs font-medium text-muted-foreground hover:bg-secondary"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              disabled={actionLoading || !rejectionReason.trim()}
+                              onClick={() => handleDeclineRequest(req.id, rejectionReason, responseText)}
+                              className="px-3 py-1.5 rounded text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white transition-colors disabled:opacity-50"
+                            >
+                              {actionLoading ? "Declining..." : "Confirm Decline"}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDecliningRequestId(req.id);
+                              setRespondingRequestId(null);
+                              setRejectionReason("");
+                            }}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                          >
+                            Decline Request
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRespondingRequestId(req.id);
+                              setDecliningRequestId(null);
+                              setResponseText("");
+                            }}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
+                          >
+                            Accept Request
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Main Grid: Fleet Specs and Service Areas */}

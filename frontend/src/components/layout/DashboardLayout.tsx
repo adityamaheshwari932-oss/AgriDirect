@@ -86,6 +86,7 @@ export const DashboardLayout: React.FC = () => {
         { label: t("common:nav.listings", "My Listings"), to: "/dashboard/listings", icon: Layers },
         { label: t("common:nav.offers", "Offers"), to: "/dashboard/offers", icon: Handshake },
         { label: t("common:nav.orders", "Orders"), to: "/dashboard/orders", icon: ClipboardList },
+        { label: t("common:nav.transportation", "Transportation"), to: "/dashboard/transporters", icon: Truck },
         { label: t("common:nav.messages", "Messages"), to: "/dashboard/messages", icon: MessageSquare },
         { label: t("common:nav.analytics", "Analytics"), to: "/dashboard/analytics", icon: BarChart3 },
         { label: t("common:nav.reports", "Reports"), to: "/dashboard/reports", icon: ShieldAlert },
@@ -105,6 +106,7 @@ export const DashboardLayout: React.FC = () => {
         { label: t("common:nav.requirements", "Requirements"), to: "/dashboard/requirements", icon: Layers },
         { label: t("common:nav.offers", "Offers"), to: "/dashboard/offers", icon: Handshake },
         { label: t("common:nav.orders", "Orders"), to: "/dashboard/orders", icon: ClipboardList },
+        { label: t("common:nav.transportation", "Transportation"), to: "/dashboard/transporters", icon: Truck },
         { label: t("common:nav.messages", "Messages"), to: "/dashboard/messages", icon: MessageSquare },
         { label: t("common:nav.analytics", "Analytics"), to: "/dashboard/analytics", icon: BarChart3 },
         { label: t("common:nav.reports", "Reports"), to: "/dashboard/reports", icon: ShieldAlert },
@@ -120,7 +122,7 @@ export const DashboardLayout: React.FC = () => {
     : isTransporter
     ? [
         { label: t("common:nav.dashboard", "Dashboard"), to: "/dashboard/transporter", icon: Truck },
-        { label: t("common:nav.find_loads", "Find Cargo"), to: "/dashboard/transporters", icon: ShoppingBag },
+        { label: t("common:nav.transportation", "Transportation"), to: "/dashboard/transporters", icon: Truck },
         { label: t("common:nav.orders", "Orders"), to: "/dashboard/orders", icon: ClipboardList },
         { label: t("common:nav.messages", "Messages"), to: "/dashboard/messages", icon: MessageSquare },
         { label: t("common:nav.profile", "Profile"), to: "/dashboard/profile", icon: UserIcon },
