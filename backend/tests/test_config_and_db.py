@@ -711,6 +711,7 @@ class TestDeclarativeBase:
             "user_reports",
             "transporter_profiles",
             "service_areas",
+            "transport_connection_requests",
         }
         actual_tables = set(Base.metadata.tables.keys())
         assert actual_tables == expected_tables, (

@@ -282,7 +282,13 @@ def test_service_areas_crud_and_deduplication(client, db_session):
 def test_transporter_discovery(client, db_session):
     """Test marketplace discovery with filters."""
     # Transporter 1: Pune, mini_truck, 2000kg
-    u1 = User(email="t1@example.com", password_hash=hash_password("P1"), role="transporter", account_status="active")
+    u1 = User(
+        email="t1@example.com",
+        password_hash=hash_password("P1"),
+        role="transporter",
+        account_status="active",
+        verification_status="verified",
+    )
     p1 = TransporterProfile(
         business_name="Pune Express",
         contact_name="P1",
@@ -301,7 +307,13 @@ def test_transporter_discovery(client, db_session):
     db_session.add(sa1)
 
     # Transporter 2: Nashik to Mumbai, refrigerated, 8000kg
-    u2 = User(email="t2@example.com", password_hash=hash_password("P2"), role="transporter", account_status="active")
+    u2 = User(
+        email="t2@example.com",
+        password_hash=hash_password("P2"),
+        role="transporter",
+        account_status="active",
+        verification_status="verified",
+    )
     p2 = TransporterProfile(
         business_name="ColdChain Transit",
         contact_name="P2",

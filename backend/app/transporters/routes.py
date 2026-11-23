@@ -29,6 +29,10 @@ from app.transporters.schemas import (
     ServiceAreaCreate,
     ServiceAreaRead,
     ServiceAreaUpdate,
+    TransportConnectionRequestCreate,
+    TransportConnectionRequestListResponse,
+    TransportConnectionRequestRead,
+    TransportConnectionRequestResponse,
     TransporterDetailRead,
     TransporterProfileRead,
     TransporterProfileUpdate,
@@ -156,6 +160,109 @@ def discover_transporters(
         page=page,
         page_size=page_size,
     )
+
+
+# ---------------------------------------------------------------------------
+# Transport Connection Requests Endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.post(
+    "/transporters/connection-requests",
+    response_model=TransportConnectionRequestRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a transportation service connection request",
+)
+def create_connection_request(
+    payload: TransportConnectionRequestCreate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    service: TransporterService = Depends(get_transporter_service),
+) -> TransportConnectionRequestRead:
+    """Initiate a formal transportation service connection request from a farmer or buyer."""
+    return service.create_connection_request(current_user, payload)
+
+
+@router.get(
+    "/transporters/connection-requests",
+    response_model=TransportConnectionRequestListResponse,
+    summary="List transportation connection requests",
+)
+def list_connection_requests(
+    current_user: Annotated[User, Depends(get_current_user)],
+    status: Annotated[Optional[str], Query(description="Filter by request status")] = None,
+    order_id: Annotated[Optional[uuid.UUID], Query(description="Filter by order ID")] = None,
+    offer_id: Annotated[Optional[uuid.UUID], Query(description="Filter by offer proposal ID")] = None,
+    page: Annotated[int, Query(ge=1, description="Page number")] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100, description="Items per page")] = 20,
+    service: TransporterService = Depends(get_transporter_service),
+) -> TransportConnectionRequestListResponse:
+    """List connection requests scoped to the authenticated user."""
+    return service.list_connection_requests(
+        current_user=current_user,
+        status=status,
+        order_id=order_id,
+        offer_id=offer_id,
+        page=page,
+        page_size=page_size,
+    )
+
+
+@router.get(
+    "/transporters/connection-requests/{request_id}",
+    response_model=TransportConnectionRequestRead,
+    summary="Get single transport connection request details",
+)
+def get_connection_request(
+    request_id: uuid.UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    service: TransporterService = Depends(get_transporter_service),
+) -> TransportConnectionRequestRead:
+    """Fetch details for a specific connection request ensuring participant authorization."""
+    return service.get_connection_request(current_user, request_id)
+
+
+@router.post(
+    "/transporters/connection-requests/{request_id}/accept",
+    response_model=TransportConnectionRequestRead,
+    summary="Transporter accepts connection request",
+)
+def accept_connection_request(
+    request_id: uuid.UUID,
+    payload: TransportConnectionRequestResponse,
+    current_user: Annotated[User, Depends(get_current_user)],
+    service: TransporterService = Depends(get_transporter_service),
+) -> TransportConnectionRequestRead:
+    """Accept a pending transportation connection request."""
+    return service.accept_connection_request(current_user, request_id, payload)
+
+
+@router.post(
+    "/transporters/connection-requests/{request_id}/decline",
+    response_model=TransportConnectionRequestRead,
+    summary="Transporter declines connection request",
+)
+def decline_connection_request(
+    request_id: uuid.UUID,
+    payload: TransportConnectionRequestResponse,
+    current_user: Annotated[User, Depends(get_current_user)],
+    service: TransporterService = Depends(get_transporter_service),
+) -> TransportConnectionRequestRead:
+    """Decline a pending transportation connection request."""
+    return service.decline_connection_request(current_user, request_id, payload)
+
+
+@router.post(
+    "/transporters/connection-requests/{request_id}/cancel",
+    response_model=TransportConnectionRequestRead,
+    summary="Requester cancels connection request",
+)
+def cancel_connection_request(
+    request_id: uuid.UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    service: TransporterService = Depends(get_transporter_service),
+) -> TransportConnectionRequestRead:
+    """Cancel a pending transportation connection request."""
+    return service.cancel_connection_request(current_user, request_id)
 
 
 @router.get(
