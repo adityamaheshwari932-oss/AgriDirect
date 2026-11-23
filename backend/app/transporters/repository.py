@@ -11,7 +11,9 @@ from typing import List, Optional, Tuple
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session, joinedload
 
+from app.models.offer import Offer
 from app.models.order import Order
+from app.models.transporter_connection import TransportConnectionRequest
 from app.models.user import ServiceArea, TransporterProfile, User
 
 
@@ -34,7 +36,10 @@ class TransporterRepository:
         """Fetch transporter profile by profile primary key."""
         return (
             self.db.query(TransporterProfile)
-            .options(joinedload(TransporterProfile.service_areas))
+            .options(
+                joinedload(TransporterProfile.service_areas),
+                joinedload(TransporterProfile.user),
+            )
             .filter(TransporterProfile.id == profile_id)
             .first()
         )
@@ -134,7 +139,11 @@ class TransporterRepository:
             self.db.query(TransporterProfile)
             .join(TransporterProfile.user)
             .filter(User.account_status == "active")
-            .options(joinedload(TransporterProfile.service_areas))
+            .filter(User.verification_status == "verified")
+            .options(
+                joinedload(TransporterProfile.service_areas),
+                joinedload(TransporterProfile.user),
+            )
         )
 
         if only_available:
@@ -202,3 +211,116 @@ class TransporterRepository:
         self.db.commit()
         self.db.refresh(order)
         return order
+
+    def get_offer_by_id(self, offer_id: uuid.UUID) -> Optional[Offer]:
+        """Fetch offer by ID for transport connection verification."""
+        return (
+            self.db.query(Offer)
+            .options(joinedload(Offer.sender), joinedload(Offer.recipient), joinedload(Offer.items))
+            .filter(Offer.id == offer_id)
+            .first()
+        )
+
+    def create_connection_request(
+        self, request: TransportConnectionRequest
+    ) -> TransportConnectionRequest:
+        """Persist a new transport connection request."""
+        self.db.add(request)
+        self.db.commit()
+        self.db.refresh(request)
+        return request
+
+    def get_connection_request_by_id(
+        self, request_id: uuid.UUID
+    ) -> Optional[TransportConnectionRequest]:
+        """Fetch transport connection request by ID with relations."""
+        return (
+            self.db.query(TransportConnectionRequest)
+            .options(
+                joinedload(TransportConnectionRequest.requester),
+                joinedload(TransportConnectionRequest.transporter),
+                joinedload(TransportConnectionRequest.order),
+                joinedload(TransportConnectionRequest.offer),
+            )
+            .filter(TransportConnectionRequest.id == request_id)
+            .first()
+        )
+
+    def find_existing_pending_request(
+        self,
+        requester_id: uuid.UUID,
+        transporter_id: uuid.UUID,
+        order_id: Optional[uuid.UUID] = None,
+        offer_id: Optional[uuid.UUID] = None,
+    ) -> Optional[TransportConnectionRequest]:
+        """Check if an active pending request already exists between requester and transporter for this deal."""
+        query = self.db.query(TransportConnectionRequest).filter(
+            TransportConnectionRequest.requester_id == requester_id,
+            TransportConnectionRequest.transporter_id == transporter_id,
+            TransportConnectionRequest.status == "pending",
+        )
+        if order_id:
+            query = query.filter(TransportConnectionRequest.order_id == order_id)
+        if offer_id:
+            query = query.filter(TransportConnectionRequest.offer_id == offer_id)
+        return query.first()
+
+    def list_connection_requests(
+        self,
+        user_id: uuid.UUID,
+        role: str,
+        status: Optional[str] = None,
+        order_id: Optional[uuid.UUID] = None,
+        offer_id: Optional[uuid.UUID] = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> Tuple[int, List[TransportConnectionRequest]]:
+        """List connection requests relevant to the user (transporter or requester/deal participant)."""
+        query = (
+            self.db.query(TransportConnectionRequest)
+            .options(
+                joinedload(TransportConnectionRequest.requester),
+                joinedload(TransportConnectionRequest.transporter),
+                joinedload(TransportConnectionRequest.order),
+                joinedload(TransportConnectionRequest.offer),
+            )
+        )
+
+        if role == "transporter":
+            query = query.filter(TransportConnectionRequest.transporter_id == user_id)
+        elif role in ("farmer", "buyer"):
+            # Can see requests where they are requester, or participant on the order/offer
+            if order_id:
+                query = query.filter(TransportConnectionRequest.order_id == order_id)
+            elif offer_id:
+                query = query.filter(TransportConnectionRequest.offer_id == offer_id)
+            else:
+                query = query.filter(TransportConnectionRequest.requester_id == user_id)
+        elif role != "admin":
+            query = query.filter(TransportConnectionRequest.requester_id == user_id)
+
+        if order_id and role not in ("farmer", "buyer"):
+            query = query.filter(TransportConnectionRequest.order_id == order_id)
+        if offer_id and role not in ("farmer", "buyer"):
+            query = query.filter(TransportConnectionRequest.offer_id == offer_id)
+
+        if status:
+            query = query.filter(TransportConnectionRequest.status == status.strip().lower())
+
+        total = query.distinct().count()
+        results = (
+            query.distinct()
+            .order_by(TransportConnectionRequest.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+        return total, results
+
+    def save_connection_request(
+        self, request: TransportConnectionRequest
+    ) -> TransportConnectionRequest:
+        """Persist state updates to a connection request."""
+        self.db.commit()
+        self.db.refresh(request)
+        return request

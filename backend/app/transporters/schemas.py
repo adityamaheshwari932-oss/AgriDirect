@@ -4,7 +4,7 @@ Covers transporter registration, profile management, service area definitions,
 marketplace discovery, and order transport coordination.
 """
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 import uuid
 from typing import List, Optional
@@ -151,6 +151,7 @@ class TransporterProfileRead(BaseModel):
     experience_years: int
     operating_states: Optional[str] = None
     bio: Optional[str] = None
+    verification_status: str = "verified"
     created_at: datetime
     updated_at: datetime
 
@@ -205,6 +206,7 @@ class TransporterSearchResult(BaseModel):
     experience_years: int
     operating_states: Optional[str] = None
     bio: Optional[str] = None
+    verification_status: str = "verified"
     service_areas: List[ServiceAreaRead] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
@@ -215,6 +217,88 @@ class TransporterSearchResponse(BaseModel):
 
     total: int
     items: List[TransporterSearchResult]
+
+
+VALID_TRANSPORT_REQUEST_STATUSES = ("pending", "accepted", "declined", "cancelled")
+
+
+class TransportConnectionRequestCreate(BaseModel):
+    """Payload to initiate a transportation service connection request."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    transporter_user_id: uuid.UUID = Field(..., description="Target transporter user ID")
+    order_id: Optional[uuid.UUID] = Field(None, description="Optional associated order ID")
+    offer_id: Optional[uuid.UUID] = Field(None, description="Optional associated offer ID")
+
+    pickup_state: Optional[str] = Field(None, max_length=64)
+    pickup_district: Optional[str] = Field(None, max_length=64)
+    pickup_address: Optional[str] = Field(None)
+
+    delivery_state: Optional[str] = Field(None, max_length=64)
+    delivery_district: Optional[str] = Field(None, max_length=64)
+    delivery_address: Optional[str] = Field(None)
+
+    cargo_description: Optional[str] = Field(None, max_length=255)
+    weight_kg: Optional[Decimal] = Field(None, gt=0)
+    required_delivery_date: Optional[date] = Field(None)
+    notes: Optional[str] = Field(None)
+
+
+class TransportConnectionRequestResponse(BaseModel):
+    """Payload to respond to a connection request (accept or decline)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    response_notes: Optional[str] = Field(None, description="Optional transporter response notes")
+    rejection_reason: Optional[str] = Field(None, description="Reason if declining the request")
+
+
+class TransportConnectionRequestRead(BaseModel):
+    """Read model for transport connection request."""
+
+    id: uuid.UUID
+    requester_id: uuid.UUID
+    transporter_id: uuid.UUID
+    order_id: Optional[uuid.UUID] = None
+    offer_id: Optional[uuid.UUID] = None
+    order_number: Optional[str] = None
+    offer_number: Optional[str] = None
+
+    requester_name: str
+    requester_role: str
+    transporter_business_name: str
+    transporter_contact_name: str
+    transporter_phone: str
+
+    pickup_state: Optional[str] = None
+    pickup_district: Optional[str] = None
+    pickup_address: Optional[str] = None
+
+    delivery_state: Optional[str] = None
+    delivery_district: Optional[str] = None
+    delivery_address: Optional[str] = None
+
+    cargo_description: Optional[str] = None
+    weight_kg: Optional[Decimal] = None
+    required_delivery_date: Optional[date] = None
+    notes: Optional[str] = None
+
+    status: str
+    rejection_reason: Optional[str] = None
+    response_notes: Optional[str] = None
+
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TransportConnectionRequestListResponse(BaseModel):
+    """List response wrapper for connection requests."""
+
+    total: int
+    items: List[TransportConnectionRequestRead]
 
 
 class OrderTransportCoordinationRequest(BaseModel):

@@ -202,6 +202,14 @@ from app.models.verification import (
     VerificationDocument,
     VerificationSubmission,
 )
+from app.models.transporter_connection import (
+    TRANSPORT_REQUEST_STATUS_ACCEPTED,
+    TRANSPORT_REQUEST_STATUS_CANCELLED,
+    TRANSPORT_REQUEST_STATUS_DECLINED,
+    TRANSPORT_REQUEST_STATUS_PENDING,
+    VALID_TRANSPORT_REQUEST_STATUSES,
+    TransportConnectionRequest,
+)
 
 __all__ = [
     "UUIDPrimaryKeyMixin",
@@ -380,4 +388,10 @@ __all__ = [
     "REPORT_STATUS_ACTION_TAKEN",
     "REPORT_STATUS_DISMISSED",
     "VALID_REPORT_STATUSES",
+    "TransportConnectionRequest",
+    "TRANSPORT_REQUEST_STATUS_PENDING",
+    "TRANSPORT_REQUEST_STATUS_ACCEPTED",
+    "TRANSPORT_REQUEST_STATUS_DECLINED",
+    "TRANSPORT_REQUEST_STATUS_CANCELLED",
+    "VALID_TRANSPORT_REQUEST_STATUSES",
 ]
