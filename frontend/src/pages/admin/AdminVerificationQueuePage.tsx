@@ -140,6 +140,7 @@ export const AdminVerificationQueuePage: React.FC = () => {
             <option value="">{t("admin:role_all", "All Applicant Roles")}</option>
             <option value="farmer">{t("admin:role_farmer", "Farmer Applicants")}</option>
             <option value="buyer">{t("admin:role_buyer", "Commercial Buyer Applicants")}</option>
+            <option value="transporter">{t("admin:role_transporter", "Transporter Applicants")}</option>
           </select>
         </div>
 

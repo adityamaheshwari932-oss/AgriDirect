@@ -284,6 +284,14 @@ class TransporterService:
                 detail="You do not have permission to coordinate transport for this order",
             )
 
+        # Assigned transporter must be verified to perform transport coordination operations
+        if is_assigned_transporter and not (is_admin or is_buyer or is_farmer):
+            if current_user.verification_status != "verified":
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Operation requires a verified transportation provider account",
+                )
+
         # Transporter assignment can only be done by buyer or farmer or admin
         if payload.transporter_user_id is not None:
             if not (is_buyer or is_farmer or is_admin):
@@ -296,6 +304,11 @@ class TransporterService:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Selected user is not a valid registered transporter",
+                )
+            if transporter_user.verification_status != "verified":
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Cannot assign unverified transportation provider to an order",
                 )
             order.transporter_id = transporter_user.id
             if order.transport_status == "none":

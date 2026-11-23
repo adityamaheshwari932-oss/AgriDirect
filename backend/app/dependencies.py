@@ -252,6 +252,50 @@ def require_buyer(
     return current_user
 
 
+def require_transporter(
+    current_user: User = Depends(get_current_active_user),
+) -> User:
+    """Verify that the authenticated user is an active transporter (verified or unverified).
+
+    Args:
+        current_user: Active User instance from get_current_active_user.
+
+    Returns:
+        The transporter User model instance.
+
+    Raises:
+        HTTPException: 403 Forbidden if user role is not transporter.
+    """
+    if current_user.role != "transporter":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Operation requires a transporter account",
+        )
+    return current_user
+
+
+def require_verified_transporter(
+    current_user: User = Depends(require_verified_user),
+) -> User:
+    """Verify that the authenticated user is an active, verified transporter.
+
+    Args:
+        current_user: Verified User instance from require_verified_user.
+
+    Returns:
+        The verified transporter User model instance.
+
+    Raises:
+        HTTPException: 403 Forbidden if user role is not transporter.
+    """
+    if current_user.role != "transporter":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Operation requires a verified transporter account",
+        )
+    return current_user
+
+
 def require_admin(
     current_user: User = Depends(get_current_active_user),
 ) -> User:

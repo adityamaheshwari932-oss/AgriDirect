@@ -361,7 +361,12 @@ def test_order_transport_coordination(client, db_session):
     buyer = User(email="b_ord@example.com", password_hash=hash_password("Pass2"), role="buyer")
     db_session.add(buyer)
     # Transporter
-    transporter = User(email="t_ord@example.com", password_hash=hash_password("Pass3"), role="transporter")
+    transporter = User(
+        email="t_ord@example.com",
+        password_hash=hash_password("Pass3"),
+        role="transporter",
+        verification_status="verified",
+    )
     t_prof = TransporterProfile(
         business_name="Fast Transit",
         contact_name="Transit Driver",

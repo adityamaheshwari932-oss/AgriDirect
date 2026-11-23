@@ -215,5 +215,38 @@ describe("AdminVerificationQueuePage", () => {
       });
     });
   });
+
+  it("filters verification queue by transporter role", async () => {
+    vi.mocked(adminApi.listVerifications).mockResolvedValue({
+      items: [
+        {
+          ...mockSubmission,
+          id: "ver-trans-1",
+          user_role: "transporter",
+          user_email: "transporter.fleet@logistics.test",
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 15,
+      total_pages: 1,
+    });
+
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByRole("combobox")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByRole("combobox"), {
+      target: { value: "transporter" },
+    });
+
+    await waitFor(() => {
+      expect(adminApi.listVerifications).toHaveBeenCalledWith(
+        expect.objectContaining({ role: "transporter" })
+      );
+    });
+  });
 });
 

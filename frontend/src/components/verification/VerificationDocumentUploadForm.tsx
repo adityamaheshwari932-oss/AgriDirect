@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { Upload, FileText, CheckCircle2, AlertCircle, X, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { verificationApi } from "../../api/verification";
@@ -8,13 +8,14 @@ import {
   ALLOWED_MIME_TYPES,
   BUYER_DOCUMENT_TYPES,
   FARMER_DOCUMENT_TYPES,
+  TRANSPORTER_DOCUMENT_TYPES,
   MAX_DOCUMENT_SIZE_BYTES,
   type VerificationDocument,
 } from "../../types/verification";
 import { formatFileSize } from "../../utils/status";
 
 interface VerificationDocumentUploadFormProps {
-  role: "farmer" | "buyer";
+  role: "farmer" | "buyer" | "transporter";
   onUploadSuccess: (document: VerificationDocument) => void;
   disabled?: boolean;
 }
@@ -25,7 +26,12 @@ export const VerificationDocumentUploadForm: React.FC<VerificationDocumentUpload
   disabled = false,
 }) => {
   const { t } = useTranslation(["verification", "common", "errors"]);
-  const documentTypeOptions = role === "farmer" ? FARMER_DOCUMENT_TYPES : BUYER_DOCUMENT_TYPES;
+  const documentTypeOptions =
+    role === "farmer"
+      ? FARMER_DOCUMENT_TYPES
+      : role === "buyer"
+      ? BUYER_DOCUMENT_TYPES
+      : TRANSPORTER_DOCUMENT_TYPES;
 
   const [selectedType, setSelectedType] = useState<string>(documentTypeOptions[0].value);
   const [documentNumber, setDocumentNumber] = useState<string>("");

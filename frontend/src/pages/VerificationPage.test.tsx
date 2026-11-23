@@ -1,4 +1,4 @@
-﻿import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -64,6 +64,29 @@ describe("VerificationPage", () => {
       state: "Maharashtra",
       postal_code: "400001",
       procurement_summary: "Weekly bulk organic produce",
+      created_at: "2026-10-29T12:00:00Z",
+      updated_at: "2026-10-29T12:00:00Z",
+    },
+  };
+
+  const mockTransporterUser: User = {
+    id: "transporter-uuid-3",
+    email: "transporter@speedyhaul.test",
+    role: "transporter",
+    verification_status: "unverified",
+    account_status: "active",
+    created_at: "2026-10-29T12:00:00Z",
+    updated_at: "2026-10-29T12:00:00Z",
+    transporter_profile: {
+      id: "t-prof-1",
+      business_name: "Speedy Haul Logistics",
+      contact_name: "Vikram Patil",
+      phone_number: "+919876543230",
+      transport_type: "refrigerated",
+      vehicle_capacity_kg: 6000,
+      vehicle_registration_number: "MH-12-TC-9988",
+      is_available: true,
+      experience_years: 5,
       created_at: "2026-10-29T12:00:00Z",
       updated_at: "2026-10-29T12:00:00Z",
     },
@@ -136,6 +159,27 @@ describe("VerificationPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders transporter-specific instructions for transportation provider account", async () => {
+    authStore["state"] = {
+      status: "authenticated",
+      user: mockTransporterUser,
+      error: null,
+    };
+
+    vi.spyOn(verificationApi, "getMyVerification").mockResolvedValueOnce(null);
+    vi.spyOn(verificationApi, "getMyVerificationHistory").mockResolvedValueOnce([]);
+
+    renderComponent();
+
+    expect(
+      screen.getByText(/validate your commercial transport credentials/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/transportation provider verification requirements & accepted evidence/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/vehicle registration \(rc\)/i)).toBeInTheDocument();
+  });
+
   it("displays unsupported role message for admin or non-trade accounts", () => {
     authStore["state"] = {
       status: "authenticated",
@@ -150,7 +194,7 @@ describe("VerificationPage", () => {
 
     expect(screen.getByText(/verification not applicable/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/designed exclusively for registered agricultural producers and commercial buyers/i)
+      screen.getByText(/designed exclusively for registered agricultural producers/i)
     ).toBeInTheDocument();
   });
 

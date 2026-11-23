@@ -4,26 +4,40 @@ import {
   Truck,
   MapPin,
   ShieldCheck,
+  ShieldAlert,
+  Clock,
+  XCircle,
   Plus,
   Trash2,
   Weight,
   Calendar,
   AlertCircle,
+  CheckCircle2,
   Power,
   RefreshCw,
   Search,
+  UploadCloud,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "../store/authStore";
 import { transportersApi } from "../api/transporters";
+import { verificationApi } from "../api/verification";
 import type {
   ServiceAreaCreate,
   TransporterDetail,
 } from "../types/transporter";
+import type { VerificationSubmission } from "../types/verification";
+import {
+  calculateProfileCompletion,
+  getDocumentTypeLabel,
+} from "../utils/status";
+import { formatDate } from "../utils/formatters";
 
 export const TransporterDashboardPage: React.FC = () => {
   const { user } = useAuth();
 
   const [detail, setDetail] = useState<TransporterDetail | null>(null);
+  const [verificationSubmission, setVerificationSubmission] = useState<VerificationSubmission | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,8 +61,12 @@ export const TransporterDashboardPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await transportersApi.getMyProfile();
-      setDetail(data);
+      const [profileData, verData] = await Promise.all([
+        transportersApi.getMyProfile(),
+        verificationApi.getMyVerification(),
+      ]);
+      setDetail(profileData);
+      setVerificationSubmission(verData);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to load transporter profile");
     } finally {
@@ -163,6 +181,10 @@ export const TransporterDashboardPage: React.FC = () => {
     );
   }
 
+  const completion = user
+    ? calculateProfileCompletion(user)
+    : { percentage: 0, completedCount: 0, totalCount: 1, missingFields: [] };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Top Welcome Banner */}
@@ -172,9 +194,35 @@ export const TransporterDashboardPage: React.FC = () => {
         </div>
 
         <div className="relative z-10 max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-800/80 border border-blue-700/60 text-xs font-medium text-blue-200">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>Verified Transportation Provider</span>
+          <div
+            className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${
+              user.verification_status === "verified"
+                ? "bg-emerald-950/80 border-emerald-600/60 text-emerald-300"
+                : user.verification_status === "pending"
+                ? "bg-blue-950/80 border-blue-600/60 text-blue-300"
+                : user.verification_status === "rejected"
+                ? "bg-rose-950/80 border-rose-600/60 text-rose-300"
+                : "bg-amber-950/80 border-amber-600/60 text-amber-300"
+            }`}
+          >
+            {user.verification_status === "verified" ? (
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            ) : user.verification_status === "pending" ? (
+              <Clock className="w-4 h-4 text-blue-400" />
+            ) : user.verification_status === "rejected" ? (
+              <XCircle className="w-4 h-4 text-rose-400" />
+            ) : (
+              <ShieldAlert className="w-4 h-4 text-amber-400" />
+            )}
+            <span>
+              {user.verification_status === "verified"
+                ? "Verified Transportation Provider"
+                : user.verification_status === "pending"
+                ? "Verification Under Review"
+                : user.verification_status === "rejected"
+                ? "Verification Rejected"
+                : "Unverified Transportation Provider"}
+            </span>
           </div>
 
           <div>
@@ -217,6 +265,183 @@ export const TransporterDashboardPage: React.FC = () => {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Dedicated Verification & Compliance Section */}
+      <div className="bg-card border border-border rounded-2xl p-6 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-4">
+          <div className="space-y-1">
+            <h2 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-primary" />
+              <span>Identity & Transport Compliance Verification</span>
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Official verification confirms regulatory compliance, commercial roadworthiness, and permits participation in order transit.
+            </p>
+          </div>
+          <Link
+            to="/verification"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary-700 transition-colors shrink-0 shadow-xs"
+          >
+            <UploadCloud className="w-4 h-4" />
+            <span>
+              {user.verification_status === "rejected"
+                ? "Resubmit Verification"
+                : user.verification_status === "unverified"
+                ? "Submit Verification Documents"
+                : "Manage Documents"}
+            </span>
+          </Link>
+        </div>
+
+        {/* Profile Completion and Status Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Status Card */}
+          <div className="p-4 rounded-xl bg-secondary/30 border border-border space-y-2">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground block">
+              Current Status
+            </span>
+            <div className="flex items-center gap-2">
+              {user.verification_status === "verified" ? (
+                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              ) : user.verification_status === "pending" ? (
+                <Clock className="w-5 h-5 text-blue-600" />
+              ) : user.verification_status === "rejected" ? (
+                <XCircle className="w-5 h-5 text-rose-600" />
+              ) : (
+                <ShieldAlert className="w-5 h-5 text-amber-600" />
+              )}
+              <span className="text-sm font-bold text-foreground capitalize">
+                {user.verification_status === "unverified"
+                  ? "Not Submitted"
+                  : user.verification_status === "pending"
+                  ? "Under Review"
+                  : user.verification_status === "verified"
+                  ? "Approved & Compliant"
+                  : "Rejected"}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {user.verification_status === "verified"
+                ? "Full access to order transport coordination is active."
+                : user.verification_status === "pending"
+                ? "Submitted credentials are currently under review by platform moderation."
+                : user.verification_status === "rejected"
+                ? "Application was rejected. Review feedback below and resubmit."
+                : "Upload vehicle RC and commercial permit to coordinate agricultural loads."}
+            </p>
+          </div>
+
+          {/* Profile Completion */}
+          <div className="p-4 rounded-xl bg-secondary/30 border border-border space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Profile Completeness
+              </span>
+              <span className="text-xs font-bold text-foreground">{completion.percentage}%</span>
+            </div>
+            <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 rounded-full ${
+                  completion.percentage === 100
+                    ? "bg-emerald-500"
+                    : completion.percentage > 60
+                    ? "bg-primary"
+                    : "bg-amber-500"
+                }`}
+                style={{ width: `${completion.percentage}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {completion.missingFields.length === 0
+                ? "All recommended fleet profile information is complete."
+                : `Recommended: Fill ${completion.missingFields.slice(0, 2).join(", ")}`}
+            </p>
+          </div>
+
+          {/* Cycle Dates & Count */}
+          <div className="p-4 rounded-xl bg-secondary/30 border border-border space-y-1 text-xs">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground block mb-1">
+              Audit Timeline
+            </span>
+            <div className="flex justify-between py-0.5">
+              <span className="text-muted-foreground">Submission Date:</span>
+              <span className="font-semibold text-foreground">
+                {verificationSubmission?.created_at
+                  ? formatDate(verificationSubmission.created_at)
+                  : "Not submitted"}
+              </span>
+            </div>
+            <div className="flex justify-between py-0.5">
+              <span className="text-muted-foreground">Last Review Date:</span>
+              <span className="font-semibold text-foreground">
+                {verificationSubmission?.reviewed_at
+                  ? formatDate(verificationSubmission.reviewed_at)
+                  : "Pending review"}
+              </span>
+            </div>
+            <div className="flex justify-between py-0.5">
+              <span className="text-muted-foreground">Evidence Files:</span>
+              <span className="font-semibold text-foreground">
+                {verificationSubmission?.documents?.length || 0} attached
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Rejection Alert Banner if rejected */}
+        {user.verification_status === "rejected" && verificationSubmission?.rejection_reason && (
+          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs space-y-2">
+            <div className="flex items-center gap-2 font-bold">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>Administrative Rejection Reason</span>
+            </div>
+            <p className="leading-relaxed bg-white/70 p-3 rounded-lg border border-rose-200/60 font-medium">
+              {verificationSubmission.rejection_reason}
+            </p>
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-rose-800">
+                Please update your credentials or provide clearer documentation to resubmit.
+              </span>
+              <Link
+                to="/verification"
+                className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold transition-colors shrink-0"
+              >
+                Resubmit Application
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Submitted Documents List */}
+        {verificationSubmission?.documents && verificationSubmission.documents.length > 0 && (
+          <div className="space-y-3 pt-2 border-t border-border">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-primary" />
+              <span>Submitted Verification Documents ({verificationSubmission.documents.length})</span>
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {verificationSubmission.documents.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="p-3.5 rounded-xl border border-border bg-card flex items-center justify-between gap-2 text-xs"
+                >
+                  <div className="space-y-0.5 overflow-hidden">
+                    <span className="font-semibold text-foreground block truncate">
+                      {getDocumentTypeLabel(doc.document_type)}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground block">
+                      {(doc.file_size_bytes / 1024).toFixed(1)} KB &bull; {formatDate(doc.created_at)}
+                    </span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-secondary text-foreground uppercase shrink-0">
+                    {verificationSubmission.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Main Grid: Fleet Specs and Service Areas */}

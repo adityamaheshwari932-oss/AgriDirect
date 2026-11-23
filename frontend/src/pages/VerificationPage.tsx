@@ -8,6 +8,7 @@ import {
   XCircle,
   Building,
   Tractor,
+  Truck,
   ArrowLeft,
   CheckCircle2,
   AlertTriangle,
@@ -50,6 +51,7 @@ export const VerificationPage: React.FC = () => {
 
   const isFarmer = user?.role === "farmer";
   const isBuyer = user?.role === "buyer";
+  const isTransporter = user?.role === "transporter";
 
   const loadVerificationData = useCallback(async () => {
     setIsLoading(true);
@@ -111,14 +113,14 @@ export const VerificationPage: React.FC = () => {
   }
 
   // Unsupported roles guard
-  if (!isFarmer && !isBuyer) {
+  if (!isFarmer && !isBuyer && !isTransporter) {
     return (
       <div className="max-w-2xl mx-auto p-8 rounded-xl border border-border bg-card text-center space-y-4">
         <ShieldAlert className="w-12 h-12 text-amber-600 mx-auto" aria-hidden="true" />
         <h1 className="text-xl font-bold text-foreground">Verification Not Applicable</h1>
         <p className="text-sm text-muted-foreground">
           Identity and business verification workflows are designed exclusively for registered
-          agricultural producers and commercial buyers.
+          agricultural producers, commercial buyers, and transportation service providers.
         </p>
         <Link
           to="/"
@@ -158,7 +160,7 @@ export const VerificationPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
         <div className="space-y-1">
           <Link
-            to={isFarmer ? "/dashboard/farmer" : "/dashboard/buyer"}
+            to={isFarmer ? "/dashboard/farmer" : isBuyer ? "/dashboard/buyer" : "/dashboard/transporter"}
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary-800 transition-colors mb-1"
           >
             <ArrowLeft className="w-4 h-4 rtl:rotate-180" aria-hidden="true" />
@@ -173,9 +175,14 @@ export const VerificationPage: React.FC = () => {
                   "verification:farmer_subtitle",
                   "Validate your agricultural producer credentials to publish produce listings and conduct direct wholesale trade"
                 )
-              : t(
+              : isBuyer
+              ? t(
                   "verification:buyer_subtitle",
                   "Validate your commercial business entity credentials to issue trade inquiries and place direct farm orders"
+                )
+              : t(
+                  "verification:transporter_subtitle",
+                  "Validate your commercial transport credentials to coordinate direct agricultural shipments"
                 )}
           </p>
         </div>
@@ -444,7 +451,9 @@ export const VerificationPage: React.FC = () => {
                 <p className="text-xs text-muted-foreground max-w-md mx-auto">
                   {isFarmer
                     ? "Upload your farmer identification or land ownership proof to initiate your compliance review."
-                    : "Upload your business registration (GSTIN, CIN, or FSSAI license) to begin commercial verification."}
+                    : isBuyer
+                    ? "Upload your business registration (GSTIN, CIN, or FSSAI license) to begin commercial verification."
+                    : "Upload your vehicle registration (RC), commercial permit, or driver license to begin transport verification."}
                 </p>
               </div>
 
@@ -466,13 +475,17 @@ export const VerificationPage: React.FC = () => {
             <div className="p-4 border-b border-border flex items-center gap-2">
               {isFarmer ? (
                 <Tractor className="w-5 h-5 text-primary" aria-hidden="true" />
-              ) : (
+              ) : isBuyer ? (
                 <Building className="w-5 h-5 text-primary" aria-hidden="true" />
+              ) : (
+                <Truck className="w-5 h-5 text-primary" aria-hidden="true" />
               )}
               <h3 className="text-sm font-bold text-foreground">
                 {isFarmer
                   ? t("verification:farmer_guide_title", "Producer Verification Requirements & Accepted Evidence")
-                  : t("verification:buyer_guide_title", "Commercial Buyer Verification Requirements & Accepted Evidence")}
+                  : isBuyer
+                  ? t("verification:buyer_guide_title", "Commercial Buyer Verification Requirements & Accepted Evidence")
+                  : t("verification:transporter_guide_title", "Transportation Provider Verification Requirements & Accepted Evidence")}
               </h3>
             </div>
 
@@ -511,7 +524,7 @@ export const VerificationPage: React.FC = () => {
                     <p className="text-muted-foreground">Accredited organic farming certification (NPOP / PGS-India)</p>
                   </div>
                 </>
-              ) : (
+              ) : isBuyer ? (
                 <>
                   <div className="p-3 rounded-lg bg-secondary/30 space-y-1 border border-border/60">
                     <div className="flex items-center gap-2 font-semibold text-foreground">
@@ -545,6 +558,40 @@ export const VerificationPage: React.FC = () => {
                     <p className="text-muted-foreground">Permanent Account Number card registered to business</p>
                   </div>
                 </>
+              ) : (
+                <>
+                  <div className="p-3 rounded-lg bg-secondary/30 space-y-1 border border-border/60">
+                    <div className="flex items-center gap-2 font-semibold text-foreground">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                      <span>Vehicle Registration (RC)</span>
+                    </div>
+                    <p className="text-muted-foreground">Official RTO registration certificate for commercial vehicle</p>
+                  </div>
+
+                  <div className="p-3 rounded-lg bg-secondary/30 space-y-1 border border-border/60">
+                    <div className="flex items-center gap-2 font-semibold text-foreground">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                      <span>Commercial Driver License</span>
+                    </div>
+                    <p className="text-muted-foreground">Valid commercial transport motor driving license (HMV/LMV-TR)</p>
+                  </div>
+
+                  <div className="p-3 rounded-lg bg-secondary/30 space-y-1 border border-border/60">
+                    <div className="flex items-center gap-2 font-semibold text-foreground">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                      <span>Goods Carriage Permit</span>
+                    </div>
+                    <p className="text-muted-foreground">State or National permit authorizing commercial produce transit</p>
+                  </div>
+
+                  <div className="p-3 rounded-lg bg-secondary/30 space-y-1 border border-border/60">
+                    <div className="flex items-center gap-2 font-semibold text-foreground">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                      <span>Insurance & Fitness Certificate</span>
+                    </div>
+                    <p className="text-muted-foreground">Active commercial vehicle insurance cover & fitness roadworthiness certificate</p>
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -564,7 +611,7 @@ export const VerificationPage: React.FC = () => {
             </div>
 
             <VerificationDocumentUploadForm
-              role={isFarmer ? "farmer" : "buyer"}
+              role={isFarmer ? "farmer" : isBuyer ? "buyer" : "transporter"}
               onUploadSuccess={handleUploadSuccess}
               disabled={isVerified}
             />
@@ -581,7 +628,7 @@ export const VerificationPage: React.FC = () => {
               </div>
 
               <VerificationApplicationForm
-                role={isFarmer ? "farmer" : "buyer"}
+                role={isFarmer ? "farmer" : isBuyer ? "buyer" : "transporter"}
                 onSubmitSuccess={handleSubmitSuccess}
                 disabled={isPending || isVerified}
               />

@@ -18,7 +18,18 @@ export type BuyerDocumentType =
   | "pan_card"
   | "other";
 
-export type VerificationDocumentType = FarmerDocumentType | BuyerDocumentType | string;
+export type TransporterDocumentType =
+  | "vehicle_rc"
+  | "driving_license"
+  | "transport_permit"
+  | "business_registration"
+  | "insurance_certificate"
+  | "fitness_certificate"
+  | "pollution_certificate"
+  | "government_id"
+  | "other";
+
+export type VerificationDocumentType = FarmerDocumentType | BuyerDocumentType | TransporterDocumentType | string;
 
 export type SubmissionStatus = "pending" | "approved" | "rejected";
 
@@ -110,6 +121,54 @@ export const BUYER_DOCUMENT_TYPES: { value: BuyerDocumentType; label: string; de
     value: "other",
     label: "Other Corporate Document",
     description: "Authorized procurement officer letter or corporate power of attorney",
+  },
+];
+
+export const TRANSPORTER_DOCUMENT_TYPES: { value: TransporterDocumentType; label: string; description: string }[] = [
+  {
+    value: "vehicle_rc",
+    label: "Vehicle Registration Certificate (RC)",
+    description: "Official vehicle registration certificate issued by the Regional Transport Office (RTO)",
+  },
+  {
+    value: "driving_license",
+    label: "Commercial Driving License",
+    description: "Valid commercial motor vehicle (HMV/LMV-TR) driving license for registered driver",
+  },
+  {
+    value: "transport_permit",
+    label: "Commercial Goods Carriage Permit",
+    description: "State or National goods carriage permit authorizing commercial produce transit",
+  },
+  {
+    value: "business_registration",
+    label: "Transport Agency Registration / GSTIN",
+    description: "Goods and Services Tax certificate or registered logistics enterprise charter",
+  },
+  {
+    value: "insurance_certificate",
+    label: "Commercial Vehicle Insurance Policy",
+    description: "Active comprehensive or third-party commercial vehicle insurance cover note",
+  },
+  {
+    value: "fitness_certificate",
+    label: "Vehicle Fitness Certificate",
+    description: "Current vehicle roadworthiness certificate issued by transport authorities",
+  },
+  {
+    value: "pollution_certificate",
+    label: "Pollution Under Control (PUC) Certificate",
+    description: "Valid emission standards compliance certificate for the registered vehicle",
+  },
+  {
+    value: "government_id",
+    label: "Government Photo Identification",
+    description: "Aadhaar card, voter identity card, or passport of the registered fleet manager",
+  },
+  {
+    value: "other",
+    label: "Other Transport Authorization",
+    description: "Cooperative transit agreement, fleet leasing deed, or state authority authorization",
   },
 ];
 

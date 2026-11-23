@@ -28,6 +28,18 @@ VALID_BUYER_DOCUMENT_TYPES = (
     "other",
 )
 
+VALID_TRANSPORTER_DOCUMENT_TYPES = (
+    "vehicle_rc",
+    "driving_license",
+    "transport_permit",
+    "business_registration",
+    "insurance_certificate",
+    "fitness_certificate",
+    "pollution_certificate",
+    "government_id",
+    "other",
+)
+
 
 class VerificationDocumentRead(BaseModel):
     """Public read model for verification documents.
