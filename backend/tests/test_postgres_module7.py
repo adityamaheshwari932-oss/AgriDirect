@@ -281,7 +281,7 @@ def test_pg_schema_and_migration_revisions(pg_session: Session) -> None:
     assert db_name == "agridirect_module3_test"
 
     rev = pg_session.execute(text("SELECT version_num FROM alembic_version")).scalar()
-    assert rev in ("a1b2c3d4e5f6", "f6a1b2c3d4e5", "e5f6a1b2c3d4", "fcf5c991d506")
+    assert rev in ("a1b2c3d4e5f6", "f6a1b2c3d4e5", "e5f6a1b2c3d4", "fcf5c991d506", "b2c3d4e5f6a1")
 
 
 def test_pg_self_review_constraint_enforcement(pg_session: Session) -> None:

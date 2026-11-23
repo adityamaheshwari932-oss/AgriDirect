@@ -6,7 +6,7 @@ import { ApiError } from "../../api/errors";
 import type { VerificationSubmission } from "../../types/verification";
 
 interface VerificationApplicationFormProps {
-  role: "farmer" | "buyer";
+  role: "farmer" | "buyer" | "transporter";
   onSubmitSuccess: (submission: VerificationSubmission) => void;
   disabled?: boolean;
 }
@@ -96,9 +96,14 @@ export const VerificationApplicationForm: React.FC<VerificationApplicationFormPr
                   "verification:notes_placeholder_farmer",
                   "Provide context regarding your farm operations, crop harvest cycles, acreage, or evidence details..."
                 )
-              : t(
+              : role === "buyer"
+              ? t(
                   "verification:notes_placeholder_buyer",
                   "Provide details regarding your commercial establishment, procurement volume, receiving docks, or entity credentials..."
+                )
+              : t(
+                  "verification:notes_placeholder_transporter",
+                  "Provide details regarding your transport fleet, vehicle registrations, driver authorizations, or service areas..."
                 )
           }
           className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60 disabled:cursor-not-allowed resize-y"

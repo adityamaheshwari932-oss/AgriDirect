@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { X, ShieldAlert, Loader2, AlertCircle, AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { adminApi } from "../../api/admin";
 import type { AdminAccountStatus, AdminUserSummary } from "../../types/admin";
 import { useToast } from "../ui/toast";
@@ -19,6 +20,7 @@ export const AdminUserStatusModal: React.FC<AdminUserStatusModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { t } = useTranslation(["admin", "common", "errors"]);
   const { success: toastSuccess, error: toastError } = useToast();
 
   const [accountStatus, setAccountStatus] = useState<AdminAccountStatus>("active");
@@ -48,12 +50,19 @@ export const AdminUserStatusModal: React.FC<AdminUserStatusModalProps> = ({
     e.preventDefault();
 
     if (isSelf) {
-      setErrorMessage("Self-modification forbidden: You cannot modify your own administrator account status.");
+      setErrorMessage(
+        t(
+          "admin:self_mod_error",
+          "Self-modification forbidden: You cannot modify your own administrator account status."
+        )
+      );
       return;
     }
 
     if (!isValidReason) {
-      setErrorMessage("A valid explanation of at least 10 non-whitespace characters is mandatory.");
+      setErrorMessage(
+        t("admin:reason_min_length", "A valid explanation of at least 10 non-whitespace characters is mandatory.")
+      );
       return;
     }
 
@@ -70,13 +79,16 @@ export const AdminUserStatusModal: React.FC<AdminUserStatusModalProps> = ({
         account_status: accountStatus,
         reason: reason.trim(),
       });
-      toastSuccess(`Account status updated to '${accountStatus}'.`, "Status Updated");
+      toastSuccess(
+        t("admin:toast_status_updated", `Account status updated to '${accountStatus}'.`, { status: accountStatus }),
+        t("admin:status_updated_title", "Status Updated")
+      );
       onSuccess();
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to update user account status.";
+      const msg = err instanceof Error ? err.message : t("admin:status_update_failed", "Failed to update user account status.");
       setErrorMessage(msg);
-      toastError(msg, "Moderation Error");
+      toastError(msg, t("admin:moderation_error", "Moderation Error"));
       setConfirmStep(false);
     } finally {
       setIsSubmitting(false);
@@ -97,10 +109,10 @@ export const AdminUserStatusModal: React.FC<AdminUserStatusModalProps> = ({
             <ShieldAlert className="w-5 h-5 text-amber-600" aria-hidden="true" />
             <div>
               <h2 id="modal-user-status-title" className="text-base font-bold text-foreground">
-                Moderate User Account Status
+                {t("admin:moderate_user_status_title", "Moderate User Account Status")}
               </h2>
               <p className="text-[11px] text-muted-foreground">
-                Target User: <span className="font-semibold text-foreground">{user.email}</span>
+                {t("admin:target_user_label", `Target User: ${user.email}`, { email: user.email })}
               </p>
             </div>
           </div>
@@ -109,7 +121,7 @@ export const AdminUserStatusModal: React.FC<AdminUserStatusModalProps> = ({
             onClick={onClose}
             disabled={isSubmitting}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-            aria-label="Close dialog"
+            aria-label={t("common:close_dialog", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -125,9 +137,14 @@ export const AdminUserStatusModal: React.FC<AdminUserStatusModalProps> = ({
             >
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
               <div>
-                <strong className="block font-semibold">Self-Modification Guard</strong>
+                <strong className="block font-semibold">
+                  {t("admin:self_mod_guard_title", "Self-Modification Guard")}
+                </strong>
                 <span>
-                  You cannot modify your own administrator account status. Platform governance rules require another administrator to execute status modifications.
+                  {t(
+                    "admin:self_mod_guard_desc",
+                    "You cannot modify your own administrator account status. Platform governance rules require another administrator to execute status modifications."
+                  )}
                 </span>
               </div>
             </div>
@@ -146,12 +163,12 @@ export const AdminUserStatusModal: React.FC<AdminUserStatusModalProps> = ({
           {/* User Current Info Card */}
           <div className="p-3 rounded-lg bg-secondary/30 border border-border text-xs flex items-center justify-between">
             <div>
-              <span className="text-[10px] text-muted-foreground block">Display Name</span>
+              <span className="text-[10px] text-muted-foreground block">{t("admin:display_name", "Display Name")}</span>
               <span className="font-medium text-foreground">{user.display_name}</span>
             </div>
             <div>
-              <span className="text-[10px] text-muted-foreground block text-right">Current Status</span>
-              <span className="font-bold uppercase text-foreground text-right block">
+              <span className="text-[10px] text-muted-foreground block text-end">{t("admin:current_status", "Current Status")}</span>
+              <span className="font-bold uppercase text-foreground text-end block">
                 {user.account_status}
               </span>
             </div>
@@ -160,7 +177,7 @@ export const AdminUserStatusModal: React.FC<AdminUserStatusModalProps> = ({
           {/* Target Status Selection */}
           <div className="space-y-1.5">
             <label htmlFor="target-account-status" className="block text-xs font-bold text-foreground">
-              New Account Status
+              {t("admin:new_account_status_label", "New Account Status")}
             </label>
             <select
               id="target-account-status"
@@ -172,17 +189,17 @@ export const AdminUserStatusModal: React.FC<AdminUserStatusModalProps> = ({
               }}
               className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
             >
-              <option value="active">Active (Full platform access)</option>
-              <option value="restricted">Restricted (Read-only catalog access)</option>
-              <option value="suspended">Suspended (Temporary operational disablement)</option>
-              <option value="blocked">Blocked (Permanent ban from platform)</option>
+              <option value="active">{t("admin:status_opt_active", "Active (Full platform access)")}</option>
+              <option value="restricted">{t("admin:status_opt_restricted", "Restricted (Read-only catalog access)")}</option>
+              <option value="suspended">{t("admin:status_opt_suspended", "Suspended (Temporary operational disablement)")}</option>
+              <option value="blocked">{t("admin:status_opt_blocked", "Blocked (Permanent ban from platform)")}</option>
             </select>
           </div>
 
           {/* Mandatory Reason */}
           <div className="space-y-1.5">
             <label htmlFor="status-change-reason" className="block text-xs font-bold text-foreground">
-              Administrative Rationale / Reason <span className="text-destructive">*</span>
+              {t("admin:reason_label", "Administrative Rationale / Reason")} <span className="text-destructive">*</span>
             </label>
             <textarea
               id="status-change-reason"
@@ -190,11 +207,14 @@ export const AdminUserStatusModal: React.FC<AdminUserStatusModalProps> = ({
               value={reason}
               disabled={isSubmitting || isSelf}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Provide a factual administrative explanation for this status change (minimum 10 characters)..."
+              placeholder={t(
+                "admin:status_reason_placeholder",
+                "Provide a factual administrative explanation for this status change (minimum 10 characters)..."
+              )}
               className="w-full p-3 text-xs rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 resize-none"
             />
             <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-              <span>Min 10 characters</span>
+              <span>{t("admin:min_10_chars", "Min 10 characters")}</span>
               <span className={reason.trim().length < 10 ? "text-amber-600 font-medium" : "text-muted-foreground"}>
                 {reason.trim().length} / 1000
               </span>
@@ -209,10 +229,14 @@ export const AdminUserStatusModal: React.FC<AdminUserStatusModalProps> = ({
             >
               <div className="flex items-center gap-1.5 font-bold">
                 <AlertTriangle className="w-4 h-4 text-amber-600" />
-                <span>Confirm Consequential Moderation</span>
+                <span>{t("admin:confirm_consequential_moderation", "Confirm Consequential Moderation")}</span>
               </div>
               <p>
-                You are about to transition this user to <strong>{accountStatus}</strong>. This will revoke operational capabilities. Click "Confirm & Apply" to proceed.
+                {t(
+                  "admin:consequential_moderation_desc",
+                  `You are about to transition this user to ${accountStatus}. This will revoke operational capabilities. Click "Confirm & Apply" to proceed.`,
+                  { status: accountStatus }
+                )}
               </p>
             </div>
           )}
@@ -225,7 +249,7 @@ export const AdminUserStatusModal: React.FC<AdminUserStatusModalProps> = ({
               disabled={isSubmitting}
               className="px-4 py-2 rounded-xl bg-secondary text-foreground hover:bg-secondary/80 text-xs font-semibold border border-border transition-colors disabled:opacity-50"
             >
-              Cancel
+              {t("common:cancel", "Cancel")}
             </button>
             <button
               type="submit"
@@ -237,7 +261,11 @@ export const AdminUserStatusModal: React.FC<AdminUserStatusModalProps> = ({
               }`}
             >
               {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>{confirmStep ? "Confirm & Apply" : "Update Account Status"}</span>
+              <span>
+                {confirmStep
+                  ? t("admin:confirm_and_apply", "Confirm & Apply")
+                  : t("admin:update_account_status", "Update Account Status")}
+              </span>
             </button>
           </div>
         </form>

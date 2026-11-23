@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Lightweight, framework-agnostic authentication store with React 18 integration.
  * Manages authentication lifecycle, token persistence, and session restoration.
  */
@@ -11,6 +11,7 @@ import type {
   BuyerRegisterRequest,
   FarmerRegisterRequest,
   LoginRequest,
+  TransporterRegisterRequest,
   User,
 } from "../types";
 
@@ -100,6 +101,15 @@ export class AuthStore {
    */
   public async registerBuyer(payload: BuyerRegisterRequest): Promise<User> {
     return this.api.registerBuyer(payload);
+  }
+
+  /**
+   * Register a transportation service provider account.
+   * Note: Registration creates the user and profile on the server but does not
+   * automatically log the user in. The authentication state remains unchanged.
+   */
+  public async registerTransporter(payload: TransporterRegisterRequest): Promise<User> {
+    return this.api.registerTransporter(payload);
   }
 
   /**
@@ -212,6 +222,7 @@ const authActions = {
   login: (credentials: LoginRequest) => authStore.login(credentials),
   registerFarmer: (payload: FarmerRegisterRequest) => authStore.registerFarmer(payload),
   registerBuyer: (payload: BuyerRegisterRequest) => authStore.registerBuyer(payload),
+  registerTransporter: (payload: TransporterRegisterRequest) => authStore.registerTransporter(payload),
   restoreSession: () => authStore.restoreSession(),
   logout: () => authStore.logout(),
   setUser: (user: User) => authStore.setUser(user),
@@ -225,6 +236,7 @@ export function useAuth(): AuthState & {
   login: (credentials: LoginRequest) => Promise<User>;
   registerFarmer: (payload: FarmerRegisterRequest) => Promise<User>;
   registerBuyer: (payload: BuyerRegisterRequest) => Promise<User>;
+  registerTransporter: (payload: TransporterRegisterRequest) => Promise<User>;
   restoreSession: () => Promise<User | null>;
   logout: () => void;
   setUser: (user: User) => void;

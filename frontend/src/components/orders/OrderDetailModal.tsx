@@ -33,6 +33,7 @@ import { AmendmentProposalModal } from "./AmendmentProposalModal";
 import { InventoryAuditModal } from "./InventoryAuditModal";
 import { DeliveryArrangeModal } from "./DeliveryArrangeModal";
 import { DeliveryAcknowledgeModal } from "./DeliveryAcknowledgeModal";
+import { DealTransportSection } from "../transport/DealTransportSection";
 import { PaymentSummaryCard } from "../payments/PaymentSummaryCard";
 import { PaymentRecordModal } from "../payments/PaymentRecordModal";
 import { PaymentHistoryModal } from "../payments/PaymentHistoryModal";
@@ -788,6 +789,24 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   </div>
                 </div>
               )}
+
+              {/* Transportation & Hauling Connection Section */}
+              <DealTransportSection
+                orderId={order.id}
+                orderNumber={order.order_number}
+                offerId={order.source_offer_id || null}
+                deliveryAddress={order.delivery_destination_address || ""}
+                cargoDescription={order.items?.map((it) => `${it.product_name} (${it.quantity} ${it.unit})`).join(", ")}
+                weightKg={
+                  order.items?.reduce(
+                    (acc, it) => (it.unit?.toLowerCase() === "kg" ? acc + Number(it.quantity) : acc),
+                    0
+                  ) || undefined
+                }
+                requiredDeliveryDate={order.delivery_arranged_date || undefined}
+                canRequest={isParticipant}
+                onTransportUpdated={() => void loadOrderData()}
+              />
 
               {/* Payment Settlement Tracking */}
               <div className="space-y-2">

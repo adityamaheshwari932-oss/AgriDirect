@@ -33,6 +33,7 @@ from app.verification.repository import VerificationRepository
 from app.verification.schemas import (
     VALID_BUYER_DOCUMENT_TYPES,
     VALID_FARMER_DOCUMENT_TYPES,
+    VALID_TRANSPORTER_DOCUMENT_TYPES,
     VerificationApproveRequest,
     VerificationRejectRequest,
     VerificationSubmissionCreate,
@@ -73,10 +74,10 @@ class VerificationService:
             HTTPException: 400 if user role is invalid, already verified, or role mismatch.
             HTTPException: 409 if an active pending application already exists.
         """
-        if user.role not in ("farmer", "buyer"):
+        if user.role not in ("farmer", "buyer", "transporter"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Only farmers and commercial buyers can submit verification applications",
+                detail="Only farmers and commercial buyers (and transportation providers) can submit verification applications",
             )
 
         if payload.role and payload.role.strip().lower() != user.role:
@@ -147,10 +148,10 @@ class VerificationService:
             HTTPException: 400 if user is already verified.
             HTTPException: 422 if document_type is invalid for user's role.
         """
-        if user.role not in ("farmer", "buyer"):
+        if user.role not in ("farmer", "buyer", "transporter"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Only farmers and commercial buyers can upload verification documents",
+                detail="Only farmers and commercial buyers (and transportation providers) can upload verification documents",
             )
 
         if user.verification_status == "verified":
@@ -170,6 +171,11 @@ class VerificationService:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"Invalid document_type '{document_type}' for buyer. Allowed types: {', '.join(VALID_BUYER_DOCUMENT_TYPES)}",
+            )
+        if user.role == "transporter" and doc_type_clean not in VALID_TRANSPORTER_DOCUMENT_TYPES:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=f"Invalid document_type '{document_type}' for transporter. Allowed types: {', '.join(VALID_TRANSPORTER_DOCUMENT_TYPES)}",
             )
 
         # Retrieve active pending submission or initialize one

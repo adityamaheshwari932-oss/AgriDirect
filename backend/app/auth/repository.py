@@ -4,13 +4,13 @@ Executes parameterized SQLAlchemy queries scoped to User identity and profiles.
 """
 
 import uuid
-from typing import Optional
+from typing import List, Optional
 
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.models.user import BuyerProfile, FarmerProfile, User
+from app.models.user import BuyerProfile, FarmerProfile, ServiceArea, TransporterProfile, User
 
 
 class DuplicateEntityException(Exception):
@@ -119,6 +119,51 @@ class AuthRepository:
             self.db.add(user)
             profile.user = user
             self.db.add(profile)
+            self.db.commit()
+            self.db.refresh(user)
+            return user
+        except IntegrityError as exc:
+            self.db.rollback()
+            error_msg = str(exc.orig) if hasattr(exc, "orig") else str(exc)
+            if "users_email_key" in error_msg or "email" in error_msg.lower():
+                raise DuplicateEntityException(
+                    "email", "An account with this email address already exists"
+                ) from exc
+            if "users_phone_number_key" in error_msg or "phone_number" in error_msg.lower():
+                raise DuplicateEntityException(
+                    "phone_number", "An account with this phone number already exists"
+                ) from exc
+            raise DuplicateEntityException(
+                "unknown", "Registration conflict detected"
+            ) from exc
+
+    def create_transporter(
+        self,
+        user: User,
+        profile: TransporterProfile,
+        service_areas: Optional[List[ServiceArea]] = None,
+    ) -> User:
+        """Create a transporter user and attached profile in a single atomic transaction.
+
+        Args:
+            user: Initialized User model instance with role='transporter'.
+            profile: Initialized TransporterProfile instance.
+            service_areas: Optional initial list of ServiceArea instances.
+
+        Returns:
+            The committed User model instance with populated relationships.
+
+        Raises:
+            DuplicateEntityException: If email or phone number conflicts with existing records.
+        """
+        try:
+            self.db.add(user)
+            profile.user = user
+            self.db.add(profile)
+            if service_areas:
+                for sa in service_areas:
+                    sa.transporter_profile = profile
+                    self.db.add(sa)
             self.db.commit()
             self.db.refresh(user)
             return user

@@ -386,13 +386,21 @@ class TestAdminUserDirectory:
         assert resp.status_code == 400
         assert "registered_from cannot be later than registered_to" in resp.json()["detail"]
 
-        # Valid range targeting recent
-        today_str = date.today().isoformat()
+        # Valid range targeting recent (using UTC date to match UTC timestamps in DB)
+        today_str = datetime.now(timezone.utc).date().isoformat()
         resp = client.get(f"/api/v1/admin/users?registered_from={today_str}", headers=make_headers(admin))
         assert resp.status_code == 200
         emails = [u["email"] for u in resp.json()["items"]]
         assert "u_recent@example.com" in emails
         assert "u_old@example.com" not in emails
+
+        # Target old range
+        old_date_str = old_time.date().isoformat()
+        resp_old = client.get(f"/api/v1/admin/users?registered_to={old_date_str}", headers=make_headers(admin))
+        assert resp_old.status_code == 200
+        old_emails = [u["email"] for u in resp_old.json()["items"]]
+        assert "u_old@example.com" in old_emails
+        assert "u_recent@example.com" not in old_emails
 
     def test_search_users(self, client, db_session):
         admin = create_user(db_session, "admin_srch@example.com", role="admin")

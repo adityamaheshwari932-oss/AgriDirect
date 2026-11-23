@@ -1,5 +1,7 @@
 import React from "react";
 import { MessageSquare, Tractor, Store, Tag } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { formatDate } from "../../utils/formatters";
 import type { ConversationItem } from "../../types/chat";
 
 interface ConversationThreadListProps {
@@ -15,6 +17,8 @@ export const ConversationThreadList: React.FC<ConversationThreadListProps> = ({
   onSelect,
   isLoading = false,
 }) => {
+  const { t } = useTranslation(["messaging", "common"]);
+
   if (isLoading) {
     return (
       <div className="divide-y divide-border animate-pulse p-3 space-y-3">
@@ -32,9 +36,14 @@ export const ConversationThreadList: React.FC<ConversationThreadListProps> = ({
     return (
       <div className="py-12 px-4 text-center text-xs text-muted-foreground flex flex-col items-center justify-center gap-2">
         <MessageSquare className="w-8 h-8 opacity-40 text-muted-foreground" aria-hidden="true" />
-        <p className="font-semibold text-foreground">No active conversations</p>
+        <p className="font-semibold text-foreground">
+          {t("messaging:empty_conversations_title", "No active conversations")}
+        </p>
         <p className="text-[11px] max-w-xs">
-          Conversations will appear here when you inquire about produce listings, requirements, or orders.
+          {t(
+            "messaging:empty_conversations_desc",
+            "Conversations will appear here when you inquire about produce listings, requirements, or orders."
+          )}
         </p>
       </div>
     );
@@ -47,7 +56,7 @@ export const ConversationThreadList: React.FC<ConversationThreadListProps> = ({
         const other = conv.other_participant;
         const isFarmer = other.role === "farmer";
 
-        const formattedDate = new Date(conv.last_message_at).toLocaleDateString([], {
+        const formattedDate = formatDate(conv.last_message_at, {
           month: "short",
           day: "numeric",
         });
@@ -57,8 +66,8 @@ export const ConversationThreadList: React.FC<ConversationThreadListProps> = ({
             key={conv.id}
             type="button"
             onClick={() => onSelect(conv)}
-            className={`w-full text-left p-3.5 transition-colors flex items-start gap-3 hover:bg-secondary/40 focus:outline-none ${
-              isSelected ? "bg-primary-50/50 border-l-4 border-primary" : ""
+            className={`w-full text-start p-3.5 transition-colors flex items-start gap-3 hover:bg-secondary/40 focus:outline-none ${
+              isSelected ? "bg-primary-50/50 border-s-4 border-primary" : ""
             }`}
           >
             <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center shrink-0 border border-border">
@@ -72,7 +81,7 @@ export const ConversationThreadList: React.FC<ConversationThreadListProps> = ({
             <div className="flex-1 min-w-0 space-y-1">
               <div className="flex items-center justify-between gap-1">
                 <span className="font-bold text-xs text-foreground truncate">
-                  {other.name || other.entity_name || "Counterparty"}
+                  {other.name || other.entity_name || t("messaging:counterparty", "Counterparty")}
                 </span>
                 <span className="text-[10px] text-muted-foreground shrink-0">{formattedDate}</span>
               </div>
@@ -90,7 +99,7 @@ export const ConversationThreadList: React.FC<ConversationThreadListProps> = ({
               </div>
 
               <p className="text-xs text-muted-foreground truncate">
-                {conv.last_message_preview || "No messages yet"}
+                {conv.last_message_preview || t("messaging:no_messages_yet", "No messages yet")}
               </p>
             </div>
 

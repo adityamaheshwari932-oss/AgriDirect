@@ -22,6 +22,7 @@ import { ToastContext } from "../ui/toast/ToastContext";
 import { NegotiationHistoryTimeline } from "./NegotiationHistoryTimeline";
 import { CounterOfferModal } from "./CounterOfferModal";
 import { OfferAcceptModal } from "./OfferAcceptModal";
+import { DealTransportSection } from "../transport/DealTransportSection";
 import type {
   OfferAcceptResponse,
   OfferDetail,
@@ -395,6 +396,28 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
                   )}
                 </div>
               )}
+
+              {/* Connected Deal Transportation Section */}
+              <DealTransportSection
+                offerId={offer.id}
+                offerNumber={offer.offer_number}
+                orderId={offer.order_id || null}
+                orderNumber={offer.order_number || null}
+                pickupState={offer.sender?.state || ""}
+                pickupDistrict={offer.sender?.city || ""}
+                deliveryState={offer.recipient?.state || ""}
+                deliveryDistrict={offer.recipient?.city || ""}
+                cargoDescription={offer.items.map((it) => `${it.product_name} (${it.quantity} ${it.unit})`).join(", ")}
+                weightKg={
+                  offer.items.reduce(
+                    (acc, it) => (it.unit?.toLowerCase() === "kg" ? acc + Number(it.quantity) : acc),
+                    0
+                  ) || undefined
+                }
+                requiredDeliveryDate={offer.proposed_delivery_date || undefined}
+                canRequest={isSender || isRecipient}
+                onTransportUpdated={onActionCompleted}
+              />
 
               {/* Negotiation Lineage Timeline */}
               {Boolean(history?.history && history.history.length > 1) && (

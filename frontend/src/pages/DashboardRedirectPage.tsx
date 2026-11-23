@@ -32,6 +32,10 @@ export const DashboardRedirectPage: React.FC = () => {
     return <Navigate to="/dashboard/buyer" replace />;
   }
 
+  if (user.role === "transporter") {
+    return <Navigate to="/dashboard/transporter" replace />;
+  }
+
   if (user.role === "admin") {
     return <Navigate to="/admin/users" replace />;
   }

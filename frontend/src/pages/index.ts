@@ -19,4 +19,7 @@ export * from "./OrdersPage";
 export * from "./MessagesPage";
 export * from "./AnalyticsDashboardPage";
 export * from "./UserReportsPage";
+export * from "./TransporterRegisterPage";
+export * from "./TransporterDashboardPage";
+export * from "./TransporterDiscoveryPage";
 export * from "./admin";

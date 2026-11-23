@@ -54,7 +54,7 @@ router = APIRouter()
     tags=["verification"],
     summary="Submit verification application",
     description=(
-        "Submits an identity verification application for the authenticated farmer or buyer. "
+        "Submits an identity verification application for the authenticated farmer, buyer, or transporter. "
         "Transitions application to pending review. Rejects duplicate active submissions or "
         "already verified users."
     ),
@@ -178,12 +178,12 @@ def download_my_document(
     summary="List verification submissions for review",
     description=(
         "Retrieves a paginated list of verification submissions with optional filtering "
-        "by review status ('pending', 'approved', 'rejected') and applicant role ('farmer', 'buyer')."
+        "by review status ('pending', 'approved', 'rejected') and applicant role ('farmer', 'buyer', 'transporter')."
     ),
 )
 def admin_list_verifications(
     status: Optional[str] = Query(None, description="Filter by status: pending, approved, rejected"),
-    role: Optional[str] = Query(None, description="Filter by applicant role: farmer, buyer"),
+    role: Optional[str] = Query(None, description="Filter by applicant role: farmer, buyer, transporter"),
     page: int = Query(1, ge=1, description="Page number (1-based)"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
     admin_user: User = Depends(require_admin),

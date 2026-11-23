@@ -20,6 +20,30 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("react-router") || id.includes("react-dom") || id.includes("react/")) {
+              return "vendor-react";
+            }
+            if (id.includes("i18next") || id.includes("react-i18next")) {
+              return "vendor-i18n";
+            }
+            if (id.includes("lucide-react")) {
+              return "vendor-icons";
+            }
+            return "vendor-core";
+          }
+          if (id.includes("/locales/") || id.includes("\\locales\\")) {
+            return "locales-all";
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
+  },
   test: {
     globals: true,
     environment: "jsdom",

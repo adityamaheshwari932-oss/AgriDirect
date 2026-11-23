@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ShieldAlert,
   Layers,
@@ -25,8 +26,10 @@ import { AdminListingModerateModal } from "../../components/admin/AdminListingMo
 import { AdminRequirementModerateModal } from "../../components/admin/AdminRequirementModerateModal";
 import { AdminReportModerateModal } from "../../components/admin/AdminReportModerateModal";
 import { AdminDisputeModerateModal } from "../../components/admin/AdminDisputeModerateModal";
+import { formatDate } from "../../utils/formatters";
 
 export const AdminContentModerationPage: React.FC = () => {
+  const { t } = useTranslation(["admin", "disputes", "reports", "common"]);
   const [activeTab, setActiveTab] = useState<"listings" | "requirements" | "reports" | "complaints">("listings");
 
   // ===========================================================================
@@ -192,10 +195,10 @@ export const AdminContentModerationPage: React.FC = () => {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
           <ShieldAlert className="w-6 h-6 text-primary" aria-hidden="true" />
-          Platform Content & Dispute Moderation
+          <span>{t("admin:content_title", "Platform Content & Dispute Moderation")}</span>
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Catalog review, soft-deletion controls, user safety grievances, and payment dispute facilitation.
+          {t("admin:content_subtitle", "Catalog review, soft-deletion controls, user safety grievances, and payment dispute facilitation.")}
         </p>
       </div>
 
@@ -211,7 +214,7 @@ export const AdminContentModerationPage: React.FC = () => {
           }`}
         >
           <Layers className="w-4 h-4" />
-          <span>Produce Listings</span>
+          <span>{t("admin:tab_listings", "Produce Listings")}</span>
         </button>
 
         <button
@@ -224,7 +227,7 @@ export const AdminContentModerationPage: React.FC = () => {
           }`}
         >
           <ClipboardList className="w-4 h-4" />
-          <span>Buyer Requirements</span>
+          <span>{t("admin:tab_requirements", "Buyer Requirements")}</span>
         </button>
 
         <button
@@ -237,7 +240,7 @@ export const AdminContentModerationPage: React.FC = () => {
           }`}
         >
           <ShieldAlert className="w-4 h-4" />
-          <span>Safety Reports</span>
+          <span>{t("admin:tab_reports", "Safety Reports")}</span>
         </button>
 
         <button
@@ -250,7 +253,7 @@ export const AdminContentModerationPage: React.FC = () => {
           }`}
         >
           <AlertTriangle className="w-4 h-4" />
-          <span>Payment Complaints</span>
+          <span>{t("admin:tab_complaints", "Payment Complaints")}</span>
         </button>
       </div>
 
@@ -263,7 +266,7 @@ export const AdminContentModerationPage: React.FC = () => {
           <div className="p-4 rounded-2xl bg-card border border-border shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex flex-wrap items-center gap-2 flex-1">
               <div className="relative min-w-[200px] flex-1">
-                <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-3.5 h-3.5 text-muted-foreground absolute start-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={listingSearch}
@@ -275,7 +278,7 @@ export const AdminContentModerationPage: React.FC = () => {
                     }
                   }}
                   placeholder="Search commodity or farmer..."
-                  className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full ps-8 pe-3 py-1.5 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
 
@@ -340,7 +343,7 @@ export const AdminContentModerationPage: React.FC = () => {
           ) : (
             <div className="bg-card border border-border rounded-2xl shadow-xs overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-start text-xs">
                   <thead className="bg-secondary/40 text-muted-foreground font-semibold border-b border-border">
                     <tr>
                       <th className="px-4 py-3">Produce & Title</th>
@@ -349,7 +352,7 @@ export const AdminContentModerationPage: React.FC = () => {
                       <th className="px-4 py-3">Status</th>
                       <th className="px-4 py-3">Complaints</th>
                       <th className="px-4 py-3">Expires At</th>
-                      <th className="px-4 py-3 text-right">Moderation</th>
+                      <th className="px-4 py-3 text-end">Moderation</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -391,9 +394,9 @@ export const AdminContentModerationPage: React.FC = () => {
                           )}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                          {new Date(item.expires_at).toLocaleDateString()}
+                          {formatDate(item.expires_at)}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-end">
                           <button
                             type="button"
                             onClick={() => setSelectedListing(item)}
@@ -418,7 +421,7 @@ export const AdminContentModerationPage: React.FC = () => {
                       onClick={() => setListingPage((p) => Math.max(1, p - 1))}
                       className="p-1.5 rounded-lg border border-border hover:bg-secondary disabled:opacity-40"
                     >
-                      <ChevronLeft className="w-4 h-4" />
+                      <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
                     </button>
                     <button
                       type="button"
@@ -426,7 +429,7 @@ export const AdminContentModerationPage: React.FC = () => {
                       onClick={() => setListingPage((p) => p + 1)}
                       className="p-1.5 rounded-lg border border-border hover:bg-secondary disabled:opacity-40"
                     >
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight className="w-4 h-4 rtl:rotate-180" />
                     </button>
                   </div>
                 </div>
@@ -445,7 +448,7 @@ export const AdminContentModerationPage: React.FC = () => {
           <div className="p-4 rounded-2xl bg-card border border-border shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex flex-wrap items-center gap-2 flex-1">
               <div className="relative min-w-[200px] flex-1">
-                <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-3.5 h-3.5 text-muted-foreground absolute start-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={reqSearch}
@@ -457,7 +460,7 @@ export const AdminContentModerationPage: React.FC = () => {
                     }
                   }}
                   placeholder="Search commodity or buyer..."
-                  className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full ps-8 pe-3 py-1.5 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
 
@@ -522,7 +525,7 @@ export const AdminContentModerationPage: React.FC = () => {
           ) : (
             <div className="bg-card border border-border rounded-2xl shadow-xs overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-start text-xs">
                   <thead className="bg-secondary/40 text-muted-foreground font-semibold border-b border-border">
                     <tr>
                       <th className="px-4 py-3">Commodity & Title</th>
@@ -531,7 +534,7 @@ export const AdminContentModerationPage: React.FC = () => {
                       <th className="px-4 py-3">Condition & Date</th>
                       <th className="px-4 py-3">Status</th>
                       <th className="px-4 py-3">Complaints</th>
-                      <th className="px-4 py-3 text-right">Moderation</th>
+                      <th className="px-4 py-3 text-end">Moderation</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -574,7 +577,7 @@ export const AdminContentModerationPage: React.FC = () => {
                             <span className="text-muted-foreground/80 text-[11px]">0</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-end">
                           <button
                             type="button"
                             onClick={() => setSelectedRequirement(item)}
@@ -599,7 +602,7 @@ export const AdminContentModerationPage: React.FC = () => {
                       onClick={() => setReqPage((p) => Math.max(1, p - 1))}
                       className="p-1.5 rounded-lg border border-border hover:bg-secondary disabled:opacity-40"
                     >
-                      <ChevronLeft className="w-4 h-4" />
+                      <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
                     </button>
                     <button
                       type="button"
@@ -607,7 +610,7 @@ export const AdminContentModerationPage: React.FC = () => {
                       onClick={() => setReqPage((p) => p + 1)}
                       className="p-1.5 rounded-lg border border-border hover:bg-secondary disabled:opacity-40"
                     >
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight className="w-4 h-4 rtl:rotate-180" />
                     </button>
                   </div>
                 </div>
@@ -677,7 +680,7 @@ export const AdminContentModerationPage: React.FC = () => {
           ) : (
             <div className="bg-card border border-border rounded-2xl shadow-xs overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-start text-xs">
                   <thead className="bg-secondary/40 text-muted-foreground font-semibold border-b border-border">
                     <tr>
                       <th className="px-4 py-3">Category</th>
@@ -685,7 +688,7 @@ export const AdminContentModerationPage: React.FC = () => {
                       <th className="px-4 py-3">Status</th>
                       <th className="px-4 py-3">Admin Findings</th>
                       <th className="px-4 py-3">Filed Date</th>
-                      <th className="px-4 py-3 text-right">Moderation</th>
+                      <th className="px-4 py-3 text-end">Moderation</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -716,9 +719,9 @@ export const AdminContentModerationPage: React.FC = () => {
                           {item.admin_notes || <span className="italic text-[11px]">Pending findings</span>}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                          {new Date(item.created_at).toLocaleDateString()}
+                          {formatDate(item.created_at)}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-end">
                           <button
                             type="button"
                             onClick={() => setSelectedReport(item)}
@@ -743,7 +746,7 @@ export const AdminContentModerationPage: React.FC = () => {
                       onClick={() => setReportPage((p) => Math.max(1, p - 1))}
                       className="p-1.5 rounded-lg border border-border hover:bg-secondary disabled:opacity-40"
                     >
-                      <ChevronLeft className="w-4 h-4" />
+                      <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
                     </button>
                     <button
                       type="button"
@@ -751,7 +754,7 @@ export const AdminContentModerationPage: React.FC = () => {
                       onClick={() => setReportPage((p) => p + 1)}
                       className="p-1.5 rounded-lg border border-border hover:bg-secondary disabled:opacity-40"
                     >
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight className="w-4 h-4 rtl:rotate-180" />
                     </button>
                   </div>
                 </div>
@@ -804,7 +807,7 @@ export const AdminContentModerationPage: React.FC = () => {
           ) : (
             <div className="bg-card border border-border rounded-2xl shadow-xs overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-start text-xs">
                   <thead className="bg-secondary/40 text-muted-foreground font-semibold border-b border-border">
                     <tr>
                       <th className="px-4 py-3">Dispute Reason</th>
@@ -813,7 +816,7 @@ export const AdminContentModerationPage: React.FC = () => {
                       <th className="px-4 py-3">Dispute Status</th>
                       <th className="px-4 py-3">Resolution Findings</th>
                       <th className="px-4 py-3">Filed Date</th>
-                      <th className="px-4 py-3 text-right">Moderation</th>
+                      <th className="px-4 py-3 text-end">Moderation</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -853,9 +856,9 @@ export const AdminContentModerationPage: React.FC = () => {
                           {item.admin_resolution_notes || <span className="italic text-[11px]">Pending resolution</span>}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                          {new Date(item.created_at).toLocaleDateString()}
+                          {formatDate(item.created_at)}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-end">
                           <button
                             type="button"
                             onClick={() => setSelectedComplaintId(item.id)}
@@ -883,7 +886,7 @@ export const AdminContentModerationPage: React.FC = () => {
                       onClick={() => setComplaintOffset((o) => Math.max(0, o - complaintLimit))}
                       className="p-1.5 rounded-lg border border-border hover:bg-secondary disabled:opacity-40"
                     >
-                      <ChevronLeft className="w-4 h-4" />
+                      <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
                     </button>
                     <button
                       type="button"
@@ -891,7 +894,7 @@ export const AdminContentModerationPage: React.FC = () => {
                       onClick={() => setComplaintOffset((o) => o + complaintLimit)}
                       className="p-1.5 rounded-lg border border-border hover:bg-secondary disabled:opacity-40"
                     >
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight className="w-4 h-4 rtl:rotate-180" />
                     </button>
                   </div>
                 </div>

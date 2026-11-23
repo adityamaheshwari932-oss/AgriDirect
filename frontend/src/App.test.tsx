@@ -1,38 +1,39 @@
-﻿import { render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import App from "./App";
 
 describe("App smoke test", () => {
-  it("renders the AgriDirect platform title and tagline", () => {
+  it("renders the AgriDirect platform title and tagline", async () => {
     render(<App />);
 
-    expect(screen.getAllByText("AgriDirect")[0]).toBeInTheDocument();
+    const brandTitles = await screen.findAllByText("AgriDirect");
+    expect(brandTitles[0]).toBeInTheDocument();
     expect(
-      screen.getByText("Agricultural Marketplace")
+      await screen.findByText("Agricultural Marketplace")
     ).toBeInTheDocument();
   });
 
-  it("renders the primary mission headline", () => {
+  it("renders the primary mission headline", async () => {
     render(<App />);
 
     expect(
-      screen.getByText("Connecting Farmers Directly with Commercial Buyers")
+      await screen.findByText("Connecting Farmers Directly with Commercial Buyers")
     ).toBeInTheDocument();
   });
 
-  it("renders the core marketplace pillars", () => {
+  it("renders the core marketplace pillars", async () => {
     render(<App />);
 
-    expect(screen.getByText("Verified Farmers")).toBeInTheDocument();
-    expect(screen.getByText("Commercial Buyers")).toBeInTheDocument();
-    expect(screen.getByText("Structured Trade")).toBeInTheDocument();
+    expect(await screen.findByText("Verified Farmers")).toBeInTheDocument();
+    expect(await screen.findByText("Commercial Buyers")).toBeInTheDocument();
+    expect(await screen.findByText("Structured Trade")).toBeInTheDocument();
   });
 
-  it("renders the platform compliance disclaimer", () => {
+  it("renders the platform compliance disclaimer", async () => {
     render(<App />);
 
     expect(
-      screen.getByText(/AgriDirect facilitates direct commercial trade/i)
+      await screen.findByText(/AgriDirect facilitates direct commercial trade/i)
     ).toBeInTheDocument();
   });
 });

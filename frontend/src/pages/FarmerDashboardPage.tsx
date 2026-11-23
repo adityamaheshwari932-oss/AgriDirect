@@ -18,6 +18,7 @@ import {
   ClipboardList,
   MessageSquare,
   CheckCircle2,
+  Truck,
 } from "lucide-react";
 import { useAuth } from "../store/authStore";
 import { VerificationSummaryCard } from "../components/ui/VerificationSummaryCard";
@@ -189,6 +190,26 @@ export const FarmerDashboardPage: React.FC = () => {
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Coordinate logistics details and share authenticated transport receipts
+              </p>
+            </div>
+          </Link>
+
+          <Link
+            to="/dashboard/transporters"
+            className="p-4 rounded-xl bg-secondary/30 hover:bg-secondary/60 border border-border/80 hover:border-primary/40 transition-all flex flex-col justify-between space-y-3 group"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-9 h-9 rounded-lg bg-indigo-500/10 text-indigo-700 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                <Truck className="w-4 h-4" />
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-indigo-600 group-hover:translate-x-0.5 rtl:rotate-180 transition-all" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-foreground group-hover:text-indigo-700 transition-colors">
+                Transportation Network
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Find verified haulers and request farm-gate produce pickup
               </p>
             </div>
           </Link>

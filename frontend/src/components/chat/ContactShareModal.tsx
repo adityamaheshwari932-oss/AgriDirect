@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { X, ShieldCheck, Phone, Mail, User, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { chatApi } from "../../api/chat";
 import type { ContactDetails } from "../../types/chat";
 
@@ -18,6 +19,7 @@ export const ContactShareModal: React.FC<ContactShareModalProps> = ({
   onClose,
   onRequestSent,
 }) => {
+  const { t } = useTranslation(["messaging", "common"]);
   const [contacts, setContacts] = useState<ContactDetails | null>(null);
   const [notes, setNotes] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -33,12 +35,12 @@ export const ContactShareModal: React.FC<ContactShareModalProps> = ({
         .getContactDetails(conversationId)
         .then((res) => setContacts(res))
         .catch((err: unknown) => {
-          const msg = err instanceof Error ? err.message : "Failed to load contact information.";
+          const msg = err instanceof Error ? err.message : t("messaging:load_contact_error", "Failed to load contact information.");
           setError(msg);
         })
         .finally(() => setIsLoading(false));
     }
-  }, [isOpen, hasConsent, conversationId]);
+  }, [isOpen, hasConsent, conversationId, t]);
 
   if (!isOpen) return null;
 
@@ -50,10 +52,10 @@ export const ContactShareModal: React.FC<ContactShareModalProps> = ({
       await chatApi.requestContactSharing(conversationId, {
         notes: notes.trim() ? notes.trim() : null,
       });
-      setSuccessMsg("Contact sharing request sent. Awaiting counterparty approval.");
+      setSuccessMsg(t("messaging:contact_request_sent_success", "Contact sharing request sent. Awaiting counterparty approval."));
       onRequestSent();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to submit contact sharing request.";
+      const msg = err instanceof Error ? err.message : t("messaging:contact_request_failed", "Failed to submit contact sharing request.");
       setError(msg);
     } finally {
       setIsSubmitting(false);
@@ -72,14 +74,16 @@ export const ContactShareModal: React.FC<ContactShareModalProps> = ({
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-primary" aria-hidden="true" />
             <h2 id="modal-contact-share-title" className="text-base font-bold text-foreground">
-              {hasConsent ? "Direct Contact Information" : "Request Contact Sharing"}
+              {hasConsent
+                ? t("messaging:contact_modal_title_disclosed", "Direct Contact Information")
+                : t("messaging:contact_modal_title_request", "Request Contact Sharing")}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Close dialog"
+            aria-label={t("common:close_dialog", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -104,19 +108,22 @@ export const ContactShareModal: React.FC<ContactShareModalProps> = ({
             isLoading ? (
               <div className="py-8 flex flex-col items-center justify-center gap-2">
                 <Loader2 className="w-5 h-5 animate-spin text-primary" aria-hidden="true" />
-                <span className="text-xs text-muted-foreground">Loading disclosed details...</span>
+                <span className="text-xs text-muted-foreground">{t("messaging:loading_contact_details", "Loading disclosed details...")}</span>
               </div>
             ) : contacts ? (
               <div className="space-y-3">
                 <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 text-xs">
-                  Mutual consent granted. Contact details disclosed for bilateral trade coordination.
+                  {t(
+                    "messaging:mutual_consent_granted_notice",
+                    "Mutual consent granted. Contact details disclosed for bilateral trade coordination."
+                  )}
                 </div>
 
                 <div className="p-4 rounded-xl border border-border bg-secondary/30 space-y-3 text-xs">
                   <div className="flex items-center gap-2.5">
                     <User className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                     <div>
-                      <span className="text-[11px] text-muted-foreground block">Name</span>
+                      <span className="text-[11px] text-muted-foreground block">{t("messaging:contact_name_label", "Name")}</span>
                       <span className="font-bold text-foreground">{contacts.name} ({contacts.role})</span>
                     </div>
                   </div>
@@ -124,9 +131,9 @@ export const ContactShareModal: React.FC<ContactShareModalProps> = ({
                   <div className="flex items-center gap-2.5">
                     <Phone className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                     <div>
-                      <span className="text-[11px] text-muted-foreground block">Phone</span>
+                      <span className="text-[11px] text-muted-foreground block">{t("messaging:contact_phone_label", "Phone")}</span>
                       <a href={`tel:${contacts.phone_number}`} className="font-bold text-primary hover:underline">
-                        {contacts.phone_number || "Not provided"}
+                        {contacts.phone_number || t("messaging:not_provided", "Not provided")}
                       </a>
                     </div>
                   </div>
@@ -134,9 +141,9 @@ export const ContactShareModal: React.FC<ContactShareModalProps> = ({
                   <div className="flex items-center gap-2.5">
                     <Mail className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                     <div>
-                      <span className="text-[11px] text-muted-foreground block">Email</span>
+                      <span className="text-[11px] text-muted-foreground block">{t("messaging:contact_email_label", "Email")}</span>
                       <a href={`mailto:${contacts.email}`} className="font-bold text-primary hover:underline">
-                        {contacts.email || "Not provided"}
+                        {contacts.email || t("messaging:not_provided", "Not provided")}
                       </a>
                     </div>
                   </div>
@@ -146,7 +153,10 @@ export const ContactShareModal: React.FC<ContactShareModalProps> = ({
           ) : (
             <form onSubmit={handleRequestSubmit} className="space-y-4">
               <p className="text-xs text-muted-foreground leading-relaxed">
-                AgriDirect safeguards participant privacy. Direct telephone and email contact details are disclosed only after both counterparties explicitly grant mutual consent.
+                {t(
+                  "messaging:privacy_notice",
+                  "AgriDirect safeguards participant privacy. Direct telephone and email contact details are disclosed only after both counterparties explicitly grant mutual consent."
+                )}
               </p>
 
               <div className="space-y-1.5">
@@ -154,14 +164,17 @@ export const ContactShareModal: React.FC<ContactShareModalProps> = ({
                   htmlFor="contact-request-notes"
                   className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
                 >
-                  Message to Counterparty (Optional)
+                  {t("messaging:counterparty_message_label", "Message to Counterparty (Optional)")}
                 </label>
                 <textarea
                   id="contact-request-notes"
                   rows={3}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="e.g., Let's speak on phone to coordinate transport logistics and loading dock address..."
+                  placeholder={t(
+                    "messaging:counterparty_message_placeholder",
+                    "e.g., Let's speak on phone to coordinate transport logistics and loading dock address..."
+                  )}
                   maxLength={500}
                   className="w-full rounded-xl border border-border bg-card px-3.5 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-medium"
                 />
@@ -173,7 +186,7 @@ export const ContactShareModal: React.FC<ContactShareModalProps> = ({
                   onClick={onClose}
                   className="px-4 py-2 rounded-xl border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors"
                 >
-                  Cancel
+                  {t("common:cancel", "Cancel")}
                 </button>
                 <button
                   type="submit"
@@ -183,10 +196,10 @@ export const ContactShareModal: React.FC<ContactShareModalProps> = ({
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                      <span>Sending...</span>
+                      <span>{t("messaging:sending", "Sending...")}</span>
                     </>
                   ) : (
-                    <span>Request Contact Disclosure</span>
+                    <span>{t("messaging:request_contact_disclosure", "Request Contact Disclosure")}</span>
                   )}
                 </button>
               </div>
@@ -200,7 +213,7 @@ export const ContactShareModal: React.FC<ContactShareModalProps> = ({
                 onClick={onClose}
                 className="px-4 py-2 rounded-xl border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors"
               >
-                Close
+                {t("common:close", "Close")}
               </button>
             </div>
           )}

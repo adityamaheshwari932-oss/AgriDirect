@@ -11,6 +11,7 @@ import {
   Check,
   X,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { chatApi } from "../../api/chat";
 import { useAuth } from "../../store/authStore";
 import type { ConversationDetail, Message } from "../../types/chat";
@@ -29,6 +30,7 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
   onBack,
   onConversationUpdated,
 }) => {
+  const { t } = useTranslation(["messaging", "common"]);
   const { user } = useAuth();
 
   const [conversation, setConversation] = useState<ConversationDetail | null>(null);
@@ -46,9 +48,22 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
   const [isRespondingContact, setIsRespondingContact] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const onConversationUpdatedRef = useRef(onConversationUpdated);
+  const isPollingRef = useRef(false);
+  const lastMsgIdRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    onConversationUpdatedRef.current = onConversationUpdated;
+  }, [onConversationUpdated]);
+
+  useEffect(() => {
+    lastMsgIdRef.current = messages.length > 0 ? messages[messages.length - 1].id : undefined;
+  }, [messages]);
 
   const scrollToBottom = (smooth = true) => {
-    messagesEndRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
+    if (typeof messagesEndRef.current?.scrollIntoView === "function") {
+      messagesEndRef.current.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
+    }
   };
 
   // Load conversation detail & initial message history
@@ -66,16 +81,16 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
       // Mark read
       if (detail.unread_count > 0) {
         void chatApi.markConversationRead(conversationId).then(() => {
-          if (onConversationUpdated) onConversationUpdated();
+          onConversationUpdatedRef.current?.();
         });
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to load conversation.";
+      const msg = err instanceof Error ? err.message : t("messaging:load_thread_error", "Failed to load conversation.");
       setError(msg);
     } finally {
       setIsLoading(false);
     }
-  }, [conversationId, onConversationUpdated]);
+  }, [conversationId, t]);
 
   useEffect(() => {
     void loadConversationData();
@@ -94,10 +109,13 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
 
     const pollInterval = setInterval(async () => {
       if (document.hidden) return; // Skip background tabs
-      try {
-        const lastMsgId = messages.length > 0 ? messages[messages.length - 1].id : undefined;
-        if (!lastMsgId) return;
+      if (isPollingRef.current) return; // Prevent concurrent polling requests
 
+      const lastMsgId = lastMsgIdRef.current;
+      if (!lastMsgId) return;
+
+      isPollingRef.current = true;
+      try {
         const newMsgs = await chatApi.listMessages(conversationId, {
           after_id: lastMsgId,
           order: "asc",
@@ -112,19 +130,23 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
             return [...prev, ...fresh];
           });
           scrollToBottom(true);
-          void chatApi.markConversationRead(conversationId);
-          if (onConversationUpdated) onConversationUpdated();
+          void chatApi.markConversationRead(conversationId).then(() => {
+            onConversationUpdatedRef.current?.();
+          });
         }
       } catch {
         // Silent poll catch to prevent UI disruptions
+      } finally {
+        isPollingRef.current = false;
       }
     }, 3500);
 
     return () => {
       isCancelled = true;
       clearInterval(pollInterval);
+      isPollingRef.current = false;
     };
-  }, [conversationId, messages, onConversationUpdated]);
+  }, [conversationId]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,7 +162,7 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
       scrollToBottom(true);
       if (onConversationUpdated) onConversationUpdated();
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : "Failed to send message.";
+      const errorMsg = err instanceof Error ? err.message : t("messaging:send_error", "Failed to send message.");
       setError(errorMsg);
     } finally {
       setIsSending(false);
@@ -153,14 +175,14 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
     try {
       const msg = await chatApi.sendMessageWithAttachment(
         conversationId,
-        caption.trim() ? caption.trim() : "Attached file",
+        caption.trim() ? caption.trim() : t("messaging:attached_file", "Attached file"),
         file
       );
       setMessages((prev) => [...prev, msg]);
       scrollToBottom(true);
       if (onConversationUpdated) onConversationUpdated();
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : "Failed to upload attachment.";
+      const errorMsg = err instanceof Error ? err.message : t("messaging:attachment_upload_error", "Failed to upload attachment.");
       setError(errorMsg);
     } finally {
       setIsSending(false);
@@ -174,7 +196,7 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
       await loadConversationData();
       if (onConversationUpdated) onConversationUpdated();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to approve contact request.";
+      const msg = err instanceof Error ? err.message : t("messaging:approve_contact_error", "Failed to approve contact request.");
       setError(msg);
     } finally {
       setIsRespondingContact(false);
@@ -188,7 +210,7 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
       await loadConversationData();
       if (onConversationUpdated) onConversationUpdated();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to reject contact request.";
+      const msg = err instanceof Error ? err.message : t("messaging:reject_contact_error", "Failed to reject contact request.");
       setError(msg);
     } finally {
       setIsRespondingContact(false);
@@ -199,7 +221,7 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-xs text-muted-foreground gap-2">
         <Loader2 className="w-6 h-6 animate-spin text-primary" aria-hidden="true" />
-        <span>Loading message thread...</span>
+        <span>{t("messaging:loading_thread", "Loading message thread...")}</span>
       </div>
     );
   }
@@ -208,7 +230,7 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-xs text-muted-foreground gap-2">
         <AlertCircle className="w-6 h-6 text-destructive" aria-hidden="true" />
-        <span>Unable to find conversation thread.</span>
+        <span>{t("messaging:thread_not_found", "Unable to find conversation thread.")}</span>
       </div>
     );
   }
@@ -231,28 +253,30 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
               type="button"
               onClick={onBack}
               className="lg:hidden p-1.5 rounded-lg text-muted-foreground hover:bg-secondary focus:outline-none"
-              aria-label="Back to conversations list"
+              aria-label={t("messaging:back_to_list", "Back to conversations list")}
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-5 h-5 rtl:rotate-180" />
             </button>
           )}
 
           <div>
             <div className="flex items-center gap-2">
               <span className="font-bold text-xs text-foreground truncate">
-                {other.name || other.entity_name || "Counterparty"}
+                {other.name || other.entity_name || t("messaging:counterparty", "Counterparty")}
               </span>
               <span className="text-[10px] px-1.5 py-0.2 rounded font-semibold bg-secondary text-muted-foreground uppercase">
                 {other.role}
               </span>
               {other.verification_status === "verified" ? (
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" aria-label="Verified user" />
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" aria-label={t("common:status.verified", "Verified user")} />
               ) : (
-                <ShieldAlert className="w-3.5 h-3.5 text-amber-500" aria-label="Unverified user" />
+                <ShieldAlert className="w-3.5 h-3.5 text-amber-500" aria-label={t("common:status.unverified", "Unverified user")} />
               )}
             </div>
             <p className="text-[10px] text-muted-foreground truncate">
-              Context: {conversation.initial_context_type || "General Inquiry"}
+              {t("messaging:context_label", "Context: {{type}}", {
+                type: conversation.initial_context_type || t("messaging:general_inquiry", "General Inquiry"),
+              })}
             </p>
           </div>
         </div>
@@ -265,7 +289,11 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
             className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border border-border bg-card hover:bg-secondary transition-colors text-foreground"
           >
             <Phone className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-            <span>{conversation.contact_sharing_consented ? "View Contact Info" : "Request Contact Info"}</span>
+            <span>
+              {conversation.contact_sharing_consented
+                ? t("messaging:view_contact_info", "View Contact Info")
+                : t("messaging:request_contact_info", "Request Contact Info")}
+            </span>
           </button>
         </div>
       </div>
@@ -275,7 +303,7 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
         <div className="bg-primary-50/70 border-b border-primary-200 px-4 py-2 text-xs flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-2 text-primary-950 font-medium">
             <Phone className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
-            <span>Counterparty requested mutual phone and email contact disclosure.</span>
+            <span>{t("messaging:contact_request_banner", "Counterparty requested mutual phone and email contact disclosure.")}</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -285,7 +313,7 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
               className="px-2.5 py-1 rounded-lg border border-border text-foreground hover:bg-secondary text-[11px] font-semibold transition-colors disabled:opacity-50 flex items-center gap-1"
             >
               <X className="w-3 h-3" />
-              <span>Decline</span>
+              <span>{t("common:decline", "Decline")}</span>
             </button>
             <button
               type="button"
@@ -294,7 +322,7 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
               className="px-2.5 py-1 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-[11px] font-bold shadow-xs transition-colors disabled:opacity-50 flex items-center gap-1"
             >
               <Check className="w-3 h-3" />
-              <span>Approve</span>
+              <span>{t("common:approve", "Approve")}</span>
             </button>
           </div>
         </div>
@@ -311,9 +339,9 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
 
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center text-xs text-muted-foreground p-6">
-            <p className="font-semibold text-foreground">Beginning of conversation</p>
+            <p className="font-semibold text-foreground">{t("messaging:beginning_title", "Beginning of conversation")}</p>
             <p className="text-[11px] max-w-xs mt-1">
-              Send a message to inquire about delivery schedules, harvest grades, or trade agreements.
+              {t("messaging:beginning_subtitle", "Send a message to inquire about delivery schedules, harvest grades, or trade agreements.")}
             </p>
           </div>
         ) : (
@@ -334,30 +362,31 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
           type="button"
           onClick={() => setIsAttachmentModalOpen(true)}
           className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
-          aria-label="Attach file"
+          aria-label={t("messaging:attach_file", "Attach file")}
         >
           <Paperclip className="w-4 h-4" aria-hidden="true" />
         </button>
 
         <input
           type="text"
+          dir="auto"
           value={textInput}
           onChange={(e) => setTextInput(e.target.value)}
-          placeholder="Type your message..."
+          placeholder={t("messaging:type_placeholder", "Type your message...")}
           maxLength={5000}
-          className="flex-1 rounded-xl border border-border bg-card px-3.5 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-medium"
+          className="flex-1 rounded-xl border border-border bg-card px-3.5 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-medium text-start"
         />
 
         <button
           type="submit"
           disabled={!textInput.trim() || isSending}
           className="p-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-xs focus:outline-none focus:ring-2 focus:ring-primary"
-          aria-label="Send message"
+          aria-label={t("messaging:send_button", "Send message")}
         >
           {isSending ? (
             <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
           ) : (
-            <Send className="w-4 h-4" aria-hidden="true" />
+            <Send className="w-4 h-4 rtl:-scale-x-100" aria-hidden="true" />
           )}
         </button>
       </form>

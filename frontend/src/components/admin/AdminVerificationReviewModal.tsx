@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { adminApi } from "../../api/admin";
 import type { VerificationSubmission } from "../../types/verification";
 import { useToast } from "../ui/toast";
@@ -26,6 +27,7 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
   onClose,
   onSuccess,
 }) => {
+  const { t } = useTranslation(["admin", "verification", "common", "errors"]);
   const { success: toastSuccess, error: toastError } = useToast();
 
   const [submission, setSubmission] = useState<VerificationSubmission | null>(null);
@@ -61,7 +63,7 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
         }
       } catch (err: unknown) {
         if (isMounted) {
-          const msg = err instanceof Error ? err.message : "Failed to load verification submission.";
+          const msg = err instanceof Error ? err.message : t("admin:load_submission_failed", "Failed to load verification submission.");
           setErrorMessage(msg);
         }
       } finally {
@@ -76,7 +78,7 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
     return () => {
       isMounted = false;
     };
-  }, [isOpen, submissionId]);
+  }, [isOpen, submissionId, t]);
 
   if (!isOpen || !submissionId) return null;
 
@@ -96,10 +98,10 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      toastSuccess("Document download initiated.", "Document Download");
+      toastSuccess(t("admin:toast_download_initiated", "Document download initiated."), t("admin:document_download", "Document Download"));
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to download evidence document.";
-      toastError(msg, "Download Failed");
+      const msg = err instanceof Error ? err.message : t("admin:download_failed_error", "Failed to download evidence document.");
+      toastError(msg, t("admin:download_failed_title", "Download Failed"));
     } finally {
       setDownloadingDocId(null);
     }
@@ -113,13 +115,16 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
       await adminApi.approveVerification(submission.id, {
         approval_notes: approvalNotes.trim() || undefined,
       });
-      toastSuccess("Verification application approved successfully.", "Application Approved");
+      toastSuccess(
+        t("admin:toast_approved_success", "Verification application approved successfully."),
+        t("admin:application_approved", "Application Approved")
+      );
       onSuccess();
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to approve verification.";
+      const msg = err instanceof Error ? err.message : t("admin:approve_failed_error", "Failed to approve verification.");
       setErrorMessage(msg);
-      toastError(msg, "Approval Error");
+      toastError(msg, t("admin:approval_error", "Approval Error"));
     } finally {
       setIsSubmitting(false);
     }
@@ -128,7 +133,7 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
   const handleReject = async () => {
     if (!submission) return;
     if (rejectionReason.trim().length < 3) {
-      setErrorMessage("A rejection reason containing at least 3 characters is mandatory.");
+      setErrorMessage(t("admin:rejection_min_length", "A rejection reason containing at least 3 characters is mandatory."));
       return;
     }
     setIsSubmitting(true);
@@ -137,13 +142,16 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
       await adminApi.rejectVerification(submission.id, {
         rejection_reason: rejectionReason.trim(),
       });
-      toastSuccess("Verification application rejected.", "Application Rejected");
+      toastSuccess(
+        t("admin:toast_rejected_success", "Verification application rejected."),
+        t("admin:application_rejected", "Application Rejected")
+      );
       onSuccess();
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to reject verification.";
+      const msg = err instanceof Error ? err.message : t("admin:reject_failed_error", "Failed to reject verification.");
       setErrorMessage(msg);
-      toastError(msg, "Rejection Error");
+      toastError(msg, t("admin:rejection_error", "Rejection Error"));
     } finally {
       setIsSubmitting(false);
     }
@@ -165,10 +173,10 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
             <ShieldCheck className="w-5 h-5 text-primary" aria-hidden="true" />
             <div>
               <h2 id="modal-verification-review-title" className="text-base font-bold text-foreground">
-                Identity Verification Review
+                {t("admin:ver_modal_title", "Identity Verification Review")}
               </h2>
               <p className="text-[11px] text-muted-foreground">
-                Administrative Credential & Document Audit
+                {t("admin:ver_modal_subtitle", "Administrative Credential & Document Audit")}
               </p>
             </div>
           </div>
@@ -177,7 +185,7 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
             onClick={onClose}
             disabled={isSubmitting}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-            aria-label="Close dialog"
+            aria-label={t("common:close_dialog", "Close dialog")}
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -188,7 +196,9 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-2">
               <Loader2 className="w-7 h-7 text-primary animate-spin" />
-              <p className="text-xs text-muted-foreground">Loading verification application...</p>
+              <p className="text-xs text-muted-foreground">
+                {t("admin:loading_ver_app", "Loading verification application...")}
+              </p>
             </div>
           ) : errorMessage && !submission ? (
             <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-2">
@@ -236,7 +246,7 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
                 {submission.submission_notes && (
                   <div className="pt-2 border-t border-border">
                     <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-0.5">
-                      Applicant Submission Notes
+                      {t("verification:applicant_notes", "Applicant Submission Notes")}
                     </span>
                     <p className="text-foreground">{submission.submission_notes}</p>
                   </div>
@@ -247,12 +257,16 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
               <div className="space-y-2">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                   <FileCheck className="w-3.5 h-3.5 text-primary" />
-                  Attached Evidence Documents ({submission.documents.length})
+                  {t(
+                    "verification:attached_documents_heading",
+                    `Attached Evidence Documents (${submission.documents.length})`,
+                    { count: submission.documents.length }
+                  )}
                 </h3>
 
                 {submission.documents.length === 0 ? (
                   <div className="p-6 text-center rounded-xl border border-dashed border-border bg-card text-xs text-muted-foreground">
-                    No documents uploaded with this submission.
+                    {t("verification:no_documents_uploaded", "No documents uploaded with this submission.")}
                   </div>
                 ) : (
                   <div className="divide-y divide-border rounded-xl border border-border bg-card overflow-hidden">
@@ -267,10 +281,13 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
                           </span>
                           <div className="text-muted-foreground text-[11px] flex flex-wrap gap-x-3">
                             {doc.document_number && (
-                              <span>Number: <strong className="font-mono">{doc.document_number}</strong></span>
+                              <span>
+                                {t("verification:number_label", "Number")}:{" "}
+                                <strong className="font-mono">{doc.document_number}</strong>
+                              </span>
                             )}
-                            <span>Size: {(doc.file_size_bytes / 1024).toFixed(1)} KB</span>
-                            <span>Type: {doc.file_mime_type}</span>
+                            <span>{t("common:size", "Size")}: {(doc.file_size_bytes / 1024).toFixed(1)} KB</span>
+                            <span>{t("common:type", "Type")}: {doc.file_mime_type}</span>
                           </div>
                         </div>
 
@@ -285,7 +302,7 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
                           ) : (
                             <Download className="w-3.5 h-3.5 text-primary" />
                           )}
-                          <span>Download Evidence</span>
+                          <span>{t("verification:download_evidence", "Download Evidence")}</span>
                         </button>
                       </div>
                     ))}
@@ -296,7 +313,9 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
               {/* Rejection / Historical info */}
               {submission.rejection_reason && (
                 <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs space-y-1">
-                  <span className="font-bold block">Previous Rejection Reason:</span>
+                  <span className="font-bold block">
+                    {t("admin:previous_rejection_reason", "Previous Rejection Reason:")}
+                  </span>
                   <p>{submission.rejection_reason}</p>
                 </div>
               )}
@@ -306,21 +325,24 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
                 <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-50/20 space-y-3 text-xs">
                   <h4 className="font-bold text-emerald-800 flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    Approve Verification Application
+                    {t("admin:approve_app_title", "Approve Verification Application")}
                   </h4>
                   <p className="text-muted-foreground">
-                    This will atomically transition the user to <strong>verified</strong> status and dispatch an approval alert.
+                    {t(
+                      "admin:approve_app_desc",
+                      "This will atomically transition the user to verified status and dispatch an approval alert."
+                    )}
                   </p>
                   <div>
                     <label htmlFor="ver-approve-notes" className="block text-[11px] font-semibold text-foreground mb-1">
-                      Approval Notes (Optional)
+                      {t("admin:approval_notes_label", "Approval Notes (Optional)")}
                     </label>
                     <textarea
                       id="ver-approve-notes"
                       rows={2}
                       value={approvalNotes}
                       onChange={(e) => setApprovalNotes(e.target.value)}
-                      placeholder="Optional notes to record in audit trail..."
+                      placeholder={t("admin:approval_notes_placeholder", "Optional notes to record in audit trail...")}
                       className="w-full p-2.5 text-xs rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
@@ -331,7 +353,7 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
                       disabled={isSubmitting}
                       className="px-3 py-1.5 rounded-lg border border-border bg-secondary text-foreground font-semibold"
                     >
-                      Back
+                      {t("common:back", "Back")}
                     </button>
                     <button
                       type="button"
@@ -340,7 +362,7 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
                       className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors shadow-xs"
                     >
                       {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                      <span>Confirm Approval</span>
+                      <span>{t("admin:confirm_approval", "Confirm Approval")}</span>
                     </button>
                   </div>
                 </div>
@@ -350,21 +372,28 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
                 <div className="p-4 rounded-xl border border-rose-500/30 bg-rose-50/20 space-y-3 text-xs">
                   <h4 className="font-bold text-rose-800 flex items-center gap-1.5">
                     <XCircle className="w-4 h-4 text-rose-600" />
-                    Reject Verification Application
+                    {t("admin:reject_app_title", "Reject Verification Application")}
                   </h4>
                   <p className="text-muted-foreground">
-                    This will transition the user's status to <strong>rejected</strong> and dispatch the explanation to the applicant.
+                    {t(
+                      "admin:reject_app_desc",
+                      "This will transition the user's status to rejected and dispatch the explanation to the applicant."
+                    )}
                   </p>
                   <div>
                     <label htmlFor="ver-reject-reason" className="block text-[11px] font-semibold text-foreground mb-1">
-                      Mandatory Rejection Reason <span className="text-destructive">*</span>
+                      {t("admin:rejection_reason_label", "Mandatory Rejection Reason")}{" "}
+                      <span className="text-destructive">*</span>
                     </label>
                     <textarea
                       id="ver-reject-reason"
                       rows={3}
                       value={rejectionReason}
                       onChange={(e) => setRejectionReason(e.target.value)}
-                      placeholder="State clearly what information was missing, blurred, or invalid (minimum 3 characters)..."
+                      placeholder={t(
+                        "admin:rejection_reason_placeholder",
+                        "State clearly what information was missing, blurred, or invalid (minimum 3 characters)..."
+                      )}
                       className="w-full p-2.5 text-xs rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
@@ -375,7 +404,7 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
                       disabled={isSubmitting}
                       className="px-3 py-1.5 rounded-lg border border-border bg-secondary text-foreground font-semibold"
                     >
-                      Back
+                      {t("common:back", "Back")}
                     </button>
                     <button
                       type="button"
@@ -384,7 +413,7 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
                       className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-destructive text-destructive-foreground font-semibold hover:bg-destructive/90 transition-colors shadow-xs disabled:opacity-40"
                     >
                       {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                      <span>Confirm Rejection</span>
+                      <span>{t("admin:confirm_rejection", "Confirm Rejection")}</span>
                     </button>
                   </div>
                 </div>
@@ -401,7 +430,7 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
             disabled={isSubmitting}
             className="px-4 py-2 rounded-xl bg-secondary text-foreground hover:bg-secondary/80 text-xs font-semibold border border-border transition-colors disabled:opacity-50"
           >
-            Close
+            {t("common:close", "Close")}
           </button>
 
           {isPending && decisionMode === "review" && (
@@ -412,7 +441,7 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 text-xs font-semibold shadow-xs transition-colors"
               >
                 <XCircle className="w-4 h-4" />
-                <span>Reject Application</span>
+                <span>{t("admin:reject_application_btn", "Reject Application")}</span>
               </button>
               <button
                 type="button"
@@ -420,7 +449,7 @@ export const AdminVerificationReviewModal: React.FC<AdminVerificationReviewModal
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 text-xs font-semibold shadow-xs transition-colors"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Approve Application</span>
+                <span>{t("admin:approve_application_btn", "Approve Application")}</span>
               </button>
             </div>
           )}

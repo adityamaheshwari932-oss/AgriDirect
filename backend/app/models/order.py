@@ -224,6 +224,17 @@ class Order(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         DateTime(timezone=True),
         nullable=True,
     )
+    transporter_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    transport_status: Mapped[str] = mapped_column(
+        String(32),
+        default="none",
+        server_default="none",
+        nullable=False,
+    )
 
     # Relationships
     source_offer: Mapped["Offer"] = relationship(
@@ -252,6 +263,11 @@ class Order(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     cancelled_by: Mapped[Optional["User"]] = relationship(
         "User",
         foreign_keys=[cancelled_by_user_id],
+    )
+    transporter: Mapped[Optional["User"]] = relationship(
+        "User",
+        foreign_keys=[transporter_id],
+        back_populates="orders_as_transporter",
     )
     items: Mapped[List["OrderItem"]] = relationship(
         "OrderItem",

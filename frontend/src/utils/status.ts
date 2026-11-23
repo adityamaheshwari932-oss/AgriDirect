@@ -192,6 +192,62 @@ export function calculateProfileCompletion(user: User): ProfileCompletionInfo {
     };
   }
 
+  if (user.role === "transporter") {
+    const profile = user.transporter_profile;
+    const checks: { name: string; filled: boolean }[] = [
+      {
+        name: "Business Name",
+        filled: Boolean(profile?.business_name?.trim()),
+      },
+      {
+        name: "Contact Name",
+        filled: Boolean(profile?.contact_name?.trim()),
+      },
+      {
+        name: "Phone Number",
+        filled: Boolean(profile?.phone_number?.trim() || user.phone_number?.trim()),
+      },
+      {
+        name: "Vehicle Type",
+        filled: Boolean(profile?.transport_type?.trim()),
+      },
+      {
+        name: "Vehicle Registration",
+        filled: Boolean(profile?.vehicle_registration_number?.trim()),
+      },
+      {
+        name: "Payload Capacity",
+        filled:
+          profile?.vehicle_capacity_kg !== undefined &&
+          profile?.vehicle_capacity_kg !== null &&
+          Number(profile.vehicle_capacity_kg) > 0,
+      },
+      {
+        name: "Operating States",
+        filled: Boolean(profile?.operating_states?.trim()),
+      },
+      {
+        name: "Experience Years",
+        filled: profile?.experience_years !== undefined && profile?.experience_years !== null,
+      },
+      {
+        name: "Fleet Overview / Bio",
+        filled: Boolean(profile?.bio?.trim()),
+      },
+    ];
+
+    const completedCount = checks.filter((c) => c.filled).length;
+    const missingFields = checks.filter((c) => !c.filled).map((c) => c.name);
+    const percentage = Math.round((completedCount / checks.length) * 100);
+
+    return {
+      percentage,
+      completedCount,
+      totalCount: checks.length,
+      missingFields,
+    };
+  }
+
   return {
     percentage: 100,
     completedCount: 1,
@@ -233,6 +289,14 @@ export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   fssai_license: "FSSAI Food Business License",
   trade_license: "Municipal Trade License / Shop & Est.",
   pan_card: "Commercial Entity PAN Card",
+  // Transporter documents
+  vehicle_rc: "Vehicle Registration Certificate (RC)",
+  driving_license: "Commercial Driving License",
+  transport_permit: "Commercial Goods Carriage Permit",
+  business_registration: "Transport Agency Registration / GSTIN",
+  insurance_certificate: "Commercial Vehicle Insurance Policy",
+  fitness_certificate: "Vehicle Fitness Certificate",
+  pollution_certificate: "Pollution Under Control (PUC) Certificate",
   // Common
   other: "Other Supporting Evidence",
 };

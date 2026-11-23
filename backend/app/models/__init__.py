@@ -187,12 +187,28 @@ from app.models.requirement_approval import (
     RequirementFulfillmentApproval,
 )
 from app.models.review import RatingReview
-from app.models.user import BuyerProfile, FarmerProfile, User
+from app.models.user import (
+    BuyerProfile,
+    FarmerProfile,
+    ServiceArea,
+    TransporterProfile,
+    User,
+    VALID_COVERAGE_TYPES,
+    VALID_TRANSPORT_TYPES,
+)
 from app.models.verification import (
     MAX_DOCUMENT_SIZE_BYTES,
     VALID_SUBMISSION_STATUSES,
     VerificationDocument,
     VerificationSubmission,
+)
+from app.models.transporter_connection import (
+    TRANSPORT_REQUEST_STATUS_ACCEPTED,
+    TRANSPORT_REQUEST_STATUS_CANCELLED,
+    TRANSPORT_REQUEST_STATUS_DECLINED,
+    TRANSPORT_REQUEST_STATUS_PENDING,
+    VALID_TRANSPORT_REQUEST_STATUSES,
+    TransportConnectionRequest,
 )
 
 __all__ = [
@@ -201,6 +217,10 @@ __all__ = [
     "User",
     "FarmerProfile",
     "BuyerProfile",
+    "TransporterProfile",
+    "ServiceArea",
+    "VALID_TRANSPORT_TYPES",
+    "VALID_COVERAGE_TYPES",
     "VerificationSubmission",
     "VerificationDocument",
     "VALID_SUBMISSION_STATUSES",
@@ -368,4 +388,10 @@ __all__ = [
     "REPORT_STATUS_ACTION_TAKEN",
     "REPORT_STATUS_DISMISSED",
     "VALID_REPORT_STATUSES",
+    "TransportConnectionRequest",
+    "TRANSPORT_REQUEST_STATUS_PENDING",
+    "TRANSPORT_REQUEST_STATUS_ACCEPTED",
+    "TRANSPORT_REQUEST_STATUS_DECLINED",
+    "TRANSPORT_REQUEST_STATUS_CANCELLED",
+    "VALID_TRANSPORT_REQUEST_STATUSES",
 ]
