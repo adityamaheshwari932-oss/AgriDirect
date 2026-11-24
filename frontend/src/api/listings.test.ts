@@ -150,6 +150,89 @@ describe("ListingsApi", () => {
     expect(result.id).toBe("img-1");
   });
 
+  it("uploads multiple image assets via FormData", async () => {
+    const mockImages: ListingImage[] = [
+      {
+        id: "img-1",
+        listing_id: "list-1",
+        image_uri: "/uploads/img1.jpg",
+        is_primary: true,
+        display_order: 0,
+        created_at: "2026-10-30T10:00:00Z",
+      },
+      {
+        id: "img-2",
+        listing_id: "list-1",
+        image_uri: "/uploads/img2.jpg",
+        is_primary: false,
+        display_order: 1,
+        created_at: "2026-10-30T10:00:01Z",
+      },
+    ];
+
+    vi.spyOn(apiClient, "post").mockResolvedValueOnce(mockImages);
+
+    const files = [
+      new File(["content1"], "photo1.jpg", { type: "image/jpeg" }),
+      new File(["content2"], "photo2.png", { type: "image/png" }),
+    ];
+    const result = await listingsApi.uploadImages("list-1", files);
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/listings/list-1/images",
+      expect.any(FormData)
+    );
+    expect(result).toHaveLength(2);
+  });
+
+  it("retrieves all images attached to a listing", async () => {
+    const mockImages: ListingImage[] = [
+      {
+        id: "img-1",
+        listing_id: "list-1",
+        image_uri: "/uploads/img1.jpg",
+        is_primary: true,
+        display_order: 0,
+        created_at: "2026-10-30T10:00:00Z",
+      },
+    ];
+
+    vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockImages);
+
+    const result = await listingsApi.getImages("list-1");
+    expect(apiClient.get).toHaveBeenCalledWith("/listings/list-1/images");
+    expect(result).toEqual(mockImages);
+  });
+
+  it("reorders listing images", async () => {
+    const mockImages: ListingImage[] = [
+      {
+        id: "img-2",
+        listing_id: "list-1",
+        image_uri: "/uploads/img2.jpg",
+        is_primary: true,
+        display_order: 0,
+        created_at: "2026-10-30T10:00:01Z",
+      },
+      {
+        id: "img-1",
+        listing_id: "list-1",
+        image_uri: "/uploads/img1.jpg",
+        is_primary: false,
+        display_order: 1,
+        created_at: "2026-10-30T10:00:00Z",
+      },
+    ];
+
+    vi.spyOn(apiClient, "patch").mockResolvedValueOnce(mockImages);
+
+    const result = await listingsApi.reorderImages("list-1", ["img-2", "img-1"]);
+    expect(apiClient.patch).toHaveBeenCalledWith("/listings/list-1/images/reorder", {
+      image_ids: ["img-2", "img-1"],
+    });
+    expect(result[0].id).toBe("img-2");
+  });
+
   it("deletes a listing image and sets primary image", async () => {
     vi.spyOn(apiClient, "delete").mockResolvedValueOnce(undefined);
     vi.spyOn(apiClient, "patch").mockResolvedValueOnce({ id: "img-2", is_primary: true });

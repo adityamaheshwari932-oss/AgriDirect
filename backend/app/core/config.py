@@ -146,6 +146,22 @@ class Settings(BaseSettings):
     listing_images_dir: str = "uploads/listings"
     """Base filesystem directory for produce listing photographic assets."""
 
+    product_images_dir: str = "uploads/products"
+    """Configurable dedicated directory for product photographs."""
+
+    max_product_images_per_listing: int = 10
+    """Maximum permitted photographs per produce listing (default 10)."""
+
+    max_product_image_size_bytes: int = 5 * 1024 * 1024
+    """Maximum permitted file upload size for product photographs in bytes (default 5 MB)."""
+
+    def get_product_images_dir(self) -> str:
+        """Resolve and ensure the local product images directory exists."""
+        import os
+        target = self.product_images_dir or self.listing_images_dir
+        os.makedirs(target, exist_ok=True)
+        return target
+
     # ------------------------------------------------------------------
     # Offers and Negotiation Settings
     # ------------------------------------------------------------------
@@ -298,6 +314,22 @@ class Settings(BaseSettings):
         """Reject non-positive max upload size."""
         if value <= 0:
             raise ValueError("MAX_UPLOAD_SIZE_BYTES must be greater than 0.")
+        return value
+
+    @field_validator("max_product_images_per_listing")
+    @classmethod
+    def max_product_images_per_listing_must_be_positive(cls, value: int) -> int:
+        """Reject non-positive maximum product images limit."""
+        if value <= 0:
+            raise ValueError("MAX_PRODUCT_IMAGES_PER_LISTING must be greater than 0.")
+        return value
+
+    @field_validator("max_product_image_size_bytes")
+    @classmethod
+    def max_product_image_size_bytes_must_be_positive(cls, value: int) -> int:
+        """Reject non-positive maximum product image file size."""
+        if value <= 0:
+            raise ValueError("MAX_PRODUCT_IMAGE_SIZE_BYTES must be greater than 0.")
         return value
 
     @field_validator("smtp_port")

@@ -17,7 +17,7 @@ Implements Module 2 (Catalog, Listings, and Media Assets) under /api/v1:
 
 import uuid
 from decimal import Decimal
-from typing import Annotated, List, Optional
+from typing import Annotated, List, Optional, Union
 
 from fastapi import (
     APIRouter,
@@ -45,6 +45,7 @@ from app.listings.schemas import (
     FarmerListingListResponse,
     ListingCreate,
     ListingImageResponse,
+    ListingImagesReorderRequest,
     ListingStatusUpdate,
     ListingUpdate,
     ProduceListingDetailResponse,
@@ -287,32 +288,72 @@ def delete_listing(
 # Listing Images
 # ---------------------------------------------------------------------------
 
+@router.get(
+    "/{id}/images",
+    response_model=List[ListingImageResponse],
+    summary="List all listing images",
+    description="Returns all images attached to a produce listing ordered by display order.",
+    status_code=status.HTTP_200_OK,
+)
+def list_listing_images(
+    id: uuid.UUID,
+    optional_user: Optional[User] = Depends(get_optional_current_user),
+    db: Session = Depends(get_db),
+) -> List[ListingImageResponse]:
+    """Retrieve all images attached to a produce listing."""
+    service = ListingService(db)
+    return service.list_listing_images(listing_id=id, current_user=optional_user)
+
+
 @router.post(
     "/{id}/images",
-    response_model=ListingImageResponse,
-    summary="Upload listing image",
+    response_model=Union[ListingImageResponse, List[ListingImageResponse]],
+    summary="Upload listing image(s)",
     description=(
-        "Uploads and attaches a photographic asset to a produce listing. Restricted to the farmer owner. "
-        "Validates image mime types (JPEG, PNG, WebP), binary magic bytes, and size (<= 5 MB)."
+        "Uploads and attaches one or more photographic assets to a produce listing. "
+        "Restricted to the farmer owner. Validates image mime types (JPEG, PNG, WebP), "
+        "binary magic bytes, and size (<= 5 MB)."
     ),
     status_code=status.HTTP_201_CREATED,
 )
 def upload_listing_image(
     id: uuid.UUID,
-    file: UploadFile = File(..., description="Photographic image file (JPEG, PNG, WebP)"),
+    file: Optional[UploadFile] = File(None, description="Single photographic image file (JPEG, PNG, WebP)"),
+    files: Optional[List[UploadFile]] = File(None, description="Multiple photographic image files"),
     is_primary: bool = Form(False, description="Whether this image is primary thumbnail"),
     display_order: int = Form(0, description="Display sort order"),
     current_user: User = Depends(require_verified_farmer),
     db: Session = Depends(get_db),
-) -> ListingImageResponse:
-    """Upload and attach a photo to a produce listing."""
+) -> Union[ListingImageResponse, List[ListingImageResponse]]:
+    """Upload and attach photo(s) to a produce listing."""
     service = ListingService(db)
-    return service.upload_listing_image(
+
+    upload_files: List[UploadFile] = []
+    if files:
+        upload_files.extend(files)
+    if file:
+        upload_files.append(file)
+
+    if not upload_files:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="At least one image file ('file' or 'files') must be provided",
+        )
+
+    # Single-file upload via 'file' parameter returns single response
+    if len(upload_files) == 1 and file is not None and not files:
+        return service.upload_listing_image(
+            listing_id=id,
+            user=current_user,
+            upload_file=file,
+            is_primary=is_primary,
+            display_order=display_order,
+        )
+
+    return service.upload_listing_images(
         listing_id=id,
         user=current_user,
-        upload_file=file,
-        is_primary=is_primary,
-        display_order=display_order,
+        upload_files=upload_files,
     )
 
 
@@ -351,6 +392,28 @@ def set_primary_listing_image(
     return service.set_primary_image(listing_id=id, image_id=image_id, user=current_user)
 
 
+@router.patch(
+    "/{id}/images/reorder",
+    response_model=List[ListingImageResponse],
+    summary="Reorder listing images",
+    description="Updates presentation display order of images attached to a produce listing. Restricted to farmer owner.",
+    status_code=status.HTTP_200_OK,
+)
+def reorder_listing_images(
+    id: uuid.UUID,
+    payload: ListingImagesReorderRequest,
+    current_user: User = Depends(require_verified_farmer),
+    db: Session = Depends(get_db),
+) -> List[ListingImageResponse]:
+    """Reorder gallery images."""
+    service = ListingService(db)
+    return service.reorder_listing_images(
+        listing_id=id,
+        user=current_user,
+        image_ids=payload.image_ids,
+    )
+
+
 @router.get(
     "/{id}/images/{image_id}",
     summary="Download or view listing image file",
@@ -373,4 +436,57 @@ def download_listing_image(
         listing_id=id, image_id=image_id, current_user=optional_user
     )
     return FileResponse(path=file_path)
+
+
+# ---------------------------------------------------------------------------
+# Product Alias Router (/api/v1/products/...)
+# Supports product-level media endpoints for compatibility with both
+# /api/v1/listings/{id}/images and /api/v1/products/{id}/images conventions.
+# ---------------------------------------------------------------------------
+
+products_router = APIRouter(prefix="/products", tags=["products"])
+
+products_router.add_api_route(
+    "/{id}/images",
+    list_listing_images,
+    methods=["GET"],
+    response_model=List[ListingImageResponse],
+    summary="List images attached to a product (alias)",
+)
+products_router.add_api_route(
+    "/{id}/images",
+    upload_listing_image,
+    methods=["POST"],
+    response_model=Union[ListingImageResponse, List[ListingImageResponse]],
+    status_code=status.HTTP_201_CREATED,
+    summary="Upload image(s) for a product (alias)",
+)
+products_router.add_api_route(
+    "/{id}/images/{image_id}",
+    delete_listing_image,
+    methods=["DELETE"],
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete product image (alias)",
+)
+products_router.add_api_route(
+    "/{id}/images/{image_id}/primary",
+    set_primary_listing_image,
+    methods=["PATCH"],
+    response_model=ListingImageResponse,
+    summary="Set primary product image (alias)",
+)
+products_router.add_api_route(
+    "/{id}/images/reorder",
+    reorder_listing_images,
+    methods=["PATCH"],
+    response_model=List[ListingImageResponse],
+    summary="Reorder product images (alias)",
+)
+products_router.add_api_route(
+    "/{id}/images/{image_id}",
+    download_listing_image,
+    methods=["GET"],
+    summary="Download or view product image file (alias)",
+)
+
 

@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.listings.models import (
     STATUS_ACTIVE,
     STATUS_CLOSED,
@@ -408,10 +409,12 @@ class ListingService:
         listing = self._get_owned_listing(listing_id, user)
 
         current_count = self.repository.count_listing_images(listing_id)
-        if current_count >= MAX_IMAGES_PER_LISTING:
+        settings = get_settings()
+        max_images = getattr(settings, "max_product_images_per_listing", MAX_IMAGES_PER_LISTING)
+        if current_count >= max_images:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Listing already has maximum allowed images ({MAX_IMAGES_PER_LISTING})",
+                detail=f"Listing already has maximum allowed images ({max_images})",
             )
 
         # If this is the first image attached, automatically make it primary
@@ -436,6 +439,112 @@ class ListingService:
             raise
 
         return ListingImageResponse.model_validate(image)
+
+    def upload_listing_images(
+        self,
+        listing_id: uuid.UUID,
+        user: User,
+        upload_files: List[UploadFile],
+    ) -> List[ListingImageResponse]:
+        """Batch upload multiple images for a produce listing owned by caller."""
+        listing = self._get_owned_listing(listing_id, user)
+        settings = get_settings()
+        max_images = getattr(settings, "max_product_images_per_listing", MAX_IMAGES_PER_LISTING)
+
+        current_count = self.repository.count_listing_images(listing_id)
+        if current_count + len(upload_files) > max_images:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Uploading {len(upload_files)} image(s) exceeds maximum allowed images ({max_images}). Current count: {current_count}",
+            )
+
+        saved_entries = []
+        saved_uris = []
+        try:
+            for idx, file in enumerate(upload_files):
+                image_uri, _mime, _size = self.storage.save_image(file)
+                saved_uris.append(image_uri)
+                # First image is primary if listing currently has no images
+                is_prim = (current_count == 0 and idx == 0)
+                saved_entries.append({
+                    "image_uri": image_uri,
+                    "is_primary": is_prim,
+                    "display_order": current_count + idx,
+                })
+
+            images = self.repository.add_listing_images(
+                listing_id=listing_id,
+                image_entries=saved_entries,
+            )
+            return [ListingImageResponse.model_validate(img) for img in images]
+        except Exception:
+            self.repository.db.rollback()
+            # Clean up all saved physical files on any error
+            for uri in saved_uris:
+                try:
+                    self.storage.delete_image_file(uri)
+                except Exception as cleanup_err:
+                    logger.error("Failed to delete orphaned image file %s: %s", uri, cleanup_err)
+            raise
+
+    def list_listing_images(
+        self,
+        listing_id: uuid.UUID,
+        current_user: Optional[User] = None,
+    ) -> List[ListingImageResponse]:
+        """List all images attached to a produce listing."""
+        listing = self.repository.get_listing_by_id(listing_id, include_deleted=True)
+        if not listing:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Listing '{listing_id}' not found",
+            )
+
+        is_owner = current_user is not None and (listing.farmer_id == current_user.id)
+        is_admin = current_user is not None and (current_user.role == "admin")
+
+        if not (is_owner or is_admin):
+            now = datetime.now(timezone.utc)
+            expires_at = _ensure_tz_aware(listing.expires_at)
+            farmer = listing.farmer
+            farmer_active_and_verified = (
+                farmer is not None
+                and farmer.account_status == "active"
+                and farmer.verification_status == "verified"
+            )
+            if (
+                listing.is_deleted
+                or listing.status != STATUS_ACTIVE
+                or listing.available_quantity <= 0
+                or expires_at <= now
+                or not farmer_active_and_verified
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Listing '{listing_id}' not found",
+                )
+
+        images = self.repository.list_listing_images(listing_id)
+        return [ListingImageResponse.model_validate(img) for img in images]
+
+    def reorder_listing_images(
+        self,
+        listing_id: uuid.UUID,
+        user: User,
+        image_ids: List[uuid.UUID],
+    ) -> List[ListingImageResponse]:
+        """Update display order for images attached to a listing."""
+        self._get_owned_listing(listing_id, user)
+        existing = {img.id: img for img in self.repository.list_listing_images(listing_id)}
+        for img_id in image_ids:
+            if img_id not in existing:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Image '{img_id}' does not belong to listing '{listing_id}'",
+                )
+
+        reordered = self.repository.reorder_listing_images(listing_id=listing_id, image_ids=image_ids)
+        return [ListingImageResponse.model_validate(img) for img in reordered]
 
     def delete_listing_image(
         self,
@@ -679,13 +788,18 @@ class ListingService:
     def _to_public_summary(self, listing: ProduceListing) -> ProduceListingPublicSummary:
         """Map ORM ProduceListing model to ProduceListingPublicSummary."""
         primary_uri = None
+        primary_url = None
+        images = []
         if listing.images:
+            images = [ListingImageResponse.model_validate(img) for img in listing.images]
             for img in listing.images:
                 if img.is_primary:
                     primary_uri = img.image_uri
+                    primary_url = f"/api/v1/listings/{listing.id}/images/{img.id}"
                     break
             if not primary_uri and listing.images:
                 primary_uri = listing.images[0].image_uri
+                primary_url = f"/api/v1/listings/{listing.id}/images/{listing.images[0].id}"
 
         farmer_summary = None
         farmer_user = listing.farmer
@@ -718,5 +832,7 @@ class ListingService:
             status=listing.status,
             created_at=listing.created_at,
             primary_image_uri=primary_uri,
+            primary_image_url=primary_url,
+            images=images,
             farmer=farmer_summary,
         )

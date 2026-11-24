@@ -127,7 +127,7 @@ export class ListingsApi {
 
   /**
    * Upload photographic asset for produce listing.
-   * Max 5 MB, JPEG, PNG, or WebP. Max 5 images per listing.
+   * Max 5 MB, JPEG, PNG, or WebP.
    */
   public async uploadImage(
     id: string,
@@ -141,6 +141,41 @@ export class ListingsApi {
     formData.append("display_order", String(displayOrder));
 
     return this.client.post<ListingImage>(`/listings/${id}/images`, formData);
+  }
+
+  /**
+   * Upload multiple photographic assets for produce listing in a single batch.
+   * Max 5 MB per file, JPEG, PNG, or WebP. Up to configured limit (10).
+   */
+  public async uploadImages(
+    id: string,
+    files: File[]
+  ): Promise<ListingImage[]> {
+    const formData = new FormData();
+    for (const file of files) {
+      formData.append("files", file);
+    }
+
+    return this.client.post<ListingImage[]>(`/listings/${id}/images`, formData);
+  }
+
+  /**
+   * List all images attached to a produce listing.
+   */
+  public async getImages(id: string): Promise<ListingImage[]> {
+    return this.client.get<ListingImage[]>(`/listings/${id}/images`);
+  }
+
+  /**
+   * Reorder gallery display order for listing images.
+   */
+  public async reorderImages(
+    id: string,
+    imageIds: string[]
+  ): Promise<ListingImage[]> {
+    return this.client.patch<ListingImage[]>(`/listings/${id}/images/reorder`, {
+      image_ids: imageIds,
+    });
   }
 
   /**
