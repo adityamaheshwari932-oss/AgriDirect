@@ -43,5 +43,9 @@
   "card_view_details": "ଲଟେର ବିସ୍ତାରିତ ଦେଖନ୍ତୁ",
   "card_view_requirement_details": "ଚାହିଦାର ବିସ୍ତାରିତ ଦେଖନ୍ତୁ",
   "detail_title": "ଫସଲେର ଲଟେର ବିବରଣ",
-  "modal_make_offer": "ବାଣିଜ୍ଯ ପ୍ରସ୍ତାବ ଶୁରୁ କରୁନ"
+  "modal_make_offer": "ବାଣିଜ୍ଯ ପ୍ରସ୍ତାବ ଶୁରୁ କରୁନ",
+  "catalog_primary_photo": "କାଟାଲଗ୍ ପ୍ରାଥମିକ ଫଟୋ",
+  "thumbnail_n": "ଥମ୍ବନେଲ୍ {{n}}",
+  "no_photos_uploaded": "ଏହି ଉତ୍ପାଦନ ଲଟ୍ ପାଇଁ କୌଣସି ଫଟୋ ଅପଲୋଡ୍ ହୋଇନାହିଁ",
+  "place_direct_order": "Place Order"
 }

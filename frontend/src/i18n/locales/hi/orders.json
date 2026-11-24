@@ -45,5 +45,24 @@
     "seller_sign": "उत्पादक के हस्ताक्षर",
     "buyer_sign": "खरीदार के हस्ताक्षर",
     "audit_footer": "एग्रीडायरेक्ट इलेक्ट्रॉनिक व्यापार बहीखाता • ऑडिट संदर्भ: {{orderId}} • एग्रीडायरेक्ट v1.0 द्वारा जनरेट किया गया"
-  }
+  },
+  "place_direct_order": "खरीद आदेश दें",
+  "direct_order_subtitle": "तत्काल इन्वेंट्री आरक्षण के साथ सीधी खरीद",
+  "order_quantity": "आदेश मात्रा",
+  "estimated_total": "अनुमानित कुल राशि",
+  "target_delivery_date": "लक्षित वितरण तिथि",
+  "delivery_address": "वितरण का पता",
+  "enter_delivery_address": "गोदाम डॉक / प्राप्ति बिंदु",
+  "handling_instructions": "विशेष हैंडलिंग और वितरण निर्देश",
+  "notes_placeholder": "उदा., क्रेट पैकेजिंग, सुबह का डिलीवरी स्लॉट, निरीक्षण संपर्क व्यक्ति",
+  "attach_reference_photos": "ऑर्डर गुणवत्ता साक्ष्य और संदर्भ तस्वीरें",
+  "images_count": "तस्वीरें",
+  "supported_image_types": "विनिर्देश, गुणवत्ता आवश्यकताएं या खरीद दस्तावेज संलग्न करें (JPEG, PNG, WebP ≤ 5 MB)।",
+  "placing_order": "आदेश दिया जा रहा है...",
+  "confirm_and_place_order": "पुष्टि करें और आदेश दें",
+  "order_placed_success": "खरीद आदेश सफलतापूर्वक दिया गया!",
+  "order_placement_failed": "आदेश देने में विफल।",
+  "max_images_limit": "आप प्रति ऑर्डर अधिकतम 5 तस्वीरें संलग्न कर सकते हैं।",
+  "file_too_large": "प्रत्येक तस्वीर 5 MB से अधिक नहीं होनी चाहिए।",
+  "unsupported_format": "केवल JPEG, PNG और WebP तस्वीरों की अनुमति है।"
 }

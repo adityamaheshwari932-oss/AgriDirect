@@ -127,4 +127,23 @@ describe("i18n Initialization and Dynamic Language Switching", () => {
     const missing = i18n.t("common:nonexistent.key");
     expect(missing).toBe("nonexistent.key");
   });
+
+  it("resolves product image management keys across English, Hindi, and RTL Urdu", async () => {
+    // English
+    await setLanguage("en");
+    expect(i18n.t("dashboard:produce_photos_title")).toBe("Produce Lot Photographs");
+    expect(i18n.t("errors:image_limit_reached")).toContain("10 photos");
+    expect(i18n.t("marketplace:no_photos_uploaded")).toContain("No photographs uploaded");
+
+    // Hindi
+    await setLanguage("hi");
+    expect(i18n.t("dashboard:produce_photos_title")).toBe("उपज लॉट फ़ोटो");
+    expect(i18n.t("errors:image_limit_reached")).toContain("10 फ़ोटो");
+
+    // Urdu (RTL)
+    await setLanguage("ur");
+    expect(i18n.t("dashboard:produce_photos_title")).toBe("فصل لاٹ کی تصاویر");
+    expect(i18n.t("errors:image_limit_reached")).toContain("10 تصاویر");
+    expect(document.documentElement.dir).toBe("rtl");
+  });
 });

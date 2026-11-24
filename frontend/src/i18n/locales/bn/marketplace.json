@@ -43,5 +43,9 @@
   "card_view_details": "লটের বিস্তারিত দেখুন",
   "card_view_requirement_details": "চাহিদার বিস্তারিত দেখুন",
   "detail_title": "ফসলের লটের বিবরণ",
-  "modal_make_offer": "বাণিজ্য প্রস্তাব শুরু করুন"
+  "modal_make_offer": "বাণিজ্য প্রস্তাব শুরু করুন",
+  "catalog_primary_photo": "ক্যাটালগের প্রধান ছবি",
+  "thumbnail_n": "থাম্বনেইল {{n}}",
+  "no_photos_uploaded": "এই ফসলের লটের জন্য কোনো ছবি আপলোড করা হয়নি",
+  "place_direct_order": "Place Order"
 }

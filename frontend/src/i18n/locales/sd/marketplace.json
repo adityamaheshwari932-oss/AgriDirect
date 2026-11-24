@@ -43,5 +43,9 @@
   "card_view_details": "پيداوار लॉट تفصيل ڏسو",
   "card_view_requirement_details": "खरीद ضروريता تفصيل ڏسو",
   "detail_title": "پيداوار लॉट विनिर्देश",
-  "modal_make_offer": "व्यापार پيشڪش शुरू करें"
+  "modal_make_offer": "व्यापार پيشڪش शुरू करें",
+  "catalog_primary_photo": "ڪيٽلاگ بنيادي تصوير",
+  "thumbnail_n": "ٿمب نيل {{n}}",
+  "no_photos_uploaded": "هن فصل لاٽ لاءِ ڪا تصوير اپ لوڊ نه ڪئي وئي آهي",
+  "place_direct_order": "Place Order"
 }

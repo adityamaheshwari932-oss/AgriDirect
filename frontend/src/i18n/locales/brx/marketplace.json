@@ -43,5 +43,9 @@
   "card_view_details": "उपज लॉट गुवारै नाय",
   "card_view_requirement_details": "खरीद आवश्यकता गुवारै नाय",
   "detail_title": "उपज लॉट विनिर्देश",
-  "modal_make_offer": "व्एबापार थांखि शुरू करें"
+  "modal_make_offer": "व्एबापार थांखि शुरू करें",
+  "catalog_primary_photo": "केटलग गाहाय सावगारी",
+  "thumbnail_n": "थाम्बनेल {{n}}",
+  "no_photos_uploaded": "बे फसल लटनि थाखाय जेबो सावगारी अपलोड खालामाखै",
+  "place_direct_order": "Place Order"
 }

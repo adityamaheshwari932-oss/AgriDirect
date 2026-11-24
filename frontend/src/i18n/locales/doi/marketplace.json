@@ -43,5 +43,9 @@
   "card_view_details": "उपज लॉट विस्तार दिक्खो",
   "card_view_requirement_details": "खरीद आवश्यकता विस्तार दिक्खो",
   "detail_title": "उपज लॉट विनिर्देश",
-  "modal_make_offer": "व्यापार पेशकश शुरू करें"
+  "modal_make_offer": "व्यापार पेशकश शुरू करें",
+  "catalog_primary_photo": "कैटलॉग मुक्ख फोटो",
+  "thumbnail_n": "थंबनेल {{n}}",
+  "no_photos_uploaded": "इस फसल लाट लेई कोई फोटो अपलोड नेईं कीती गेई ऐ",
+  "place_direct_order": "Place Order"
 }

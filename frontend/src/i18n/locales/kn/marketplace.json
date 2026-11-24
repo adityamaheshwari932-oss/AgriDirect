@@ -43,5 +43,9 @@
   "card_view_details": "ಲಾಟ್ ವಿವರಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
   "card_view_requirement_details": "ಅಗತ್ಯ ವಿವರಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
   "detail_title": "ಬೆಳೆ ಲಾಟ್ ವಿಶೇಷಣಗಳು",
-  "modal_make_offer": "ವ್ಯಾಪಾರ ಆಫರ್ ಪ್ರಾರಂಭಿಸಿ"
+  "modal_make_offer": "ವ್ಯಾಪಾರ ಆಫರ್ ಪ್ರಾರಂಭಿಸಿ",
+  "catalog_primary_photo": "ಕ್ಯಾಟಲಾಗ್ ಮುಖ್ಯ ಫೋಟೋ",
+  "thumbnail_n": "ಥಂಬ್‌ನೇಲ್ {{n}}",
+  "no_photos_uploaded": "ಈ ಉತ್ಪನ್ನದ ಲಾಟ್‌ಗಾಗಿ ಯಾವುದೇ ಛಾಯಾಚಿತ್ರಗಳನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಲಾಗಿಲ್ಲ",
+  "place_direct_order": "Place Order"
 }

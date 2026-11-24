@@ -14,5 +14,13 @@
   "try_again": "Try Again",
   "forbidden_title": "Access Restricted",
   "forbidden_message": "You do not have sufficient permissions to access this feature or perform this operation.",
-  "return_to_dashboard": "Return to Dashboard"
+  "return_to_dashboard": "Return to Dashboard",
+  "image_limit_reached": "Maximum limit of 10 photos per listing has been reached.",
+  "image_size_exceeded": "Image size exceeds the 5 MB limit.",
+  "unsupported_image_format": "Unsupported image format. Please select a JPEG, PNG, or WebP photo.",
+  "select_image_first": "Please select an image file to upload.",
+  "upload_failed": "Failed to upload image. Please try again.",
+  "network_error_upload": "An unexpected network error occurred while uploading the photo.",
+  "delete_failed": "Failed to delete image.",
+  "primary_failed": "Failed to designate primary image."
 }

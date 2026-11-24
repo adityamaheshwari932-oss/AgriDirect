@@ -14,5 +14,13 @@
   "try_again": "पुनः प्रयास करें",
   "forbidden_title": "पहुँच प्रतिबंधित",
   "forbidden_message": "आपके पास इस सुविधा तक पहुँचने या इस कर्य को करने की अनुमति नहीं है।",
-  "return_to_dashboard": "डैशबोर्ड पर पाछाँ लौटें"
+  "return_to_dashboard": "डैशबोर्ड पर पाछाँ लौटें",
+  "image_limit_reached": "प्रति सूची अधिकतम १० फोटोक सीमा समाप्त भेल।",
+  "image_size_exceeded": "फोटॉक आकार ५ MB सीमा सँ अधिक अछि।",
+  "unsupported_image_format": "असमर्थित छवि प्रारूप। कृपा क' JPEG, PNG वा WebP फोटो चुनू।",
+  "select_image_first": "कृपा क' अपलोड करबाक लेल फोटो चुनू।",
+  "upload_failed": "फोटो अपलोड विफल भेल। कृपा क' पुन: प्रयास करू।",
+  "network_error_upload": "फोटो अपलोड करबाक काल नेटवर्क त्रुटि भेल।",
+  "delete_failed": "फोटो हटाबयमे विफल।",
+  "primary_failed": "मुख्य छवि तय करबामे विफल।"
 }

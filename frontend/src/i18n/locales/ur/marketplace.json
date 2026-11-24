@@ -43,5 +43,9 @@
   "card_view_details": "پیداوار लॉट تفصیلات دیکھیں",
   "card_view_requirement_details": "खरीद لازمیता تفصیلات دیکھیں",
   "detail_title": "پیداوار लॉट विनिर्देश",
-  "modal_make_offer": "व्یاपार پیشکش शुरू करें"
+  "modal_make_offer": "व्یاपार پیشکش शुरू करें",
+  "catalog_primary_photo": "کیٹلاگ بنیادی تصویر",
+  "thumbnail_n": "تھمب نیل {{n}}",
+  "no_photos_uploaded": "اس فصل لاٹ کے لیے کوئی تصویر اپ لوڈ نہیں کی گئی ہے",
+  "place_direct_order": "Place Order"
 }

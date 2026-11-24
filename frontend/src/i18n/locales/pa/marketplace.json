@@ -43,5 +43,9 @@
   "card_view_details": "ਫ਼ਸਲ ਲਾਟ ਵੇਰਵਾ ਵੇਖੋ",
   "card_view_requirement_details": "ਖਰੀਦ ਲੋੜ ਵੇਰਵਾ ਵੇਖੋ",
   "detail_title": "ਫ਼ਸਲ ਲਾਟ ਵੇਰਵੇ",
-  "modal_make_offer": "ਵਪਾਰਕ ਪੇਸ਼ਕਸ਼ ਸ਼ੁਰੂ ਕਰੋ"
+  "modal_make_offer": "ਵਪਾਰਕ ਪੇਸ਼ਕਸ਼ ਸ਼ੁਰੂ ਕਰੋ",
+  "catalog_primary_photo": "ਕੈਟਾਲਾਗ ਮੁੱਖ ਫੋਟੋ",
+  "thumbnail_n": "ਥੰਬਨੇਲ {{n}}",
+  "no_photos_uploaded": "ਇਸ ਉਪਜ ਲਾਟ ਲਈ ਕੋਈ ਤਸਵੀਰ ਅਪਲੋਡ ਨਹੀਂ ਕੀਤੀ ਗਈ ਹੈ",
+  "place_direct_order": "Place Order"
 }

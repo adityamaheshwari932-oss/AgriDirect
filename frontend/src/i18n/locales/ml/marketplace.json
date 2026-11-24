@@ -43,5 +43,9 @@
   "card_view_details": "വിളവ് ലോട്ട് വിവരങ്ങൾ കാണുക",
   "card_view_requirement_details": "ആവശ്യ വിവരങ്ങൾ കാണുക",
   "detail_title": "വിളവ് ലോട്ട് പ്രത്യേകതകൾ",
-  "modal_make_offer": "വ്യാപാര ഓഫർ ആരംഭിക്കുക"
+  "modal_make_offer": "വ്യാപാര ഓഫർ ആരംഭിക്കുക",
+  "catalog_primary_photo": "കാറ്റലോഗ് പ്രധാന ഫോട്ടോ",
+  "thumbnail_n": "ലഘുചിത്രം {{n}}",
+  "no_photos_uploaded": "ഈ വിളവ് ലോട്ടിനായി ഫോട്ടോകളൊന്നും അപ്‌ലോഡ് ചെയ്തിട്ടില്ല",
+  "place_direct_order": "Place Order"
 }

@@ -39,7 +39,8 @@
     "admin_audit": "অডিট লগ",
     "admin_analytics": "প্ল্যাটফর্ম বিশ্লেষণ",
     "open_menu": "মেনু খুলুন",
-    "close_menu": "মেনু বন্ধ করুন"
+    "close_menu": "মেনু বন্ধ করুন",
+    "transportation": "পরিবহন"
   },
   "actions": {
     "save": "সংরক্ষণ করুন",

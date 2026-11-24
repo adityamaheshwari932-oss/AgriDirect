@@ -45,5 +45,24 @@
     "seller_sign": "Producer Signature",
     "buyer_sign": "Buyer Signature",
     "audit_footer": "AgriDirect Electronic Trade Ledger • Audit Ref: {{orderId}} • Generated via AgriDirect v1.0"
-  }
+  },
+  "place_direct_order": "Place Purchase Order",
+  "direct_order_subtitle": "Direct purchase with instant inventory reservation",
+  "order_quantity": "Order Volume",
+  "estimated_total": "Estimated Total Amount",
+  "target_delivery_date": "Target Delivery Date",
+  "delivery_address": "Delivery Address",
+  "enter_delivery_address": "Warehouse dock / Receiving point",
+  "handling_instructions": "Special Handling & Delivery Instructions",
+  "notes_placeholder": "e.g., Crate packaging, morning delivery slot, inspection contact person",
+  "attach_reference_photos": "Order Quality Evidence & Reference Photos",
+  "images_count": "photos",
+  "supported_image_types": "Attach specifications, quality requirements, or purchase documents (JPEG, PNG, WebP ≤ 5 MB).",
+  "placing_order": "Placing Order...",
+  "confirm_and_place_order": "Confirm & Place Order",
+  "order_placed_success": "Purchase order placed successfully!",
+  "order_placement_failed": "Failed to place order.",
+  "max_images_limit": "You can attach a maximum of 5 images per order.",
+  "file_too_large": "Each image must not exceed 5 MB.",
+  "unsupported_format": "Only JPEG, PNG, and WebP images are permitted."
 }

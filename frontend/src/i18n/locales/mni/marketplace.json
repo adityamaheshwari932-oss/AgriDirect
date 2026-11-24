@@ -43,5 +43,9 @@
   "card_view_details": "ꯂꯇꯦꯔ ꯕꯤꯁ꯭ꯇꯥꯔꯤꯇ ꯌꯦꯡꯕ",
   "card_view_requirement_details": "ꯆꯥꯍꯤꯗꯥꯔ ꯕꯤꯁ꯭ꯇꯥꯔꯤꯇ ꯌꯦꯡꯕ",
   "detail_title": "ꯐꯁꯂꯦꯔ ꯂꯇꯦꯔ ꯕꯤꯕꯔꯅ",
-  "modal_make_offer": "ꯕꯥꯅꯤꯖ꯭ꯌ ꯄ꯭ꯔꯁ꯭ꯇꯥꯕ ꯁꯨꯔꯨ ꯀꯔꯨꯅ"
+  "modal_make_offer": "ꯕꯥꯅꯤꯖ꯭ꯌ ꯄ꯭ꯔꯁ꯭ꯇꯥꯕ ꯁꯨꯔꯨ ꯀꯔꯨꯅ",
+  "catalog_primary_photo": "কেতালোগ মরুওইবা ফোতো",
+  "thumbnail_n": "থম্বনেল {{n}}",
+  "no_photos_uploaded": "পোত্থোক লত অসিগী ফোতো অমত্তা অপলোদ তৌদ্রি",
+  "place_direct_order": "Place Order"
 }

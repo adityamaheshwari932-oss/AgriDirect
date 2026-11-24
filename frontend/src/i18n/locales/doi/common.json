@@ -39,7 +39,8 @@
     "admin_audit": "ऑडिट लॉग",
     "admin_analytics": "प्लेटफ़ॉर्म विश्लेषण",
     "open_menu": "नेविगेशन मेनू खोलें",
-    "close_menu": "नेविगेशन मेनू बंद करो"
+    "close_menu": "नेविगेशन मेनू बंद करो",
+    "transportation": "ढोआ-ढुआई"
   },
   "actions": {
     "save": "सम्हलो",
