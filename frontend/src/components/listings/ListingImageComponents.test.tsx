@@ -2,7 +2,6 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { ListingCreateEditModal } from "./ListingCreateEditModal";
-import { ListingImageModal } from "./ListingImageModal";
 import { ProduceListingCard } from "../marketplace/ProduceListingCard";
 import { ProduceDetailModal } from "../marketplace/ProduceDetailModal";
 import { listingsApi } from "../../api/listings";

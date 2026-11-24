@@ -43,5 +43,9 @@
   "card_view_details": "લોટ વિગતો જુઓ",
   "card_view_requirement_details": "ખરીદ જરૂરિયાત વિગતો જુઓ",
   "detail_title": "પેદાશ લોટ વિશિષ્ટતાઓ",
-  "modal_make_offer": "વેપાર ઓફર શરૂ કરો"
+  "modal_make_offer": "વેપાર ઓફર શરૂ કરો",
+  "catalog_primary_photo": "કેટલોગ મુખ્ય ફોટો",
+  "thumbnail_n": "થંબનેલ {{n}}",
+  "no_photos_uploaded": "આ પાક માટે કોઈ ફોટોગ્રાફ અપલોડ કરવામાં આવ્યા નથી",
+  "place_direct_order": "Place Order"
 }

@@ -43,5 +43,9 @@
   "card_view_details": "தொகுதி விவரங்களைப் பார்க்கவும்",
   "card_view_requirement_details": "தேவை விவரங்களைப் பார்க்கவும்",
   "detail_title": "விளைபொருள் தொகுதி விவரக்குறிப்புகள்",
-  "modal_make_offer": "வர்த்தக சலுகையைத் தொடங்கவும்"
+  "modal_make_offer": "வர்த்தக சலுகையைத் தொடங்கவும்",
+  "catalog_primary_photo": "பட்டியல் முதன்மைப் புகைப்படம்",
+  "thumbnail_n": "சிறுபடம் {{n}}",
+  "no_photos_uploaded": "இந்த விளைபொருளுக்கு புகைப்படங்கள் எதுவும் பதிவேற்றப்படவில்லை",
+  "place_direct_order": "Place Order"
 }

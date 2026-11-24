@@ -43,5 +43,9 @@
   "card_view_details": "ᱞᱴᱮᱨ ᱵᱤᱥᱛᱟᱨᱤᱛ ᱧᱮᱞ",
   "card_view_requirement_details": "ᱪᱟᱦᱤᱫᱟᱨ ᱵᱤᱥᱛᱟᱨᱤᱛ ᱧᱮᱞ",
   "detail_title": "ᱯᱷᱥᱞᱮᱨ ᱞᱴᱮᱨ ᱵᱤᱵᱨᱬ",
-  "modal_make_offer": "ᱵᱟᱬᱤᱡᱭ ᱯᱨᱥᱛᱟᱵ ᱥᱩᱨᱩ ᱠᱨᱩᱱ"
+  "modal_make_offer": "ᱵᱟᱬᱤᱡᱭ ᱯᱨᱥᱛᱟᱵ ᱥᱩᱨᱩ ᱠᱨᱩᱱ",
+  "catalog_primary_photo": "ᱠᱮᱴᱞᱚᱜᱽ ᱢᱩᱬᱩᱛ ᱪᱤᱛᱟᱹᱨ",
+  "thumbnail_n": "ᱛᱷᱟᱢᱵᱽᱱᱮᱞ {{n}}",
+  "no_photos_uploaded": "ᱱᱚᱶᱟ ᱩᱯᱚᱡᱽ ᱞᱚᱴ ᱞᱟᱹᱜᱤᱫ ᱪᱮᱫ ᱪᱤᱛᱟᱹᱨ ᱦᱚᱸ ᱵᱟᱝ ᱟᱯᱞᱳᱰ ᱟᱠᱟᱱᱟ",
+  "place_direct_order": "Place Order"
 }

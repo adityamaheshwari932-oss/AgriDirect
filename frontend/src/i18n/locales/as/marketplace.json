@@ -43,5 +43,9 @@
   "card_view_details": "লটেৰ বিস্তাৰিত চাওক",
   "card_view_requirement_details": "চাহিদাৰ বিস্তাৰিত চাওক",
   "detail_title": "ফসলেৰ লটেৰ বিবৰণ",
-  "modal_make_offer": "বাণিজ্য প্ৰস্তাব শুৰু কৰুন"
+  "modal_make_offer": "বাণিজ্য প্ৰস্তাব শুৰু কৰুন",
+  "catalog_primary_photo": "তালিকাৰ প্ৰাথমিক ফটো",
+  "thumbnail_n": "থাম্বনেইল {{n}}",
+  "no_photos_uploaded": "এই শস্য লটৰ বাবে কোনো ফটো আপলোড কৰা হোৱা নাই",
+  "place_direct_order": "Place Order"
 }

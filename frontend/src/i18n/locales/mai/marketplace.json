@@ -43,5 +43,9 @@
   "card_view_details": "उपज लॉट विवरण देखू",
   "card_view_requirement_details": "खरीद आवश्यकता विवरण देखू",
   "detail_title": "उपज लॉट विनिर्देश",
-  "modal_make_offer": "व्वापार प्रस्ताव शुरू करें"
+  "modal_make_offer": "व्वापार प्रस्ताव शुरू करें",
+  "catalog_primary_photo": "कैटलॉग मुख्य फोटो",
+  "thumbnail_n": "थंबनेल {{n}}",
+  "no_photos_uploaded": "एहि उपज लोटक लेल कोनो फोटो अपलोड नहि कएल गेल अछि",
+  "place_direct_order": "Place Order"
 }

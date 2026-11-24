@@ -39,7 +39,8 @@
     "admin_audit": "آڊٽ लॉग",
     "admin_analytics": "प्लेटफ़ॉर्म تجزيي",
     "open_menu": "नेविगेशन मेनू खोलें",
-    "close_menu": "नेविगेशन मेनू بند ڪريو"
+    "close_menu": "नेविगेशन मेनू بند ڪريو",
+    "transportation": "آمد و رفت"
   },
   "actions": {
     "save": "محفوظ ڪريو",

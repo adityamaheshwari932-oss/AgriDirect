@@ -43,5 +43,9 @@
   "card_view_details": "उपज लॉट विवरण हेर्नुहोस्",
   "card_view_requirement_details": "खरीद आवश्यकता विवरण हेर्नुहोस्",
   "detail_title": "उपज लॉट विनिर्देश",
-  "modal_make_offer": "व्वापार प्रस्तावहरू शुरू करें"
+  "modal_make_offer": "व्वापार प्रस्तावहरू शुरू करें",
+  "catalog_primary_photo": "क्याटलग मुख्य तस्बिर",
+  "thumbnail_n": "थम्बनेल {{n}}",
+  "no_photos_uploaded": "यो बाली लटको लागि कुनै तस्बिर अपलोड गरिएको छैन",
+  "place_direct_order": "Place Order"
 }

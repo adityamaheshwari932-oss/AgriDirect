@@ -43,5 +43,9 @@
   "card_view_details": "లాట్ వివరాలను వీక్షించండి",
   "card_view_requirement_details": "అవసరాల వివరాలను వీక్షించండి",
   "detail_title": "పంట లాట్ వివరాలు",
-  "modal_make_offer": "వాణిజ్య ఆఫర్‌ను ప్రారంభించండి"
+  "modal_make_offer": "వాణిజ్య ఆఫర్‌ను ప్రారంభించండి",
+  "catalog_primary_photo": "కేటలాగ్ ప్రధాన ఫోటో",
+  "thumbnail_n": "థంబ్‌నెయిల్ {{n}}",
+  "no_photos_uploaded": "ఈ ఉత్పత్తి లాట్ కోసం ఛాయాచిత్రాలు అప్‌లోడ్ చేయబడలేదు",
+  "place_direct_order": "Place Order"
 }

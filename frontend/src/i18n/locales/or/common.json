@@ -39,7 +39,8 @@
     "admin_audit": "ଅଡିଟ ଲଗ",
     "admin_analytics": "ପ୍ଲ୍ଯାଟଫର୍ମ ବିଶ୍ଳେଷଣ",
     "open_menu": "ମେନୁ ଖୁଲୁନ",
-    "close_menu": "ମେନୁ ବନ୍ଦ କରନ୍ତୁ"
+    "close_menu": "ମେନୁ ବନ୍ଦ କରନ୍ତୁ",
+    "transportation": "ପରିବହନ"
   },
   "actions": {
     "save": "ସଂରକ୍ଷଣ କରନ୍ତୁ",

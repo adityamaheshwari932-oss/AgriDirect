@@ -39,7 +39,8 @@
     "admin_audit": "ઓડિટ લૉગ્સ",
     "admin_analytics": "પ્લેટફોર્મ વિશ્લેષણ",
     "open_menu": "નેવિગેશન મેનુ ખોલો",
-    "close_menu": "નેવિગેશન મેનુ બંધ કરો"
+    "close_menu": "નેવિગેશન મેનુ બંધ કરો",
+    "transportation": "પરિવહન"
   },
   "actions": {
     "save": "સાચવો",

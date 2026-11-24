@@ -43,5 +43,9 @@
   "card_view_details": "View Produce Lot Details",
   "card_view_requirement_details": "View Sourcing Requirement Details",
   "detail_title": "Produce Lot Specifications",
-  "modal_make_offer": "Initiate Trade Offer"
+  "modal_make_offer": "Initiate Trade Offer",
+  "catalog_primary_photo": "Catalog Primary Photo",
+  "thumbnail_n": "Thumbnail {{n}}",
+  "no_photos_uploaded": "No photographs uploaded for this produce lot",
+  "place_direct_order": "Place Order"
 }

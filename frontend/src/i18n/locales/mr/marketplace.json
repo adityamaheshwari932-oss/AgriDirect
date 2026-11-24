@@ -43,5 +43,9 @@
   "card_view_details": "शेतीमाल तपशील पहा",
   "card_view_requirement_details": "खरेदी आवश्यकता तपशील पहा",
   "detail_title": "शेतीमाल लॉट तपशील",
-  "modal_make_offer": "व्यापार प्रस्ताव सुरू करा"
+  "modal_make_offer": "व्यापार प्रस्ताव सुरू करा",
+  "catalog_primary_photo": "कॅटलॉग मुख्य छायाचित्र",
+  "thumbnail_n": "लघुप्रतिमा {{n}}",
+  "no_photos_uploaded": "या शेतमाल लॉटसाठी कोणतीही छायाचित्रे अपलोड केलेली नाहीत",
+  "place_direct_order": "Place Order"
 }
