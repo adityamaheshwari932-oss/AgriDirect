@@ -238,15 +238,15 @@ export const OrderSlipModal: React.FC<OrderSlipModalProps> = ({
                 <span>{t("orders:slip.manifest_title", "Agricultural Produce Manifest")}</span>
               </h3>
               <div className="border border-slate-200 rounded-lg overflow-hidden">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-start text-xs">
                   <thead className="bg-slate-100 text-slate-600 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
                     <tr>
                       <th className="px-3 py-2.5">#</th>
                       <th className="px-3 py-2.5">{t("orders:slip.col_commodity", "Commodity / Variety")}</th>
                       <th className="px-3 py-2.5">{t("orders:slip.col_grade", "Quality Grade")}</th>
-                      <th className="px-3 py-2.5 text-right">{t("orders:slip.col_qty", "Quantity")}</th>
-                      <th className="px-3 py-2.5 text-right">{t("orders:slip.col_rate", "Agreed Rate")}</th>
-                      <th className="px-3 py-2.5 text-right">{t("orders:slip.col_subtotal", "Line Total")}</th>
+                      <th className="px-3 py-2.5 text-end">{t("orders:slip.col_qty", "Quantity")}</th>
+                      <th className="px-3 py-2.5 text-end">{t("orders:slip.col_rate", "Agreed Rate")}</th>
+                      <th className="px-3 py-2.5 text-end">{t("orders:slip.col_subtotal", "Line Total")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 text-slate-800">
@@ -260,13 +260,13 @@ export const OrderSlipModal: React.FC<OrderSlipModalProps> = ({
                           <td className="px-3 py-2.5 text-slate-600">
                             {it.quality_grade || "Grade A (Standard)"}
                           </td>
-                          <td className="px-3 py-2.5 text-right font-medium">
+                          <td className="px-3 py-2.5 text-end font-medium">
                             {formatNumber(Number(it.quantity))} {it.unit}
                           </td>
-                          <td className="px-3 py-2.5 text-right font-mono text-slate-700">
+                          <td className="px-3 py-2.5 text-end font-mono text-slate-700">
                             ₹{formatNumber(Number(it.unit_price))} / {it.unit}
                           </td>
-                          <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-900">
+                          <td className="px-3 py-2.5 text-end font-mono font-bold text-slate-900">
                             ₹{formatNumber(Number(it.subtotal))}
                           </td>
                         </tr>
@@ -278,9 +278,9 @@ export const OrderSlipModal: React.FC<OrderSlipModalProps> = ({
                           Produce Lot (Order #{order.order_number})
                         </td>
                         <td className="px-3 py-2.5 text-slate-600">Commercial Standard</td>
-                        <td className="px-3 py-2.5 text-right font-medium">Lot Fulfillment</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-slate-700">—</td>
-                        <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-900">
+                        <td className="px-3 py-2.5 text-end font-medium">Lot Fulfillment</td>
+                        <td className="px-3 py-2.5 text-end font-mono text-slate-700">—</td>
+                        <td className="px-3 py-2.5 text-end font-mono font-bold text-slate-900">
                           ₹{formatNumber(totalContractAmount)}
                         </td>
                       </tr>

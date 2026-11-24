@@ -135,7 +135,14 @@ export const App: React.FC = () => {
                       </RequireRole>
                     }
                   />
-                  <Route path="transporters" element={<TransporterDiscoveryPage />} />
+                  <Route
+                    path="transporters"
+                    element={
+                      <RequireRole allowedRoles={["farmer", "buyer"]}>
+                        <TransporterDiscoveryPage />
+                      </RequireRole>
+                    }
+                  />
 
                   {/* Farmer specific routes */}
                   <Route
@@ -232,6 +239,7 @@ export const App: React.FC = () => {
                 {/* Public & Authentication Shell */}
                 <Route element={<AppLayout />}>
                   <Route path="/" element={<LandingPage />} />
+                  <Route path="/verification" element={<Navigate to="/dashboard/verification" replace />} />
                   <Route path="/marketplace" element={<MarketplacePage />} />
                   <Route path="/transporters" element={<TransporterDiscoveryPage />} />
                   <Route

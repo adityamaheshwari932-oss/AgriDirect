@@ -297,14 +297,14 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
                 </h3>
 
                 <div className="rounded-xl border border-border overflow-hidden bg-card">
-                  <table className="w-full text-left border-collapse text-xs">
+                  <table className="w-full text-start border-collapse text-xs">
                     <thead className="bg-secondary/40 text-muted-foreground font-semibold uppercase tracking-wider border-b border-border">
                       <tr>
                         <th className="py-2.5 px-3">{t("offers:product_name_col", "Product Name")}</th>
                         <th className="py-2.5 px-3">{t("offers:quality_col", "Quality")}</th>
                         <th className="py-2.5 px-3">{t("offers:quantity_col", "Quantity")}</th>
                         <th className="py-2.5 px-3">{t("offers:unit_price_col", "Unit Price")}</th>
-                        <th className="py-2.5 px-3 text-right">{t("offers:subtotal_col", "Subtotal")}</th>
+                        <th className="py-2.5 px-3 text-end">{t("offers:subtotal_col", "Subtotal")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -322,7 +322,7 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
                           <td className="py-2.5 px-3">
                             ₹{formatNumber(Number(item.unit_price))}
                           </td>
-                          <td className="py-2.5 px-3 text-right font-bold text-foreground">
+                          <td className="py-2.5 px-3 text-end font-bold text-foreground">
                             ₹{formatNumber(Number(item.subtotal))}
                           </td>
                         </tr>
@@ -330,10 +330,10 @@ export const OfferDetailModal: React.FC<OfferDetailModalProps> = ({
                     </tbody>
                     <tfoot className="bg-secondary/30 font-bold border-t border-border">
                       <tr>
-                        <td colSpan={4} className="py-3 px-3 text-right text-muted-foreground uppercase text-[11px]">
+                        <td colSpan={4} className="py-3 px-3 text-end text-muted-foreground uppercase text-[11px]">
                           {t("offers:server_calculated_total", "Server-Calculated Total:")}
                         </td>
-                        <td className="py-3 px-3 text-right text-sm text-primary">
+                        <td className="py-3 px-3 text-end text-sm text-primary">
                           ₹{formatNumber(Number(offer.total_amount))}
                         </td>
                       </tr>
