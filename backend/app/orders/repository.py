@@ -26,6 +26,7 @@ from app.models.order import (
     Order,
     OrderAmendment,
     OrderDeliveryAcknowledgement,
+    OrderImage,
     OrderItem,
 )
 from app.models.requirement import BuyerRequirement
@@ -134,7 +135,7 @@ class OrderRepository:
         return self.db.scalars(stmt).unique().one_or_none()
 
     def get_order_detail(self, order_id: uuid.UUID) -> Optional[Order]:
-        """Fetch an order by ID with eager loading for items, participants, and amendments."""
+        """Fetch an order by ID with eager loading for items, participants, amendments, and images."""
         stmt = (
             select(Order)
             .where(Order.id == order_id)
@@ -142,9 +143,80 @@ class OrderRepository:
                 selectinload(Order.items),
                 selectinload(Order.amendments),
                 selectinload(Order.delivery_acknowledgements),
+                selectinload(Order.images),
                 joinedload(Order.buyer).joinedload(User.buyer_profile),
                 joinedload(Order.farmer).joinedload(User.farmer_profile),
             )
+        )
+        return self.db.scalars(stmt).unique().one_or_none()
+
+    def get_by_idempotency_key(self, idempotency_key: str) -> Optional[Order]:
+        """Fetch an order by client-supplied idempotency key."""
+        if not idempotency_key:
+            return None
+        stmt = select(Order).where(Order.idempotency_key == idempotency_key)
+        return self.db.scalars(stmt).unique().one_or_none()
+
+    def generate_order_number(self) -> str:
+        """Generate a collision-free human-readable order number.
+
+        Format: ORD-YYYYMMDD-XXXXX
+        """
+        today = datetime.now(timezone.utc).strftime("%Y%m%d")
+        for _ in range(10):
+            suffix = secrets.token_hex(3).upper()[:5]
+            candidate = f"ORD-{today}-{suffix}"
+            exists = self.db.scalar(
+                select(Order.id).where(Order.order_number == candidate)
+            )
+            if not exists:
+                return candidate
+        micro = datetime.now(timezone.utc).strftime("%f")[:5]
+        return f"ORD-{today}-{micro}"
+
+    def lock_listing(self, listing_id: uuid.UUID) -> Optional[ProduceListing]:
+        """Acquire Tier 3 exclusive row lock on a single ProduceListing."""
+        stmt = (
+            select(ProduceListing)
+            .where(ProduceListing.id == listing_id)
+            .with_for_update(of=ProduceListing)
+            .execution_options(populate_existing=True)
+        )
+        return self.db.scalars(stmt).unique().one_or_none()
+
+    def add_order_image(
+        self,
+        order_id: uuid.UUID,
+        uploaded_by_user_id: uuid.UUID,
+        image_uri: str,
+        mime_type: str,
+        file_size_bytes: int,
+    ) -> OrderImage:
+        """Insert photographic asset reference for an order."""
+        image = OrderImage(
+            order_id=order_id,
+            uploaded_by_user_id=uploaded_by_user_id,
+            image_uri=image_uri,
+            mime_type=mime_type,
+            file_size_bytes=file_size_bytes,
+        )
+        self.db.add(image)
+        return image
+
+    def get_order_images(self, order_id: uuid.UUID) -> List[OrderImage]:
+        """Retrieve all images attached to an order."""
+        stmt = (
+            select(OrderImage)
+            .where(OrderImage.order_id == order_id)
+            .order_by(OrderImage.created_at.asc())
+        )
+        return list(self.db.scalars(stmt).all())
+
+    def get_order_image(self, order_id: uuid.UUID, image_id: uuid.UUID) -> Optional[OrderImage]:
+        """Retrieve a specific order image by ID."""
+        stmt = select(OrderImage).where(
+            OrderImage.order_id == order_id,
+            OrderImage.id == image_id,
         )
         return self.db.scalars(stmt).unique().one_or_none()
 

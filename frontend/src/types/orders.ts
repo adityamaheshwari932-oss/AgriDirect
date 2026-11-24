@@ -86,7 +86,7 @@ export interface OrderAmendment {
 export interface OrderListItem {
   id: string;
   order_number: string;
-  source_offer_id: string;
+  source_offer_id?: string | null;
   buyer_id: string;
   farmer_id: string;
   total_amount: number | string;
@@ -99,10 +99,28 @@ export interface OrderListItem {
   updated_at: string;
 }
 
+export interface OrderImage {
+  id: string;
+  order_id: string;
+  image_url: string;
+  mime_type: string;
+  file_size_bytes: number;
+  created_at: string;
+}
+
+export interface OrderCreatePayload {
+  listing_id: string;
+  quantity: number;
+  delivery_destination_address?: string;
+  delivery_arranged_date?: string;
+  delivery_notes?: string;
+  idempotency_key?: string;
+}
+
 export interface OrderDetail {
   id: string;
   order_number: string;
-  source_offer_id: string;
+  source_offer_id?: string | null;
   buyer_id: string;
   farmer_id: string;
   total_amount: number | string;
@@ -127,6 +145,7 @@ export interface OrderDetail {
   buyer?: OrderParticipant | null;
   farmer?: OrderParticipant | null;
   amendments: OrderAmendment[];
+  images?: OrderImage[];
 }
 
 export interface OrderListResponse {

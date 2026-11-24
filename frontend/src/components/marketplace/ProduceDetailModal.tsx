@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Handshake,
   MessageSquare,
+  ShoppingCart,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { listingsApi } from "../../api/listings";
@@ -16,6 +17,7 @@ import { chatApi } from "../../api/chat";
 import type { ProduceListingDetail } from "../../types/listings";
 import { useAuth } from "../../store/authStore";
 import { OfferCreateModal } from "../offers/OfferCreateModal";
+import { OrderCreateModal } from "../orders/OrderCreateModal";
 import { formatNumber, formatDate } from "../../utils/formatters";
 
 interface ProduceDetailModalProps {
@@ -36,6 +38,7 @@ export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
 
   const canMakeOffer =
     Boolean(user && user.role === "buyer" && user.verification_status === "verified" && detail && detail.status === "active");
@@ -140,16 +143,19 @@ export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
             </div>
           ) : detail ? (
             <>
-              {/* Photo Gallery (if images present) */}
+              {/* Photo Gallery (if images present) or Fallback Placeholder */}
               {detail.images && detail.images.length > 0 ? (
                 <div className="space-y-3">
                   <div className="aspect-video w-full rounded-xl overflow-hidden bg-secondary relative">
                     <img
-                      src={listingsApi.getImageUrl(detail.id, detail.images[activeImageIndex].id)}
+                      src={
+                        detail.images[activeImageIndex]?.image_url ||
+                        listingsApi.getImageUrl(detail.id, detail.images[activeImageIndex]?.id)
+                      }
                       alt={detail.title}
                       className="w-full h-full object-cover"
                     />
-                    {detail.images[activeImageIndex].is_primary && (
+                    {detail.images[activeImageIndex]?.is_primary && (
                       <span className="absolute top-3 start-3 px-2 py-0.5 rounded-md bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider shadow-xs">
                         {t("marketplace:catalog_primary_photo", "Catalog Primary Photo")}
                       </span>
@@ -168,7 +174,7 @@ export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
                           }`}
                         >
                           <img
-                            src={listingsApi.getImageUrl(detail.id, img.id)}
+                            src={img.image_url || listingsApi.getImageUrl(detail.id, img.id)}
                             alt={t("marketplace:thumbnail_n", "Thumbnail {{n}}", { n: idx + 1 })}
                             className="w-full h-full object-cover"
                           />
@@ -177,7 +183,14 @@ export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
                     </div>
                   )}
                 </div>
-              ) : null}
+              ) : (
+                <div className="aspect-video w-full rounded-xl overflow-hidden bg-secondary/40 border border-border flex flex-col items-center justify-center text-muted-foreground/40 gap-2">
+                  <Tractor className="w-14 h-14 stroke-[1.25]" aria-hidden="true" />
+                  <span className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider">
+                    {t("marketplace:no_photos_uploaded", "No photographs uploaded for this produce lot")}
+                  </span>
+                </div>
+              )}
 
               {/* Title & Headline */}
               <div className="space-y-2">
@@ -304,30 +317,52 @@ export const ProduceDetailModal: React.FC<ProduceDetailModalProps> = ({
               </button>
             )}
             {canMakeOffer && (
-              <button
-                type="button"
-                onClick={() => setIsOfferModalOpen(true)}
-                className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5"
-              >
-                <Handshake className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>{t("marketplace:make_purchase_offer", "Make Purchase Offer")}</span>
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => setIsOfferModalOpen(true)}
+                  className="px-3.5 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-secondary text-xs font-semibold transition-colors flex items-center gap-1.5"
+                >
+                  <Handshake className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>{t("marketplace:make_purchase_offer", "Make Purchase Offer")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsOrderModalOpen(true)}
+                  className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5"
+                >
+                  <ShoppingCart className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>{t("marketplace:place_direct_order", "Place Order")}</span>
+                </button>
+              </>
             )}
           </div>
         </div>
       </div>
 
       {detail && (
-        <OfferCreateModal
-          isOpen={isOfferModalOpen}
-          onClose={() => setIsOfferModalOpen(false)}
-          targetType="listing"
-          targetListing={detail}
-          onSuccess={() => {
-            setIsOfferModalOpen(false);
-            onClose();
-          }}
-        />
+        <>
+          <OfferCreateModal
+            isOpen={isOfferModalOpen}
+            onClose={() => setIsOfferModalOpen(false)}
+            targetType="listing"
+            targetListing={detail}
+            onSuccess={() => {
+              setIsOfferModalOpen(false);
+              onClose();
+            }}
+          />
+          <OrderCreateModal
+            isOpen={isOrderModalOpen}
+            listing={detail}
+            onClose={() => setIsOrderModalOpen(false)}
+            onSuccess={() => {
+              setIsOrderModalOpen(false);
+              onClose();
+              navigate("/dashboard/orders");
+            }}
+          />
+        </>
       )}
     </div>
   );

@@ -59,7 +59,16 @@ export const OfferAcceptModal: React.FC<OfferAcceptModalProps> = ({
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = React.useRef(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!isOpen) {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+      setGeneralError(null);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -79,8 +88,10 @@ export const OfferAcceptModal: React.FC<OfferAcceptModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setGeneralError(null);
+    if (isSubmittingRef.current || isSubmitting) return;
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
+    setGeneralError(null);
 
     try {
       let payload: OfferAcceptPayload = {};
@@ -114,6 +125,11 @@ export const OfferAcceptModal: React.FC<OfferAcceptModalProps> = ({
       const response = await offersApi.acceptOffer(offer.id, payload);
       onSuccess(response);
     } catch (err: unknown) {
+      if (err instanceof ApiError && (err.status === 409 || err.message?.includes("already been generated"))) {
+        // Idempotent recovery: order already created, dismiss gracefully
+        onClose();
+        return;
+      }
       if (err instanceof ApiError) {
         setGeneralError(
           err.message || t("errors:offer_accept_failed", "Failed to accept offer. The proposal or inventory state may have changed.")
@@ -122,6 +138,7 @@ export const OfferAcceptModal: React.FC<OfferAcceptModalProps> = ({
         setGeneralError(t("errors:network_error_accept", "An unexpected network error occurred while accepting offer."));
       }
     } finally {
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   };

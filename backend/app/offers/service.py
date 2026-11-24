@@ -336,6 +336,23 @@ class OfferService:
             hours = getattr(self.settings, "default_offer_expiry_hours", 72)
             expires_at = datetime.now(timezone.utc) + timedelta(hours=hours)
 
+        # Check for rapid duplicate submission within last 15 seconds (idempotency guard)
+        recent_threshold = datetime.now(timezone.utc) - timedelta(seconds=15)
+        recent_duplicate = (
+            self.db.query(Offer)
+            .filter(
+                Offer.conversation_id == conv.id,
+                Offer.sender_id == current_user.id,
+                Offer.recipient_id == recipient.id,
+                Offer.status == OFFER_STATUS_PENDING,
+                Offer.created_at >= recent_threshold,
+                Offer.total_amount == total_amount,
+            )
+            .first()
+        )
+        if recent_duplicate:
+            return self._to_detail_response(recent_duplicate)
+
         offer_number = self.repo.generate_offer_number()
 
         header_data = {

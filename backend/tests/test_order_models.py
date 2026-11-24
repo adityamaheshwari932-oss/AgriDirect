@@ -251,7 +251,8 @@ class TestOrderMetadata:
         expected = {
             "id": False,
             "order_number": False,
-            "source_offer_id": False,
+            "source_offer_id": True,
+            "idempotency_key": True,
             "buyer_id": False,
             "farmer_id": False,
             "total_amount": False,
@@ -274,7 +275,7 @@ class TestOrderMetadata:
             "created_at": False,
             "updated_at": False,
         }
-        assert len(table.columns) == 24
+        assert len(table.columns) == 25
         for col_name, nullable in expected.items():
             assert col_name in table.c, f"Column {col_name} missing from orders"
             assert table.c[col_name].nullable == nullable

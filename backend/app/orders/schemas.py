@@ -98,14 +98,27 @@ class OrderDeliveryAcknowledgementResponse(BaseModel):
     notes: Optional[str] = None
 
 
+class OrderImageResponse(BaseModel):
+    """Photographic quality documentation, dispatch verification, or receipt asset attached to an order."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    order_id: uuid.UUID
+    image_url: str
+    mime_type: str
+    file_size_bytes: int
+    created_at: datetime
+
+
 class OrderDetailResponse(BaseModel):
-    """Detailed order view with items, participants, delivery, and amendment lineage."""
+    """Detailed order view with items, participants, delivery, images, and amendment lineage."""
 
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     order_number: str
-    source_offer_id: uuid.UUID
+    source_offer_id: Optional[uuid.UUID] = None
     buyer_id: uuid.UUID
     farmer_id: uuid.UUID
     total_amount: Decimal
@@ -133,6 +146,7 @@ class OrderDetailResponse(BaseModel):
     amendments: List[OrderAmendmentResponse] = []
     delivery_acknowledgements: List[OrderDeliveryAcknowledgementResponse] = []
     delivery_acknowledgements_pending: List[str] = []
+    images: List[OrderImageResponse] = []
 
 
 class OrderListItemResponse(BaseModel):
@@ -142,7 +156,7 @@ class OrderListItemResponse(BaseModel):
 
     id: uuid.UUID
     order_number: str
-    source_offer_id: uuid.UUID
+    source_offer_id: Optional[uuid.UUID] = None
     buyer_id: uuid.UUID
     farmer_id: uuid.UUID
     total_amount: Decimal
@@ -165,6 +179,17 @@ class OrderListResponse(BaseModel):
     page: int
     page_size: int
     total_pages: int
+
+
+class OrderCreateRequest(BaseOrderSchema):
+    """Payload for direct order placement against a produce listing."""
+
+    listing_id: uuid.UUID = Field(..., description="ID of the active produce listing to purchase")
+    quantity: Decimal = Field(..., gt=Decimal("0"), decimal_places=2, description="Physical volume of produce to purchase")
+    delivery_destination_address: Optional[str] = Field(default=None, max_length=500, description="Destination delivery address")
+    delivery_arranged_date: Optional[date] = Field(default=None, description="Proposed delivery date")
+    delivery_notes: Optional[str] = Field(default=None, max_length=1000, description="Buyer special handling instructions or dispatch requirements")
+    idempotency_key: Optional[str] = Field(default=None, max_length=128, description="Client idempotency token preventing duplicate submissions")
 
 
 # ---------------------------------------------------------------------------
