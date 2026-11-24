@@ -37,6 +37,9 @@ pwdlib[argon2]>=0.2
 # JWT encoding / decoding
 PyJWT[crypto]>=2.8
 
+# Image processing and validation (content inspection, decompression-bomb protection)
+pillow>=10.0
+
 # ===========================================================================
 # Development and test dependencies
 # Not required in production. Install alongside runtime deps during development.

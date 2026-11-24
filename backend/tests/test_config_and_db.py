@@ -650,8 +650,14 @@ class TestDeclarativeBase:
         Uses an isolated Python subprocess to guarantee that earlier tests in the
         session that imported app.models do not leak imported module state into this verification.
         """
+        import os
         import subprocess
         import sys
+        from pathlib import Path
+
+        backend_dir = str(Path(__file__).resolve().parent.parent)
+        env = os.environ.copy()
+        env["PYTHONPATH"] = backend_dir
 
         verify_script = (
             "import sys\n"
@@ -669,6 +675,8 @@ class TestDeclarativeBase:
             capture_output=True,
             text=True,
             check=False,
+            env=env,
+            cwd=backend_dir,
         )
         assert proc.returncode == 0, (
             f"Importing Base alone implicitly imported models or registered tables:\n"
@@ -712,6 +720,7 @@ class TestDeclarativeBase:
             "transporter_profiles",
             "service_areas",
             "transport_connection_requests",
+            "order_images",
         }
         actual_tables = set(Base.metadata.tables.keys())
         assert actual_tables == expected_tables, (
