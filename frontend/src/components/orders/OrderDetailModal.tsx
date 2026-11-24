@@ -19,6 +19,7 @@ import {
   FileText,
   Check,
   Printer,
+  Image as ImageIcon,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ordersApi } from "../../api/orders";
@@ -632,14 +633,14 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   })}
                 </span>
                 <div className="rounded-xl border border-border overflow-hidden">
-                  <table className="w-full text-left text-xs">
+                  <table className="w-full text-start text-xs">
                     <thead className="bg-secondary/60 text-muted-foreground border-b border-border font-bold">
                       <tr>
                         <th className="px-4 py-2.5">{t("orders:detail.col_item", "Produce Item")}</th>
                         <th className="px-4 py-2.5">{t("orders:detail.col_quality", "Quality")}</th>
-                        <th className="px-4 py-2.5 text-right">{t("orders:detail.col_quantity", "Quantity")}</th>
-                        <th className="px-4 py-2.5 text-right">{t("orders:detail.col_unit_price", "Unit Price")}</th>
-                        <th className="px-4 py-2.5 text-right">{t("orders:detail.col_subtotal", "Line Subtotal")}</th>
+                        <th className="px-4 py-2.5 text-end">{t("orders:detail.col_quantity", "Quantity")}</th>
+                        <th className="px-4 py-2.5 text-end">{t("orders:detail.col_unit_price", "Unit Price")}</th>
+                        <th className="px-4 py-2.5 text-end">{t("orders:detail.col_subtotal", "Line Subtotal")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -651,13 +652,13 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                           <td className="px-4 py-3 text-muted-foreground">
                             {it.quality_grade || t("orders:detail.standard_grade", "Standard")}
                           </td>
-                          <td className="px-4 py-3 text-right font-medium">
+                          <td className="px-4 py-3 text-end font-medium">
                             {formatNumber(it.quantity)} {it.unit}
                           </td>
-                          <td className="px-4 py-3 text-right text-muted-foreground font-mono">
+                          <td className="px-4 py-3 text-end text-muted-foreground font-mono">
                             ₹{formatNumber(Number(it.unit_price))}
                           </td>
-                          <td className="px-4 py-3 text-right font-bold text-foreground font-mono">
+                          <td className="px-4 py-3 text-end font-bold text-foreground font-mono">
                             ₹{formatNumber(Number(it.subtotal))}
                           </td>
                         </tr>
@@ -665,10 +666,10 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                     </tbody>
                     <tfoot className="bg-secondary/40 border-t border-border font-bold text-xs">
                       <tr>
-                        <td colSpan={4} className="px-4 py-3 text-right text-muted-foreground">
+                        <td colSpan={4} className="px-4 py-3 text-end text-muted-foreground">
                           {t("orders:detail.total_valuation", "Total Commercial Valuation:")}
                         </td>
-                        <td className="px-4 py-3 text-right text-base text-primary font-black font-mono">
+                        <td className="px-4 py-3 text-end text-base text-primary font-black font-mono">
                           ₹{formatNumber(Number(order.total_amount))}
                         </td>
                       </tr>
@@ -710,6 +711,38 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   </div>
                 </div>
               </div>
+
+              {/* Attached Order Images & Documentation (Phase 2) */}
+              {order.images && order.images.length > 0 && (
+                <div className="p-4 rounded-xl border border-border bg-card space-y-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+                      <span>{t("orders:detail.order_photographs", "Order Documentation & Quality Photographs")}</span>
+                    </span>
+                    <span className="text-[11px] font-normal text-muted-foreground">
+                      {order.images.length} {t("orders:detail.photos_attached", "photos attached")}
+                    </span>
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {order.images.map((img) => (
+                      <a
+                        key={img.id}
+                        href={img.image_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group relative aspect-video rounded-lg overflow-hidden border border-border hover:border-primary transition-all bg-secondary/30 flex items-center justify-center"
+                      >
+                        <img
+                          src={img.image_url}
+                          alt="Order document"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Delivery Coordination Controls */}
               {order.status !== "cancelled" &&
