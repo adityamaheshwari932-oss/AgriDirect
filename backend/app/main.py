@@ -102,7 +102,7 @@ def create_app() -> FastAPI:
     from app.analytics.routes import router as analytics_router
     from app.auth.routes import router as auth_router
     from app.chat.routes import router as chat_router
-    from app.listings.routes import router as listings_router
+    from app.listings.routes import products_router, router as listings_router
     from app.notifications.routes import router as notifications_router
     from app.offers.routes import router as offers_router
     from app.orders.routes import router as orders_router
@@ -118,6 +118,7 @@ def create_app() -> FastAPI:
     app.include_router(users_router, prefix="/api/v1")
     app.include_router(transporters_router, prefix="/api/v1")
     app.include_router(listings_router, prefix="/api/v1")
+    app.include_router(products_router, prefix="/api/v1")
     app.include_router(requirements_router, prefix="/api/v1")
     app.include_router(offers_router, prefix="/api/v1")
     app.include_router(orders_router, prefix="/api/v1")

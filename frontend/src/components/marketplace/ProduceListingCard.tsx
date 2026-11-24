@@ -21,6 +21,14 @@ export const ProduceListingCard: React.FC<ProduceListingCardProps> = ({
   onViewDetails,
 }) => {
   const { t } = useTranslation("marketplace");
+  const [imgError, setImgError] = React.useState(false);
+
+  const imageSrc =
+    listing.primary_image_url ||
+    (listing.images && listing.images.length > 0
+      ? listing.images[0].image_url
+      : undefined);
+
   const formattedPrice = formatNumber(Number(listing.price_per_unit), {
     maximumFractionDigits: 2,
   });
@@ -32,14 +40,12 @@ export const ProduceListingCard: React.FC<ProduceListingCardProps> = ({
     >
       {/* Thumbnail with overlay tags */}
       <div className="relative aspect-video w-full bg-secondary/50 overflow-hidden">
-        {listing.primary_image_uri ? (
+        {imageSrc && !imgError ? (
           <img
-            src={listing.primary_image_uri}
+            src={imageSrc}
             alt={listing.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            onError={(e) => {
-              (e.target as HTMLElement).style.display = "none";
-            }}
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/30 bg-gradient-to-br from-secondary/30 to-secondary/60">

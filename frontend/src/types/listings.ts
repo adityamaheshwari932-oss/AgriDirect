@@ -18,6 +18,7 @@ export interface ListingImage {
   is_primary: boolean;
   display_order: number;
   created_at: string;
+  image_url?: string;
 }
 
 export interface FarmerSummary {
@@ -80,6 +81,8 @@ export interface ProduceListingPublicSummary {
   status: string;
   created_at: string;
   primary_image_uri?: string | null;
+  primary_image_url?: string | null;
+  images?: ListingImage[];
   farmer?: FarmerSummary | null;
 }
 

@@ -336,3 +336,52 @@ class ListingRepository:
         self.db.refresh(image)
         return image
 
+    def list_listing_images(self, listing_id: uuid.UUID) -> List[ListingImage]:
+        """List all images attached to a listing ordered by display_order, then created_at."""
+        return (
+            self.db.query(ListingImage)
+            .filter(ListingImage.listing_id == listing_id)
+            .order_by(ListingImage.display_order.asc(), ListingImage.created_at.asc())
+            .all()
+        )
+
+    def reorder_listing_images(
+        self,
+        listing_id: uuid.UUID,
+        image_ids: List[uuid.UUID],
+    ) -> List[ListingImage]:
+        """Update display_order for images matching listing_id according to the given order."""
+        for order_index, img_id in enumerate(image_ids):
+            self.db.query(ListingImage).filter(
+                ListingImage.listing_id == listing_id,
+                ListingImage.id == img_id,
+            ).update({"display_order": order_index})
+        self.db.commit()
+        return self.list_listing_images(listing_id)
+
+    def add_listing_images(
+        self,
+        listing_id: uuid.UUID,
+        image_entries: List[dict],
+    ) -> List[ListingImage]:
+        """Batch attach multiple images to a produce listing atomically."""
+        created_images = []
+        for entry in image_entries:
+            if entry.get("is_primary"):
+                self.db.query(ListingImage).filter(
+                    ListingImage.listing_id == listing_id,
+                    ListingImage.is_primary.is_(True),
+                ).update({"is_primary": False})
+            img = ListingImage(
+                listing_id=listing_id,
+                image_uri=entry["image_uri"],
+                is_primary=entry.get("is_primary", False),
+                display_order=entry.get("display_order", 0),
+            )
+            self.db.add(img)
+            created_images.append(img)
+        self.db.commit()
+        for img in created_images:
+            self.db.refresh(img)
+        return created_images
+

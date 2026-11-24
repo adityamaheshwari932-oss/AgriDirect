@@ -1,10 +1,20 @@
-import React, { useEffect, useState } from "react";
-import { X, Save, AlertCircle, Loader2 } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  X,
+  Save,
+  AlertCircle,
+  Loader2,
+  ImagePlus,
+  Star,
+  Trash2,
+  ImageIcon,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { listingsApi } from "../../api/listings";
 import { ApiError } from "../../api/errors";
 import type {
   ListingCreatePayload,
+  ListingImage,
   ListingUpdatePayload,
   ProduceCategory,
   ProduceListingDetail,
@@ -38,6 +48,11 @@ const QUALITY_GRADES = [
   { value: "Export Quality", label: "Export Grade" },
 ];
 
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_IMAGES_LIMIT = 10;
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
+
 export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
   isOpen,
   listingToEdit,
@@ -64,11 +79,38 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
   const [availableFrom, setAvailableFrom] = useState("");
   const [status, setStatus] = useState<"active" | "draft">("active");
 
+  // Image Upload & Management State
+  const [existingImages, setExistingImages] = useState<ListingImage[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [newPrimaryIndex, setNewPrimaryIndex] = useState(0);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
+  const [settingPrimaryId, setSettingPrimaryId] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = React.useRef(false);
+  const createdListingRef = React.useRef<ProduceListingDetail | null>(null);
+
+  // Revoke object URLs on cleanup
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [previewUrls]);
 
   useEffect(() => {
+    // Revoke previous URLs
+    previewUrls.forEach((url) => URL.revokeObjectURL(url));
+    setSelectedFiles([]);
+    setPreviewUrls([]);
+    setNewPrimaryIndex(0);
+    setImageError(null);
+
     if (listingToEdit) {
       setProductName(listingToEdit.product_name);
       setTitle(listingToEdit.title);
@@ -83,6 +125,7 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
       setHarvestDate(listingToEdit.harvest_date || "");
       setAvailableFrom(listingToEdit.available_from ? listingToEdit.available_from.slice(0, 10) : "");
       setStatus(listingToEdit.status === "draft" ? "draft" : "active");
+      setExistingImages(listingToEdit.images || []);
     } else {
       setProductName("");
       setTitle("");
@@ -97,12 +140,133 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
       setHarvestDate("");
       setAvailableFrom(new Date().toISOString().slice(0, 10));
       setStatus("active");
+      setExistingImages([]);
+      createdListingRef.current = null;
     }
+    isSubmittingRef.current = false;
     setFieldErrors({});
     setGeneralError(null);
   }, [listingToEdit, defaultState, defaultCity, categories, isOpen]);
 
   if (!isOpen) return null;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setImageError(null);
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const fileList = Array.from(files);
+    const currentTotal = existingImages.length + selectedFiles.length;
+
+    if (currentTotal + fileList.length > MAX_IMAGES_LIMIT) {
+      setImageError(
+        t(
+          "errors:image_limit_reached",
+          `Selecting ${fileList.length} photo(s) would exceed the maximum limit of ${MAX_IMAGES_LIMIT} photos. (Currently: ${currentTotal})`
+        )
+      );
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    const validNewFiles: File[] = [];
+    const validNewUrls: string[] = [];
+
+    for (const file of fileList) {
+      if (file.size > MAX_IMAGE_SIZE_BYTES) {
+        setImageError(
+          t(
+            "errors:image_size_exceeded",
+            `"${file.name}" exceeds the 5 MB limit (${(file.size / (1024 * 1024)).toFixed(2)} MB).`
+          )
+        );
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
+
+      const lowerName = file.name.toLowerCase();
+      const hasValidExt = ALLOWED_EXTENSIONS.some((ext) => lowerName.endsWith(ext));
+      const hasValidMime = ALLOWED_MIME_TYPES.includes(file.type);
+
+      if (!hasValidExt || !hasValidMime) {
+        setImageError(
+          t(
+            "errors:unsupported_image_format",
+            `"${file.name}" has an unsupported format. Please select JPEG, PNG, or WebP photographs.`
+          )
+        );
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
+
+      validNewFiles.push(file);
+      validNewUrls.push(URL.createObjectURL(file));
+    }
+
+    setSelectedFiles((prev) => [...prev, ...validNewFiles]);
+    setPreviewUrls((prev) => [...prev, ...validNewUrls]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleRemoveSelectedFile = (index: number) => {
+    URL.revokeObjectURL(previewUrls[index]);
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
+    if (newPrimaryIndex === index) {
+      setNewPrimaryIndex(0);
+    } else if (newPrimaryIndex > index) {
+      setNewPrimaryIndex((prev) => prev - 1);
+    }
+  };
+
+  const handleDeleteExistingImage = async (imageId: string) => {
+    if (!listingToEdit) return;
+    if (
+      !window.confirm(
+        t(
+          "dashboard:confirm_delete_photo",
+          "Are you sure you want to remove this photograph from the listing?"
+        )
+      )
+    ) {
+      return;
+    }
+
+    setDeletingImageId(imageId);
+    setImageError(null);
+    try {
+      await listingsApi.deleteImage(listingToEdit.id, imageId);
+      setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? err.message : "Failed to delete photograph.";
+      setImageError(msg);
+    } finally {
+      setDeletingImageId(null);
+    }
+  };
+
+  const handleSetPrimaryExisting = async (imageId: string) => {
+    if (!listingToEdit) return;
+    setSettingPrimaryId(imageId);
+    setImageError(null);
+    try {
+      await listingsApi.setPrimaryImage(listingToEdit.id, imageId);
+      setExistingImages((prev) =>
+        prev.map((img) => ({
+          ...img,
+          is_primary: img.id === imageId,
+        }))
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? err.message : "Failed to set primary thumbnail.";
+      setImageError(msg);
+    } finally {
+      setSettingPrimaryId(null);
+    }
+  };
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
@@ -143,7 +307,8 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
     setGeneralError(null);
 
     if (!validate()) return;
-
+    if (isSubmittingRef.current || isSubmitting) return;
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     try {
       if (isEdit && listingToEdit) {
@@ -164,7 +329,15 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
         };
 
         const updated = await listingsApi.updateListing(listingToEdit.id, payload);
-        onSuccess(updated, true);
+
+        // Upload any newly selected images
+        if (selectedFiles.length > 0) {
+          await listingsApi.uploadImages(listingToEdit.id, selectedFiles);
+          const refreshed = await listingsApi.getListing(listingToEdit.id);
+          onSuccess(refreshed, true);
+        } else {
+          onSuccess(updated, true);
+        }
       } else {
         const payload: ListingCreatePayload = {
           product_name: productName.trim(),
@@ -182,8 +355,30 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
           status,
         };
 
-        const created = await listingsApi.createListing(payload);
-        onSuccess(created, false);
+        let created = createdListingRef.current;
+        if (!created) {
+          created = await listingsApi.createListing(payload);
+          createdListingRef.current = created;
+        }
+
+        // Upload attached photographs
+        if (selectedFiles.length > 0) {
+          try {
+            const uploaded = await listingsApi.uploadImages(created.id, selectedFiles);
+            if (newPrimaryIndex > 0 && uploaded.length > newPrimaryIndex) {
+              await listingsApi.setPrimaryImage(created.id, uploaded[newPrimaryIndex].id);
+            }
+          } catch (uploadErr) {
+            // Even if an image upload fails, notify caller that listing was established
+            const refreshed = await listingsApi.getListing(created.id).catch(() => created!);
+            onSuccess(refreshed, false);
+            throw uploadErr;
+          }
+          const refreshed = await listingsApi.getListing(created.id);
+          onSuccess(refreshed, false);
+        } else {
+          onSuccess(created, false);
+        }
       }
     } catch (err: unknown) {
       if (err instanceof ApiError) {
@@ -201,9 +396,12 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
         setGeneralError(t("errors:network_error_save", "An unexpected network error occurred while saving the listing."));
       }
     } finally {
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   };
+
+  const totalImagesCount = existingImages.length + selectedFiles.length;
 
   return (
     <div
@@ -380,7 +578,7 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label htmlFor="listing-quality-grade" className="block text-xs font-semibold text-foreground mb-1">
-                {t("dashboard:quality_grade_label", "Quality Grade")}
+                {t("dashboard:quality_grading_label", "Quality Grading")}
               </label>
               <select
                 id="listing-quality-grade"
@@ -411,7 +609,7 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
 
             <div>
               <label htmlFor="listing-available-from" className="block text-xs font-semibold text-foreground mb-1">
-                {t("dashboard:ready_dispatch_label", "Ready for Dispatch From")}
+                {t("dashboard:available_from_label", "Dispatch Readiness Date")}
               </label>
               <input
                 id="listing-available-from"
@@ -452,6 +650,165 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
                 className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
+          </div>
+
+          {/* Product Photographs Section */}
+          <div className="p-4 rounded-xl bg-secondary/30 border border-border space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-primary" aria-hidden="true" />
+                <span className="text-xs font-bold text-foreground">
+                  {t("dashboard:produce_photos_title", "Produce Lot Photographs")}
+                </span>
+                <span className="text-[11px] font-semibold text-muted-foreground px-2 py-0.5 rounded-full bg-secondary border border-border">
+                  {totalImagesCount} / {MAX_IMAGES_LIMIT}
+                </span>
+              </div>
+              <span className="text-[11px] text-muted-foreground">
+                {t("dashboard:photo_limits_guidance", "Max 10 photos, 5 MB each (JPEG, PNG, WebP)")}
+              </span>
+            </div>
+
+            {imageError && (
+              <div className="p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>{imageError}</span>
+              </div>
+            )}
+
+            {/* Existing Images (Edit Mode) */}
+            {existingImages.length > 0 && (
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-semibold text-muted-foreground block">
+                  {t("dashboard:current_photos_label", "Existing Photographs:")}
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {existingImages.map((img) => (
+                    <div
+                      key={img.id}
+                      className="relative rounded-lg border border-border overflow-hidden bg-background aspect-square group flex flex-col justify-between"
+                    >
+                      <img
+                        src={img.image_url || listingsApi.getImageUrl(listingToEdit!.id, img.id)}
+                        alt="Produce Lot"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-1">
+                        {!img.is_primary && (
+                          <button
+                            type="button"
+                            onClick={() => handleSetPrimaryExisting(img.id)}
+                            disabled={settingPrimaryId === img.id}
+                            className="p-1.5 rounded-md bg-background/90 text-foreground hover:bg-background text-xs shadow-xs"
+                            title={t("dashboard:make_primary_photo", "Make Primary Photo")}
+                          >
+                            <Star className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteExistingImage(img.id)}
+                          disabled={deletingImageId === img.id}
+                          className="p-1.5 rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 text-xs shadow-xs"
+                          title={t("dashboard:delete_photo", "Delete Photo")}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      {img.is_primary && (
+                        <span className="absolute top-1.5 start-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary text-primary-foreground shadow-xs flex items-center gap-1">
+                          <Star className="w-3 h-3 fill-current" />
+                          {t("dashboard:primary_photo_badge", "Primary")}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Selected New Previews */}
+            {selectedFiles.length > 0 && (
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-semibold text-muted-foreground block">
+                  {t("dashboard:photos_to_upload_label", "Photographs to be uploaded:")}
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {selectedFiles.map((file, idx) => (
+                    <div
+                      key={idx}
+                      className="relative rounded-lg border border-primary/40 overflow-hidden bg-background aspect-square group"
+                    >
+                      <img
+                        src={previewUrls[idx]}
+                        alt={file.name}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSelectedFile(idx)}
+                        className="absolute top-1.5 end-1.5 p-1 rounded-full bg-destructive/90 text-destructive-foreground hover:bg-destructive shadow-xs"
+                        title={t("common:remove", "Remove")}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                      <div className="absolute bottom-0 inset-x-0 bg-background/90 backdrop-blur-xs p-1 text-[10px] truncate text-center">
+                        <span className="truncate block font-medium">{file.name}</span>
+                        <span className="text-muted-foreground">
+                          {(file.size / 1024).toFixed(0)} KB
+                        </span>
+                      </div>
+                      {/* Primary selector for new files if no existing images */}
+                      {existingImages.length === 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setNewPrimaryIndex(idx)}
+                          className={`absolute top-1.5 start-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold shadow-xs flex items-center gap-1 ${
+                            newPrimaryIndex === idx
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-background/80 text-foreground hover:bg-background"
+                          }`}
+                        >
+                          <Star className={`w-3 h-3 ${newPrimaryIndex === idx ? "fill-current" : ""}`} />
+                          {newPrimaryIndex === idx
+                            ? t("dashboard:primary_photo_badge", "Primary")
+                            : t("dashboard:set_primary", "Set Primary")}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Upload File Input */}
+            {totalImagesCount < MAX_IMAGES_LIMIT && (
+              <div>
+                <input
+                  ref={fileInputRef}
+                  id="listing-images-input"
+                  type="file"
+                  multiple
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full py-3 px-4 rounded-xl border border-dashed border-border bg-background hover:bg-secondary/50 text-foreground text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  <ImagePlus className="w-4 h-4 text-primary" />
+                  <span>
+                    {totalImagesCount === 0
+                      ? t("dashboard:add_first_photos", "Select or Take Harvest Photographs")
+                      : t("dashboard:add_more_photos", "Add More Photographs ({{remaining}} remaining)", {
+                          remaining: MAX_IMAGES_LIMIT - totalImagesCount,
+                        })}
+                  </span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Initial Status (Create Mode only) */}
@@ -523,4 +880,3 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
     </div>
   );
 };
-

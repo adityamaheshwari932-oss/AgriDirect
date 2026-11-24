@@ -9,7 +9,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator
 
 from app.models.listing import (
     CANONICAL_UNITS,
@@ -43,6 +43,24 @@ class ListingImageResponse(BaseModel):
     is_primary: bool
     display_order: int
     created_at: datetime
+
+    @computed_field
+    @property
+    def image_url(self) -> str:
+        """Usable relative delivery URL for frontend rendering."""
+        return f"/api/v1/listings/{self.listing_id}/images/{self.id}"
+
+
+class ListingImagesReorderRequest(BaseModel):
+    """Payload to reorder gallery images."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    image_ids: List[uuid.UUID] = Field(
+        ...,
+        min_length=1,
+        description="List of image IDs in desired presentation order",
+    )
 
 
 class FarmerSummary(BaseModel):
@@ -282,6 +300,8 @@ class ProduceListingPublicSummary(BaseModel):
     status: str
     created_at: datetime
     primary_image_uri: Optional[str] = None
+    primary_image_url: Optional[str] = None
+    images: List[ListingImageResponse] = []
     farmer: Optional[FarmerSummary] = None
 
 
