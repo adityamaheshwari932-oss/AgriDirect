@@ -122,10 +122,16 @@ export const DashboardLayout: React.FC = () => {
     : isTransporter
     ? [
         { label: t("common:nav.dashboard", "Dashboard"), to: "/dashboard/transporter", icon: Truck },
-        { label: t("common:nav.transportation", "Transportation"), to: "/dashboard/transporters", icon: Truck },
         { label: t("common:nav.orders", "Orders"), to: "/dashboard/orders", icon: ClipboardList },
         { label: t("common:nav.messages", "Messages"), to: "/dashboard/messages", icon: MessageSquare },
         { label: t("common:nav.profile", "Profile"), to: "/dashboard/profile", icon: UserIcon },
+        {
+          label: t("common:nav.verification", "Verification"),
+          to: "/dashboard/verification",
+          icon: ShieldCheck,
+          badge: verificationConfig.label,
+          badgeClass: verificationConfig.badgeClass,
+        },
       ]
     : isAdmin
     ? [
