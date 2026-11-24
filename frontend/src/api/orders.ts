@@ -15,7 +15,9 @@ import type {
   OrderAmendmentCreatePayload,
   OrderAmendmentListResponse,
   OrderCancelPayload,
+  OrderCreatePayload,
   OrderDetail,
+  OrderImage,
   OrderListFilterParams,
   OrderListResponse,
   RejectFulfillmentPayload,
@@ -27,6 +29,42 @@ export class OrdersApi {
   // -------------------------------------------------------------------------
   // Order Lifecycle
   // -------------------------------------------------------------------------
+
+  /**
+   * Place a direct purchase order against an active produce listing.
+   * Atomic inventory deduction and client-side idempotency protection.
+   */
+  public async createOrder(
+    payload: OrderCreatePayload,
+    idempotencyKey?: string
+  ): Promise<OrderDetail> {
+    const headers: Record<string, string> = {};
+    if (idempotencyKey) {
+      headers["X-Idempotency-Key"] = idempotencyKey;
+    }
+    return this.client.post<OrderDetail>("/orders", payload, { headers });
+  }
+
+  /**
+   * Attach photographic assets (specifications, quality, dispatch evidence) to an order.
+   */
+  public async uploadOrderImages(
+    orderId: string,
+    files: File[]
+  ): Promise<OrderImage[]> {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+    return this.client.post<OrderImage[]>(`/orders/${orderId}/images`, formData);
+  }
+
+  /**
+   * Retrieve all attached photographs for an order.
+   */
+  public async getOrderImages(orderId: string): Promise<OrderImage[]> {
+    return this.client.get<OrderImage[]>(`/orders/${orderId}/images`);
+  }
 
   /**
    * Retrieve paginated orders for the authenticated participant (buyer or farmer).

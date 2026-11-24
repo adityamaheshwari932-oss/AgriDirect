@@ -12,9 +12,11 @@ import json
 import uuid
 from datetime import date, datetime, timezone
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.listing import (
@@ -23,7 +25,7 @@ from app.models.listing import (
     STATUS_PARTIALLY_FULFILLED,
     ProduceListing,
 )
-from app.models.notification import Notification
+from app.models.notification import NOTIFICATION_REF_ORDER, Notification
 from app.models.order import (
     AMENDMENT_STATUS_EFFECTIVE,
     AMENDMENT_STATUS_PROPOSED,
@@ -34,9 +36,11 @@ from app.models.order import (
     AMENDMENT_TYPE_TERMS,
     CHANGE_TYPE_AMENDMENT_DELTA,
     CHANGE_TYPE_ORDER_CANCELLATION_RELEASE,
+    CHANGE_TYPE_ORDER_FULFILLMENT,
     DELIVERY_STATUS_ARRANGED,
     DELIVERY_STATUS_COMPLETED,
     DELIVERY_STATUS_COMPLETION_MARKED,
+    DELIVERY_STATUS_NOT_ARRANGED,
     ORDER_ITEM_STATUS_CANCELLED,
     ORDER_ITEM_STATUS_CONFIRMED,
     ORDER_ITEM_STATUS_DISPUTED,
@@ -51,6 +55,7 @@ from app.models.order import (
     Order,
     OrderAmendment,
     OrderDeliveryAcknowledgement,
+    OrderImage,
     OrderItem,
 )
 from app.models.requirement import (
@@ -67,6 +72,7 @@ from app.models.requirement_approval import (
 )
 from app.models.user import User
 from app.orders.repository import OrderRepository
+from app.orders.storage import OrderImageStorageService
 from app.orders.schemas import (
     DeliveryAcknowledgeRequest,
     DeliveryArrangeRequest,
@@ -76,8 +82,10 @@ from app.orders.schemas import (
     OrderAmendmentListResponse,
     OrderAmendmentResponse,
     OrderCancelRequest,
+    OrderCreateRequest,
     OrderDeliveryAcknowledgementResponse,
     OrderDetailResponse,
+    OrderImageResponse,
     OrderItemResponse,
     OrderListItemResponse,
     OrderListResponse,
@@ -213,6 +221,20 @@ class OrderService:
                 if order.buyer_id not in acked_users:
                     pending_roles.append("buyer")
 
+        # Convert attached order images
+        order_imgs = getattr(order, "images", []) or []
+        images_resp = [
+            OrderImageResponse(
+                id=img.id,
+                order_id=img.order_id,
+                image_url=f"/api/v1/orders/{order.id}/images/{img.id}",
+                mime_type=img.mime_type,
+                file_size_bytes=int(img.file_size_bytes or 0),
+                created_at=img.created_at,
+            )
+            for img in order_imgs
+        ]
+
         return OrderDetailResponse(
             id=order.id,
             order_number=order.order_number,
@@ -243,6 +265,7 @@ class OrderService:
             amendments=amendments_resp,
             delivery_acknowledgements=acks_resp,
             delivery_acknowledgements_pending=pending_roles,
+            images=images_resp,
         )
 
     # -----------------------------------------------------------------------
@@ -316,6 +339,271 @@ class OrderService:
             )
 
         return self._to_detail_response(order)
+
+    def create_direct_order(
+        self,
+        current_user: User,
+        payload: OrderCreateRequest,
+    ) -> OrderDetailResponse:
+        """Create a direct purchase order against an active produce listing with strict inventory deduction and idempotency."""
+        self._ensure_active_verified(current_user, required_role="buyer")
+
+        # 1. Idempotency Check: if client supplied idempotency_key, return existing order safely
+        if payload.idempotency_key:
+            existing = self.repo.get_by_idempotency_key(payload.idempotency_key)
+            if existing:
+                if existing.buyer_id != current_user.id and current_user.role != "admin":
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Idempotency key was used by another account",
+                    )
+                # Return the existing order cleanly without duplicate deduction or error
+                return self.get_order_detail(current_user, existing.id)
+
+        # 2. Acquire Tier 3 exclusive row lock on ProduceListing
+        listing = self.repo.lock_listing(payload.listing_id)
+        if not listing or listing.is_deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Produce listing '{payload.listing_id}' not found",
+            )
+
+        if listing.status != STATUS_ACTIVE:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Listing is not available for purchase (status: {listing.status})",
+            )
+
+        if listing.farmer_id == current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Commercial buyers cannot purchase their own produce listings",
+            )
+
+        if listing.available_quantity < payload.quantity:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Requested quantity ({payload.quantity} {listing.unit}) exceeds available stock ({listing.available_quantity} {listing.unit})",
+            )
+
+        # 3. Authoritative Inventory Deduction
+        previous_stock = listing.available_quantity
+        new_stock = previous_stock - payload.quantity
+        listing.available_quantity = new_stock
+        if new_stock == Decimal("0"):
+            listing.status = STATUS_CLOSED
+
+        # 4. Generate collision-free order number
+        order_number = self.repo.generate_order_number()
+        total_amount = (payload.quantity * listing.price_per_unit).quantize(Decimal("0.01"))
+
+        # 5. Create Order Entity
+        order = Order(
+            order_number=order_number,
+            source_offer_id=None,
+            buyer_id=current_user.id,
+            farmer_id=listing.farmer_id,
+            total_amount=total_amount,
+            status=ORDER_STATUS_PENDING,
+            delivery_method="direct_delivery",
+            delivery_destination_address=payload.delivery_destination_address,
+            delivery_arranged_date=payload.delivery_arranged_date,
+            delivery_status=DELIVERY_STATUS_NOT_ARRANGED,
+            delivery_notes=payload.delivery_notes,
+            idempotency_key=payload.idempotency_key,
+        )
+        try:
+            self.db.add(order)
+            self.db.flush()
+
+            # 6. Snapshot Line Item
+            order_item = OrderItem(
+                order_id=order.id,
+                listing_id=listing.id,
+                buyer_requirement_id=None,
+                product_name=listing.product_name,
+                quantity=payload.quantity,
+                unit=listing.unit,
+                unit_price=listing.price_per_unit,
+                subtotal=total_amount,
+                quality_grade=listing.quality_grade,
+                status=ORDER_ITEM_STATUS_CONFIRMED,
+            )
+            self.db.add(order_item)
+
+            # 7. Append-only Inventory Adjustment Audit Ledger
+            adj = InventoryAdjustment(
+                listing_id=listing.id,
+                order_id=order.id,
+                change_type=CHANGE_TYPE_ORDER_FULFILLMENT,
+                quantity_delta=-payload.quantity,
+                recorded_by_user_id=current_user.id,
+                notes=f"Direct purchase order {order_number} inventory fulfillment deduction",
+            )
+            self.db.add(adj)
+
+            # 8. Notify Farmer
+            buyer_name = self._get_user_display_name(current_user)
+            self.db.add(
+                Notification(
+                    user_id=listing.farmer_id,
+                    event_type="order_created",
+                    title="New Purchase Order Placed",
+                    body=f"{buyer_name} placed order {order_number} for {payload.quantity} {listing.unit} of {listing.product_name}.",
+                    reference_type=NOTIFICATION_REF_ORDER,
+                    reference_id=order.id,
+                )
+            )
+
+            self.db.commit()
+        except IntegrityError as exc:
+            self.db.rollback()
+            # If an idempotency key was supplied, check whether another concurrent transaction
+            # already committed the exact same order. If so, return the committed order safely.
+            if payload.idempotency_key:
+                existing = self.repo.get_by_idempotency_key(payload.idempotency_key)
+                if existing:
+                    if existing.buyer_id != current_user.id and current_user.role != "admin":
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Idempotency key was used by another account",
+                        )
+                    return self.get_order_detail(current_user, existing.id)
+            # Re-raise original database integrity failure if unrelated
+            raise exc
+
+        return self.get_order_detail(current_user, order.id)
+
+    def upload_order_images(
+        self,
+        current_user: User,
+        order_id: uuid.UUID,
+        upload_files: List[Any],
+    ) -> List[OrderImageResponse]:
+        """Attach quality inspection or delivery verification photographs to an order."""
+        self._ensure_active_verified(current_user)
+        order = self.repo.get_by_id(order_id)
+        if not order:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Order '{order_id}' not found",
+            )
+
+        if current_user.role != "admin" and current_user.id not in (order.buyer_id, order.farmer_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only order counterparties or administrators can attach order photographs",
+            )
+
+        existing_images = self.repo.get_order_images(order_id)
+        if len(existing_images) + len(upload_files) > 10:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Maximum 10 images permitted per order. Order already has {len(existing_images)} attached.",
+            )
+
+        storage = OrderImageStorageService()
+        saved_entities = []
+        saved_uris: List[str] = []
+        try:
+            for file in upload_files:
+                uri, mime_type, file_size = storage.save_image(file)
+                saved_uris.append(uri)
+                img = self.repo.add_order_image(
+                    order_id=order.id,
+                    uploaded_by_user_id=current_user.id,
+                    image_uri=uri,
+                    mime_type=mime_type,
+                    file_size_bytes=file_size,
+                )
+                saved_entities.append(img)
+
+            self.db.commit()
+        except Exception:
+            self.db.rollback()
+            # Clean up all physical files saved in this failed batch
+            for uri in saved_uris:
+                try:
+                    storage.delete_image_file(uri)
+                except Exception:
+                    pass
+            raise
+
+        return [
+            OrderImageResponse(
+                id=img.id,
+                order_id=img.order_id,
+                image_url=f"/api/v1/orders/{order.id}/images/{img.id}",
+                mime_type=img.mime_type,
+                file_size_bytes=int(img.file_size_bytes or 0),
+                created_at=img.created_at,
+            )
+            for img in saved_entities
+        ]
+
+    def get_order_image_file_path(
+        self,
+        current_user: User,
+        order_id: uuid.UUID,
+        image_id: uuid.UUID,
+    ) -> Path:
+        """Resolve and verify authorization for streaming an attached order image."""
+        self._ensure_active_verified(current_user)
+        order = self.repo.get_by_id(order_id)
+        if not order:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Order '{order_id}' not found",
+            )
+
+        if current_user.role != "admin" and current_user.id not in (order.buyer_id, order.farmer_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access restricted to authenticated order counterparties or administrators",
+            )
+
+        image = self.repo.get_order_image(order_id, image_id)
+        if not image:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Order image '{image_id}' not found",
+            )
+
+        storage = OrderImageStorageService()
+        return storage.resolve_image_path(image.image_uri)
+
+    def list_order_images(
+        self,
+        current_user: User,
+        order_id: uuid.UUID,
+    ) -> List[OrderImageResponse]:
+        """List all photographs attached to an order."""
+        self._ensure_active_verified(current_user)
+        order = self.repo.get_by_id(order_id)
+        if not order:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Order '{order_id}' not found",
+            )
+
+        if current_user.role != "admin" and current_user.id not in (order.buyer_id, order.farmer_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access restricted to authenticated order counterparties or administrators",
+            )
+
+        images = self.repo.get_order_images(order_id)
+        return [
+            OrderImageResponse(
+                id=img.id,
+                order_id=img.order_id,
+                image_url=f"/api/v1/orders/{order.id}/images/{img.id}",
+                mime_type=img.mime_type,
+                file_size_bytes=int(img.file_size_bytes or 0),
+                created_at=img.created_at,
+            )
+            for img in images
+        ]
 
     def confirm_order(self, current_user: User, order_id: uuid.UUID) -> OrderDetailResponse:
         """Confirm order by the seller (farmer) exclusively."""

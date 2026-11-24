@@ -18,9 +18,10 @@ Exposes RESTful endpoints versioned under /api/v1:
 """
 
 import uuid
-from typing import Optional
+from typing import List, Optional, Union
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -34,7 +35,9 @@ from app.orders.schemas import (
     OrderAmendmentListResponse,
     OrderAmendmentResponse,
     OrderCancelRequest,
+    OrderCreateRequest,
     OrderDetailResponse,
+    OrderImageResponse,
     OrderListResponse,
 )
 from app.orders.service import OrderService
@@ -48,8 +51,26 @@ def get_order_service(db: Session = Depends(get_db)) -> OrderService:
 
 
 # ---------------------------------------------------------------------------
-# Batch 1: Order Listing, Details & Confirmation
+# Batch 1: Order Creation, Listing, Details & Confirmation
 # ---------------------------------------------------------------------------
+
+@router.post(
+    "/orders",
+    response_model=OrderDetailResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create direct purchase order",
+    description="Place a direct order against an active produce listing with atomic inventory deduction and idempotency.",
+)
+def create_direct_order(
+    payload: OrderCreateRequest,
+    x_idempotency_key: Optional[str] = Header(default=None, alias="X-Idempotency-Key"),
+    current_user: User = Depends(require_verified_user),
+    service: OrderService = Depends(get_order_service),
+) -> OrderDetailResponse:
+    if x_idempotency_key and not payload.idempotency_key:
+        payload.idempotency_key = x_idempotency_key
+    return service.create_direct_order(current_user=current_user, payload=payload)
+
 
 @router.get(
     "/orders",
@@ -305,4 +326,75 @@ def get_listing_inventory_adjustments(
         page=page,
         page_size=page_size,
     )
+
+
+# ---------------------------------------------------------------------------
+# Batch 6: Order Photographic Evidence & Quality Assets (Phase 2)
+# ---------------------------------------------------------------------------
+
+@router.post(
+    "/orders/{id}/images",
+    response_model=List[OrderImageResponse],
+    status_code=status.HTTP_201_CREATED,
+    summary="Upload order image(s)",
+    description="Upload photographic quality inspection, delivery dispatch, or receipt verification assets to an order.",
+)
+def upload_order_images(
+    id: uuid.UUID,
+    file: Optional[UploadFile] = File(None, description="Single image file"),
+    files: Optional[List[UploadFile]] = File(None, description="Multiple image files"),
+    current_user: User = Depends(require_verified_user),
+    service: OrderService = Depends(get_order_service),
+) -> List[OrderImageResponse]:
+    upload_files: List[UploadFile] = []
+    if files:
+        upload_files.extend(files)
+    if file:
+        upload_files.append(file)
+    if not upload_files:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="At least one image file ('file' or 'files') must be provided",
+        )
+    return service.upload_order_images(
+        current_user=current_user,
+        order_id=id,
+        upload_files=upload_files,
+    )
+
+
+@router.get(
+    "/orders/{id}/images",
+    response_model=List[OrderImageResponse],
+    status_code=status.HTTP_200_OK,
+    summary="List order images",
+    description="Retrieve all photographic assets attached to an order.",
+)
+def list_order_images(
+    id: uuid.UUID,
+    current_user: User = Depends(require_verified_user),
+    service: OrderService = Depends(get_order_service),
+) -> List[OrderImageResponse]:
+    return service.list_order_images(current_user=current_user, order_id=id)
+
+
+@router.get(
+    "/orders/{id}/images/{image_id}",
+    summary="Download or stream order image",
+    description="Streams an attached order photograph. Restricted to order counterparties or administrators.",
+    status_code=status.HTTP_200_OK,
+)
+def download_order_image(
+    id: uuid.UUID,
+    image_id: uuid.UUID,
+    current_user: User = Depends(require_verified_user),
+    service: OrderService = Depends(get_order_service),
+) -> FileResponse:
+    file_path = service.get_order_image_file_path(
+        current_user=current_user,
+        order_id=id,
+        image_id=image_id,
+    )
+    return FileResponse(path=file_path)
+
 

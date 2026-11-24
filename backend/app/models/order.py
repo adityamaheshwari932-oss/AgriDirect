@@ -141,11 +141,17 @@ class Order(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         unique=True,
         nullable=False,
     )
-    source_offer_id: Mapped[uuid.UUID] = mapped_column(
+    source_offer_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("offers.id", ondelete="RESTRICT"),
         unique=True,
-        nullable=False,
+        nullable=True,
+    )
+    idempotency_key: Mapped[Optional[str]] = mapped_column(
+        String(128),
+        unique=True,
+        nullable=True,
+        index=True,
     )
     buyer_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -306,6 +312,12 @@ class Order(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         back_populates="order",
         cascade="all, delete-orphan",
         order_by="OrderDeliveryAcknowledgement.acknowledged_at.asc()",
+    )
+    images: Mapped[List["OrderImage"]] = relationship(
+        "OrderImage",
+        foreign_keys="[OrderImage.order_id]",
+        back_populates="order",
+        cascade="all, delete-orphan",
     )
 
     __table_args__ = (
@@ -646,5 +658,53 @@ class OrderDeliveryAcknowledgement(Base, UUIDPrimaryKeyMixin):
         ),
         Index("idx_order_delivery_acknowledgements_order_id", "order_id"),
         Index("idx_order_delivery_acknowledgements_user_id", "user_id"),
+    )
+
+
+class OrderImage(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    """Photographic quality documentation, dispatch verification, or receipt assets attached to an order."""
+
+    __tablename__ = "order_images"
+
+    order_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("orders.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    uploaded_by_user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    image_uri: Mapped[str] = mapped_column(
+        String(512),
+        nullable=False,
+    )
+    mime_type: Mapped[str] = mapped_column(
+        String(64),
+        nullable=False,
+        default="image/jpeg",
+    )
+    file_size_bytes: Mapped[int] = mapped_column(
+        Numeric(precision=12, scale=0),
+        nullable=False,
+        default=0,
+    )
+
+    # Relationships
+    order: Mapped["Order"] = relationship(
+        "Order",
+        foreign_keys=[order_id],
+        back_populates="images",
+    )
+    uploader: Mapped["User"] = relationship(
+        "User",
+        foreign_keys=[uploaded_by_user_id],
+    )
+
+    __table_args__ = (
+        Index("idx_order_images_order_id", "order_id"),
+        Index("idx_order_images_uploaded_by", "uploaded_by_user_id"),
     )
 

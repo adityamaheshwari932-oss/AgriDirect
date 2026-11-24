@@ -37,6 +37,7 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
 }) => {
   const { t } = useTranslation(["offers", "validation", "marketplace", "requirements", "dashboard", "common", "errors"]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = React.useRef(false);
   const [error, setError] = useState<string | null>(null);
 
   // Form states
@@ -58,6 +59,7 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
 
   useEffect(() => {
     if (!isOpen) {
+      isSubmittingRef.current = false;
       setError(null);
       setIsSubmitting(false);
       return;
@@ -207,6 +209,8 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
       ],
     };
 
+    if (isSubmittingRef.current || isSubmitting) return;
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     try {
       const createdOffer = await offersApi.createOffer(payload);
@@ -218,6 +222,7 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
       const msg = err instanceof Error ? err.message : t("errors:submit_offer_failed", "Failed to submit offer proposal.");
       setError(msg);
     } finally {
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   };
