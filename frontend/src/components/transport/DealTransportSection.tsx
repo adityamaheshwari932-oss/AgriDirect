@@ -7,11 +7,13 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
+  ShieldAlert,
   Plus,
   RefreshCw,
   ExternalLink,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../../store/authStore";
 import { transportersApi } from "../../api/transporters";
 import type {
   TransportConnectionRequest,
@@ -58,11 +60,18 @@ export const DealTransportSection: React.FC<DealTransportSectionProps> = ({
   onTransportUpdated,
 }) => {
   const { t } = useTranslation(["delivery", "common"]);
+  const { user } = useAuth();
+  const isVerified = user?.role === "admin" || user?.verification_status === "verified";
 
   const [connectionRequests, setConnectionRequests] = useState<TransportConnectionRequest[]>([]);
   const [recommendedTransporters, setRecommendedTransporters] = useState<TransporterSearchResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Counterparty approval/rejection state
+  const [rejectingRequestId, setRejectingRequestId] = useState<string | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
 
   // Modals
   const [detailTransporter, setDetailTransporter] = useState<TransporterSearchResult | null>(null);
@@ -113,6 +122,36 @@ export const DealTransportSection: React.FC<DealTransportSectionProps> = ({
     }
   };
 
+  const handleApproveAssignment = async (requestId: string) => {
+    try {
+      setActionLoading(true);
+      await transportersApi.approveConnectionRequest(requestId);
+      void loadTransportData();
+      if (onTransportUpdated) onTransportUpdated();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to approve assignment.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRejectAssignment = async (requestId: string, reason?: string) => {
+    try {
+      setActionLoading(true);
+      await transportersApi.rejectConnectionRequest(requestId, {
+        counterparty_rejection_reason: reason || undefined,
+      });
+      setRejectingRequestId(null);
+      setRejectionReason("");
+      void loadTransportData();
+      if (onTransportUpdated) onTransportUpdated();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to reject assignment.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleConnectionSuccess = () => {
     void loadTransportData();
     if (onTransportUpdated) onTransportUpdated();
@@ -129,11 +168,26 @@ export const DealTransportSection: React.FC<DealTransportSectionProps> = ({
 
   const getStatusBadge = (st: string) => {
     switch (st) {
-      case "accepted":
+      case "counterparty_approved":
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-            <span>{t("delivery:status_accepted", "Accepted")}</span>
+            <span>{t("delivery:status_counterparty_approved", "Assignment Confirmed")}</span>
+          </span>
+        );
+      case "counterparty_rejected":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300">
+            <XCircle className="w-3.5 h-3.5 text-red-600" />
+            <span>{t("delivery:status_counterparty_rejected", "Assignment Rejected")}</span>
+          </span>
+        );
+      case "transporter_accepted":
+      case "accepted":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+            <Clock className="w-3.5 h-3.5 text-blue-600" />
+            <span>{t("delivery:status_transporter_accepted", "Accepted — Awaiting Counterparty Approval")}</span>
           </span>
         );
       case "declined":
@@ -187,9 +241,26 @@ export const DealTransportSection: React.FC<DealTransportSectionProps> = ({
         </Link>
       </div>
 
+      {!isVerified && (
+        <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+            <span className="text-xs">
+              {t("delivery:verification_required_transport", "Account verification is required to request transportation services.")}
+            </span>
+          </div>
+          <Link
+            to="/verification"
+            className="text-xs font-bold text-primary hover:underline whitespace-nowrap"
+          >
+            {t("delivery:go_to_verification", "Verify Account →")}
+          </Link>
+        </div>
+      )}
+
       {loading && (
         <div className="py-8 flex items-center justify-center text-muted-foreground">
-          <RefreshCw className="w-5 h-5 animate-spin text-primary mr-2" />
+          <RefreshCw className="w-5 h-5 animate-spin text-primary me-2" />
           <span>{t("delivery:loading_transport_data", "Loading logistics information...")}</span>
         </div>
       )}
@@ -210,50 +281,140 @@ export const DealTransportSection: React.FC<DealTransportSectionProps> = ({
 
           <div className="rounded-xl border border-border overflow-hidden bg-card divide-y divide-border">
             {connectionRequests.map((req) => (
-              <div key={req.id} className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-secondary/20">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-foreground text-xs">{req.transporter_business_name}</span>
-                    {getStatusBadge(req.status)}
-                    <span className="text-[11px] text-muted-foreground">
-                      Requested {formatDate(req.created_at)}
-                    </span>
+              <div key={req.id} className="p-3.5 space-y-3 hover:bg-secondary/20">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-foreground text-xs">{req.transporter_business_name}</span>
+                      {getStatusBadge(req.status)}
+                      <span className="text-[11px] text-muted-foreground">
+                        {t("delivery:requested_on", "Requested")} {formatDate(req.created_at)}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-[11px]">
+                      {req.cargo_description && <span><strong>{t("delivery:cargo_label", "Cargo:")}</strong> {req.cargo_description}</span>}
+                      {req.weight_kg && <span><strong>{t("delivery:weight_label", "Weight:")}</strong> {formatNumber(req.weight_kg)} kg</span>}
+                      {req.required_delivery_date && <span><strong>{t("delivery:date_label", "Date:")}</strong> {formatDate(req.required_delivery_date)}</span>}
+                      {req.pickup_district && <span><strong>{t("delivery:route_label", "Route:")}</strong> {req.pickup_district} &rarr; {req.delivery_district || "Destination"}</span>}
+                    </div>
+
+                    {req.notes && (
+                      <p className="text-[11px] text-foreground italic bg-secondary/40 px-2.5 py-1 rounded-md mt-1">
+                        &ldquo;{req.notes}&rdquo;
+                      </p>
+                    )}
+
+                    {req.response_notes && (
+                      <p className="text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">
+                        {t("delivery:transporter_note", "Transporter note:")} {req.response_notes}
+                      </p>
+                    )}
+
+                    {req.rejection_reason && (
+                      <p className="text-[11px] text-destructive">
+                        {t("delivery:decline_reason_label", "Decline reason:")} {req.rejection_reason}
+                      </p>
+                    )}
+
+                    {req.counterparty_rejection_reason && (
+                      <p className="text-[11px] text-destructive font-medium">
+                        {t("delivery:counterparty_rejection_reason_label", "Counterparty Rejection Reason:")} {req.counterparty_rejection_reason}
+                      </p>
+                    )}
+
+                    {req.status === "counterparty_approved" && (
+                      <p className="text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">
+                        {t("delivery:approved_by_counterparty", "Assignment approved by {{name}}", { name: req.counterparty_name || "counterparty" })}
+                      </p>
+                    )}
                   </div>
 
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-[11px]">
-                    {req.cargo_description && <span><strong>Cargo:</strong> {req.cargo_description}</span>}
-                    {req.weight_kg && <span><strong>Weight:</strong> {formatNumber(req.weight_kg)} kg</span>}
-                    {req.required_delivery_date && <span><strong>Date:</strong> {formatDate(req.required_delivery_date)}</span>}
-                    {req.pickup_district && <span><strong>Route:</strong> {req.pickup_district} &rarr; {req.delivery_district || "Destination"}</span>}
-                  </div>
-
-                  {req.notes && (
-                    <p className="text-[11px] text-foreground italic bg-secondary/40 px-2.5 py-1 rounded-md mt-1">
-                      &ldquo;{req.notes}&rdquo;
-                    </p>
-                  )}
-
-                  {req.response_notes && (
-                    <p className="text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">
-                      Transporter note: {req.response_notes}
-                    </p>
-                  )}
-
-                  {req.rejection_reason && (
-                    <p className="text-[11px] text-destructive">
-                      Decline reason: {req.rejection_reason}
-                    </p>
+                  {(req.status === "pending" || req.status === "transporter_accepted" || req.status === "accepted") && canRequest && req.requester_id === user?.id && (
+                    <button
+                      type="button"
+                      onClick={() => handleCancelRequest(req.id)}
+                      className="px-2.5 py-1 rounded border border-border hover:bg-destructive/10 hover:text-destructive text-muted-foreground font-semibold text-[11px] transition-colors self-start sm:self-center"
+                    >
+                      {t("delivery:cancel_request", "Cancel Request")}
+                    </button>
                   )}
                 </div>
 
-                {req.status === "pending" && canRequest && (
-                  <button
-                    type="button"
-                    onClick={() => handleCancelRequest(req.id)}
-                    className="px-2.5 py-1 rounded border border-border hover:bg-destructive/10 hover:text-destructive text-muted-foreground font-semibold text-[11px] transition-colors self-start sm:self-center"
-                  >
-                    {t("delivery:cancel_request", "Cancel Request")}
-                  </button>
+                {/* Counterparty Approval Banner & Controls */}
+                {req.can_current_user_approve && (req.status === "transporter_accepted" || req.status === "accepted") && (
+                  <div className="p-3 rounded-xl border border-primary/30 bg-primary/5 space-y-2.5">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold text-xs text-foreground">
+                          {t("delivery:action_required_counterparty", "Approval Required: Transporter Accepted Assignment")}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {t(
+                            "delivery:counterparty_approval_prompt",
+                            "This transporter accepted the haulage request. Both parties must approve before the transporter is officially assigned to this deal."
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    {rejectingRequestId === req.id ? (
+                      <div className="space-y-2 pt-1">
+                        <label className="text-[11px] font-semibold text-foreground block">
+                          {t("delivery:reject_reason_label", "Reason for Rejecting Assignment (Optional):")}
+                        </label>
+                        <input
+                          type="text"
+                          value={rejectionReason}
+                          onChange={(e) => setRejectionReason(e.target.value)}
+                          placeholder={t("delivery:reject_reason_placeholder", "e.g. Alternative arrangement preferred")}
+                          className="w-full text-xs p-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-destructive outline-none"
+                        />
+                        <div className="flex items-center gap-2 justify-end">
+                          <button
+                            type="button"
+                            disabled={actionLoading}
+                            onClick={() => {
+                              setRejectingRequestId(null);
+                              setRejectionReason("");
+                            }}
+                            className="px-2.5 py-1 rounded text-[11px] font-medium text-muted-foreground hover:bg-secondary"
+                          >
+                            {t("common:actions.cancel", "Cancel")}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={actionLoading}
+                            onClick={() => handleRejectAssignment(req.id, rejectionReason)}
+                            className="px-3 py-1 rounded text-[11px] font-semibold bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+                          >
+                            {actionLoading ? t("delivery:processing", "Processing...") : t("delivery:confirm_reject", "Confirm Rejection")}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 pt-1">
+                        <button
+                          type="button"
+                          disabled={actionLoading}
+                          onClick={() => handleApproveAssignment(req.id)}
+                          className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>{t("delivery:approve_assignment", "Approve Assignment")}</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={actionLoading}
+                          onClick={() => setRejectingRequestId(req.id)}
+                          className="px-3 py-1.5 rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 font-semibold text-xs transition-colors"
+                        >
+                          {t("delivery:reject_assignment", "Reject Assignment")}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             ))}
@@ -330,7 +491,11 @@ export const DealTransportSection: React.FC<DealTransportSectionProps> = ({
         initialDeliveryState={deliveryState}
         initialDeliveryDistrict={deliveryDistrict}
         initialDeliveryAddress={deliveryAddress}
-        initialCargoDescription={cargoDescription}
+        initialCargoDescription={
+          cargoDescription && cargoDescription.length > 250
+            ? cargoDescription.slice(0, 247) + "..."
+            : cargoDescription
+        }
         initialWeightKg={weightKg}
         initialDeliveryDate={requiredDeliveryDate}
         isOpen={!!connectTransporter}

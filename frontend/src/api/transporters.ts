@@ -14,6 +14,8 @@ import type {
   TransporterProfileUpdate,
   TransporterSearchParams,
   TransporterSearchResponse,
+  TransportConnectionApprovalPayload,
+  TransportConnectionRejectionPayload,
   TransportConnectionRequest,
   TransportConnectionRequestCreate,
   TransportConnectionRequestListResponse,
@@ -202,6 +204,32 @@ export class TransportersApi {
   ): Promise<TransportConnectionRequest> {
     return this.client.post<TransportConnectionRequest>(
       `/transporters/connection-requests/${requestId}/cancel`
+    );
+  }
+
+  /**
+   * Deal counterparty approves transporter assignment.
+   */
+  public async approveConnectionRequest(
+    requestId: string,
+    payload: TransportConnectionApprovalPayload = {}
+  ): Promise<TransportConnectionRequest> {
+    return this.client.post<TransportConnectionRequest>(
+      `/transporters/connection-requests/${requestId}/approve`,
+      payload
+    );
+  }
+
+  /**
+   * Deal counterparty rejects transporter assignment.
+   */
+  public async rejectConnectionRequest(
+    requestId: string,
+    payload: TransportConnectionRejectionPayload = {}
+  ): Promise<TransportConnectionRequest> {
+    return this.client.post<TransportConnectionRequest>(
+      `/transporters/connection-requests/${requestId}/reject`,
+      payload
     );
   }
 }

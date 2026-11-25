@@ -207,12 +207,13 @@ export const TransporterDiscoveryPage: React.FC = () => {
               className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary outline-none"
             >
               <option value="">{t("delivery:all_vehicle_types", "All Vehicle Types")}</option>
-              <option value="mini_truck">Mini Truck</option>
-              <option value="open_body">Open Body</option>
-              <option value="refrigerated">Refrigerated / Cold-Chain</option>
-              <option value="covered_truck">Covered Truck</option>
-              <option value="tempo">Tempo</option>
-              <option value="trailer">Trailer</option>
+              <option value="mini_truck">{t("delivery:type_mini_truck", "Mini Truck")}</option>
+              <option value="open_body">{t("delivery:type_open_body", "Open Body")}</option>
+              <option value="refrigerated">{t("delivery:type_refrigerated", "Refrigerated / Cold-Chain")}</option>
+              <option value="covered_truck">{t("delivery:type_covered_truck", "Covered Truck")}</option>
+              <option value="tempo">{t("delivery:type_tempo", "Tempo")}</option>
+              <option value="trailer">{t("delivery:type_trailer", "Trailer")}</option>
+              <option value="other">{t("delivery:type_other", "Other")}</option>
             </select>
           </div>
 

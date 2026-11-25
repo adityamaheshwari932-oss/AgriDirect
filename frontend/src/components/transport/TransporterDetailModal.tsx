@@ -173,7 +173,7 @@ export const TransporterDetailModal: React.FC<TransporterDetailModalProps> = ({
               </p>
             ) : (
               <div className="rounded-xl border border-border overflow-hidden">
-                <table className="w-full text-left border-collapse text-xs">
+                <table className="w-full text-start border-collapse text-xs">
                   <thead className="bg-secondary/40 text-muted-foreground font-semibold border-b border-border">
                     <tr>
                       <th className="py-2 px-3">{t("delivery:state", "State")}</th>

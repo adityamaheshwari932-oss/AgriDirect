@@ -1,14 +1,17 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   X,
   Truck,
   MapPin,
   AlertCircle,
+  ShieldAlert,
   Loader2,
   CheckCircle2,
   Link as LinkIcon,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../../store/authStore";
 import { transportersApi } from "../../api/transporters";
 import type {
   TransporterSearchResult,
@@ -56,6 +59,8 @@ export const TransportConnectionModal: React.FC<TransportConnectionModalProps> =
   onSuccess,
 }) => {
   const { t } = useTranslation(["delivery", "common"]);
+  const { user } = useAuth();
+  const isVerified = user?.role === "admin" || user?.verification_status === "verified";
 
   const [pickupState, setPickupState] = useState(initialPickupState);
   const [pickupDistrict, setPickupDistrict] = useState(initialPickupDistrict);
@@ -65,7 +70,9 @@ export const TransportConnectionModal: React.FC<TransportConnectionModalProps> =
   const [deliveryDistrict, setDeliveryDistrict] = useState(initialDeliveryDistrict);
   const [deliveryAddress, setDeliveryAddress] = useState(initialDeliveryAddress);
 
-  const [cargoDescription, setCargoDescription] = useState(initialCargoDescription);
+  const [cargoDescription, setCargoDescription] = useState(
+    initialCargoDescription.length > 255 ? initialCargoDescription.slice(0, 255) : initialCargoDescription
+  );
   const [weightKg, setWeightKg] = useState<number | "">(initialWeightKg || "");
   const [requiredDeliveryDate, setRequiredDeliveryDate] = useState(initialDeliveryDate);
   const [notes, setNotes] = useState("");
@@ -78,6 +85,26 @@ export const TransportConnectionModal: React.FC<TransportConnectionModalProps> =
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!isVerified) {
+      setError(
+        t(
+          "delivery:verification_required_transport",
+          "Account verification is required to request transportation services. Please verify your account."
+        )
+      );
+      return;
+    }
+
+    if (!transporter.user_id) {
+      setError(
+        t(
+          "delivery:transporter_user_id_missing",
+          "Transporter user identifier is missing. Please select another provider or refresh."
+        )
+      );
+      return;
+    }
 
     if (!cargoDescription.trim() && !orderId && !offerId) {
       setError(t("delivery:cargo_desc_required", "Please describe the cargo or select an active transaction."));
@@ -94,7 +121,7 @@ export const TransportConnectionModal: React.FC<TransportConnectionModalProps> =
       delivery_state: deliveryState.trim() || undefined,
       delivery_district: deliveryDistrict.trim() || undefined,
       delivery_address: deliveryAddress.trim() || undefined,
-      cargo_description: cargoDescription.trim() || undefined,
+      cargo_description: cargoDescription.trim().slice(0, 255) || undefined,
       weight_kg: weightKg ? Number(weightKg) : undefined,
       required_delivery_date: requiredDeliveryDate || undefined,
       notes: notes.trim() || undefined,
@@ -106,7 +133,17 @@ export const TransportConnectionModal: React.FC<TransportConnectionModalProps> =
       onSuccess(res);
       onClose();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : t("delivery:request_failed", "Failed to submit transport request."));
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("already exists") || msg.includes("409")) {
+        setError(
+          t(
+            "delivery:duplicate_request_warning",
+            "A pending or active transportation request already exists for this provider and transaction."
+          )
+        );
+      } else {
+        setError(msg || t("delivery:request_failed", "Failed to submit transport request."));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -148,6 +185,29 @@ export const TransportConnectionModal: React.FC<TransportConnectionModalProps> =
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 text-xs flex-1">
+          {!isVerified && (
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
+              <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-semibold text-xs">
+                  {t("delivery:verification_required_title", "Account Verification Required")}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {t(
+                    "delivery:verification_required_transport",
+                    "Account verification is required to request transportation services. Please complete profile verification."
+                  )}
+                </p>
+                <Link
+                  to="/verification"
+                  className="inline-block text-[11px] font-bold text-primary hover:underline mt-0.5"
+                >
+                  {t("delivery:go_to_verification", "Go to Verification →")}
+                </Link>
+              </div>
+            </div>
+          )}
+
           {/* Associated Context Pill if linked to deal */}
           {(orderNumber || offerNumber) && (
             <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 text-foreground flex items-center gap-2">
@@ -258,6 +318,7 @@ export const TransportConnectionModal: React.FC<TransportConnectionModalProps> =
               <label className="block font-semibold mb-1 text-foreground">{t("delivery:cargo_desc", "Cargo Description")}</label>
               <input
                 type="text"
+                maxLength={255}
                 value={cargoDescription}
                 onChange={(e) => setCargoDescription(e.target.value)}
                 placeholder="e.g. 300 Crates Alphonso Mangoes"
@@ -310,7 +371,7 @@ export const TransportConnectionModal: React.FC<TransportConnectionModalProps> =
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !isVerified}
               className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary-700 transition-colors flex items-center gap-1.5 shadow-xs disabled:opacity-50"
             >
               {isSubmitting ? (

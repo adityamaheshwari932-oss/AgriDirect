@@ -83,6 +83,7 @@ export interface TransporterProfileUpdate {
 
 export interface TransporterDetail {
   id: string;
+  user_id: string;
   business_name: string;
   contact_name: string;
   phone_number: string;
@@ -149,7 +150,14 @@ export interface OrderTransportCoordinationResponse {
   delivery_notes?: string | null;
 }
 
-export type TransportRequestStatus = "pending" | "accepted" | "declined" | "cancelled";
+export type TransportRequestStatus =
+  | "pending"
+  | "transporter_accepted"
+  | "counterparty_approved"
+  | "counterparty_rejected"
+  | "declined"
+  | "cancelled"
+  | "accepted";
 
 export interface TransportConnectionRequestCreate {
   transporter_user_id: string;
@@ -170,6 +178,14 @@ export interface TransportConnectionRequestCreate {
 export interface TransportConnectionRequestResponse {
   response_notes?: string;
   rejection_reason?: string;
+}
+
+export interface TransportConnectionApprovalPayload {
+  approval_notes?: string;
+}
+
+export interface TransportConnectionRejectionPayload {
+  counterparty_rejection_reason?: string;
 }
 
 export interface TransportConnectionRequest {
@@ -198,6 +214,15 @@ export interface TransportConnectionRequest {
   status: TransportRequestStatus;
   rejection_reason?: string | null;
   response_notes?: string | null;
+  transporter_accepted_at?: string | null;
+  counterparty_approved_by_id?: string | null;
+  counterparty_approved_at?: string | null;
+  counterparty_rejected_by_id?: string | null;
+  counterparty_rejected_at?: string | null;
+  counterparty_rejection_reason?: string | null;
+  counterparty_name?: string | null;
+  can_current_user_approve?: boolean;
+  can_current_user_reject?: boolean;
   created_at: string;
   updated_at: string;
 }

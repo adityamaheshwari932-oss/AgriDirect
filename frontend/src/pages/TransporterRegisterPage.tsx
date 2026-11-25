@@ -8,7 +8,7 @@ import { ApiError } from "../api/errors";
 import type { TransporterRegisterRequest, User } from "../types";
 
 export const TransporterRegisterPage: React.FC = () => {
-  const { t } = useTranslation(["auth", "validation", "common"]);
+  const { t } = useTranslation(["auth", "validation", "common", "delivery"]);
   const { registerTransporter } = useAuth();
 
   // Form state
@@ -281,13 +281,13 @@ export const TransporterRegisterPage: React.FC = () => {
                 className="w-full px-3 py-2 text-xs rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                 disabled={isSubmitting}
               >
-                <option value="mini_truck">Mini Truck (e.g. Tata Ace, Bolero Maxi)</option>
-                <option value="open_body">Open Body Truck</option>
-                <option value="refrigerated">Refrigerated / Cold-Chain Van</option>
-                <option value="covered_truck">Covered Container Truck</option>
-                <option value="tempo">Tempo / Three-Wheeler Loader</option>
-                <option value="trailer">Trailer / Heavy Hauler</option>
-                <option value="other">Other Commercial Vehicle</option>
+                <option value="mini_truck">{t("delivery:type_mini_truck", "Mini Truck (e.g. Tata Ace, Bolero Maxi)")}</option>
+                <option value="open_body">{t("delivery:type_open_body", "Open Body Truck")}</option>
+                <option value="refrigerated">{t("delivery:type_refrigerated", "Refrigerated / Cold-Chain Van")}</option>
+                <option value="covered_truck">{t("delivery:type_covered_truck", "Covered Container Truck")}</option>
+                <option value="tempo">{t("delivery:type_tempo", "Tempo / Three-Wheeler Loader")}</option>
+                <option value="trailer">{t("delivery:type_trailer", "Trailer / Heavy Hauler")}</option>
+                <option value="other">{t("delivery:type_other", "Other Commercial Vehicle")}</option>
               </select>
             </div>
 

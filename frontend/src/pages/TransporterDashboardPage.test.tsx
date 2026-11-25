@@ -21,6 +21,7 @@ describe("TransporterDashboardPage", () => {
 
   const mockDetail: TransporterDetail = {
     id: "transporter-prof-1",
+    user_id: "user-transporter-1",
     business_name: "Sahyadri Agro Haulage",
     contact_name: "Santosh Shinde",
     phone_number: "+919876500000",

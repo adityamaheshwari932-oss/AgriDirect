@@ -113,19 +113,21 @@ describe("OrderCreateModal", () => {
   });
 
   it("synchronous click lock prevents duplicate submissions on rapid double clicks", async () => {
-    let resolveOrder: (val: OrderDetail) => void;
+    let resolveOrder!: (val: OrderDetail) => void;
     const pendingPromise = new Promise<OrderDetail>((resolve) => {
       resolveOrder = resolve;
     });
 
-    const createSpy = vi.spyOn(ordersApi, "createOrder").mockReturnValue(pendingPromise);
+    const createSpy = vi.spyOn(ordersApi, "createOrder").mockImplementation(() => pendingPromise);
+    const handleSuccess = vi.fn();
+    const handleClose = vi.fn();
 
     render(
       <OrderCreateModal
         isOpen={true}
         listing={mockListing}
-        onClose={vi.fn()}
-        onSuccess={vi.fn()}
+        onClose={handleClose}
+        onSuccess={handleSuccess}
       />
     );
 
@@ -137,7 +139,11 @@ describe("OrderCreateModal", () => {
 
     expect(createSpy).toHaveBeenCalledTimes(1);
 
-    // Resolve promise
-    resolveOrder!(mockCreatedOrder);
+    // Resolve promise and wait for completion to settle
+    resolveOrder(mockCreatedOrder);
+    await waitFor(() => {
+      expect(handleSuccess).toHaveBeenCalledWith(mockCreatedOrder);
+      expect(handleClose).toHaveBeenCalled();
+    });
   });
 });

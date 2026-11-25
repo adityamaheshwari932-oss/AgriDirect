@@ -510,7 +510,11 @@ export const TransporterDashboardPage: React.FC = () => {
               const count =
                 status === "all"
                   ? incomingRequests.length
-                  : incomingRequests.filter((r) => r.status === status).length;
+                  : status === "pending"
+                    ? incomingRequests.filter((r) => r.status === "pending").length
+                    : status === "accepted"
+                      ? incomingRequests.filter((r) => ["accepted", "transporter_accepted", "counterparty_approved"].includes(r.status)).length
+                      : incomingRequests.filter((r) => ["declined", "counterparty_rejected"].includes(r.status)).length;
               return (
                 <button
                   key={status}
@@ -546,9 +550,13 @@ export const TransporterDashboardPage: React.FC = () => {
 
         {/* Request List or Empty State */}
         {(() => {
-          const filtered = incomingRequests.filter(
-            (r) => requestFilter === "all" || r.status === requestFilter
-          );
+          const filtered = incomingRequests.filter((r) => {
+            if (requestFilter === "all") return true;
+            if (requestFilter === "pending") return r.status === "pending";
+            if (requestFilter === "accepted") return ["accepted", "transporter_accepted", "counterparty_approved"].includes(r.status);
+            if (requestFilter === "declined") return ["declined", "counterparty_rejected"].includes(r.status);
+            return r.status === requestFilter;
+          });
 
           if (filtered.length === 0) {
             return (
@@ -596,18 +604,31 @@ export const TransporterDashboardPage: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold capitalize ${req.status === "accepted"
-                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                          : req.status === "declined"
-                            ? "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
-                            : req.status === "cancelled"
-                              ? "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300"
-                              : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                          }`}
-                      >
-                        {req.status}
-                      </span>
+                      {req.status === "counterparty_approved" ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                          {t("delivery:status_counterparty_approved", "Assignment Confirmed")}
+                        </span>
+                      ) : req.status === "transporter_accepted" || req.status === "accepted" ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                          {t("delivery:status_transporter_accepted", "Accepted — Awaiting Counterparty Approval")}
+                        </span>
+                      ) : req.status === "counterparty_rejected" ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                          {t("delivery:status_counterparty_rejected", "Assignment Rejected")}
+                        </span>
+                      ) : req.status === "declined" ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                          {t("delivery:status_declined", "Declined")}
+                        </span>
+                      ) : req.status === "cancelled" ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300">
+                          {t("delivery:status_cancelled", "Cancelled")}
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                          {t("delivery:status_pending", "Pending Response")}
+                        </span>
+                      )}
                       <span className="text-[11px] text-muted-foreground">
                         {formatDate(req.created_at)}
                       </span>
@@ -676,6 +697,13 @@ export const TransporterDashboardPage: React.FC = () => {
                     <div className="text-xs text-muted-foreground bg-rose-500/5 px-3 py-2 rounded-lg border border-rose-500/20">
                       <span className="font-semibold text-rose-700 dark:text-rose-400">{t("delivery:decline_reason", "Decline Reason: ")}</span>
                       {req.rejection_reason}
+                    </div>
+                  )}
+
+                  {req.counterparty_rejection_reason && (
+                    <div className="text-xs text-muted-foreground bg-rose-500/5 px-3 py-2 rounded-lg border border-rose-500/20">
+                      <span className="font-semibold text-rose-700 dark:text-rose-400">{t("delivery:counterparty_rejection_reason_label", "Counterparty Rejection Reason: ")}</span>
+                      {req.counterparty_rejection_reason}
                     </div>
                   )}
 
