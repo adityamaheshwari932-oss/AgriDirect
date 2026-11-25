@@ -29,6 +29,8 @@ from app.transporters.schemas import (
     ServiceAreaCreate,
     ServiceAreaRead,
     ServiceAreaUpdate,
+    TransportConnectionApprovalResponse,
+    TransportConnectionRejectionPayload,
     TransportConnectionRequestCreate,
     TransportConnectionRequestListResponse,
     TransportConnectionRequestRead,
@@ -263,6 +265,36 @@ def cancel_connection_request(
 ) -> TransportConnectionRequestRead:
     """Cancel a pending transportation connection request."""
     return service.cancel_connection_request(current_user, request_id)
+
+
+@router.post(
+    "/transporters/connection-requests/{request_id}/approve",
+    response_model=TransportConnectionRequestRead,
+    summary="Counterparty approves transporter assignment",
+)
+def approve_assignment(
+    request_id: uuid.UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    payload: Optional[TransportConnectionApprovalResponse] = None,
+    service: TransporterService = Depends(get_transporter_service),
+) -> TransportConnectionRequestRead:
+    """Deal counterparty approves the transporter assignment for an order or proposal."""
+    return service.approve_assignment(current_user, request_id, payload)
+
+
+@router.post(
+    "/transporters/connection-requests/{request_id}/reject",
+    response_model=TransportConnectionRequestRead,
+    summary="Counterparty rejects transporter assignment",
+)
+def reject_assignment(
+    request_id: uuid.UUID,
+    current_user: Annotated[User, Depends(get_current_user)],
+    payload: Optional[TransportConnectionRejectionPayload] = None,
+    service: TransporterService = Depends(get_transporter_service),
+) -> TransportConnectionRequestRead:
+    """Deal counterparty rejects the proposed transporter assignment."""
+    return service.reject_assignment(current_user, request_id, payload)
 
 
 @router.get(

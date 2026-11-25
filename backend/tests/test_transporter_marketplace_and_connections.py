@@ -379,7 +379,7 @@ def test_connection_request_associated_with_order(client, db_session, users_fixt
 
 
 def test_transporter_accepts_connection_request_assigns_order(client, db_session, users_fixture):
-    """When a transporter accepts a request for an order, the order is automatically linked."""
+    """When a transporter accepts a request for an order, order is NOT assigned until counterparty approves."""
     farmer = users_fixture["farmer"]
     buyer = users_fixture["buyer"]
     transporter = users_fixture["transporter_v"]
@@ -411,7 +411,7 @@ def test_transporter_accepts_connection_request_assigns_order(client, db_session
     db_session.add(order)
     db_session.commit()
 
-    # 1. Create request
+    # 1. Farmer initiates request
     req_res = client.post(
         "/api/v1/transporters/connection-requests",
         json={
@@ -423,7 +423,7 @@ def test_transporter_accepts_connection_request_assigns_order(client, db_session
     )
     req_id = req_res.json()["id"]
 
-    # 2. Transporter accepts
+    # 2. Transporter accepts -> Status becomes transporter_accepted
     accept_res = client.post(
         f"/api/v1/transporters/connection-requests/{req_id}/accept",
         json={"response_notes": "Accepted. Pickup confirmed for 8 AM."},
@@ -431,19 +431,166 @@ def test_transporter_accepts_connection_request_assigns_order(client, db_session
     )
     assert accept_res.status_code == 200
     data = accept_res.json()
-    assert data["status"] == "accepted"
+    assert data["status"] == "transporter_accepted"
     assert data["response_notes"] == "Accepted. Pickup confirmed for 8 AM."
+    assert data["transporter_accepted_at"] is not None
 
-    # 3. Verify order was updated
+    # Order is NOT assigned yet (bilateral safety guarantee)
+    db_session.refresh(order)
+    assert order.transporter_id is None
+    assert order.transport_status == "none"
+
+    # 3. Deal counterparty (buyer) approves the assignment
+    approve_res = client.post(
+        f"/api/v1/transporters/connection-requests/{req_id}/approve",
+        json={"approval_notes": "Counterparty logistics approval granted."},
+        headers=get_auth_headers(buyer),
+    )
+    assert approve_res.status_code == 200
+    appr_data = approve_res.json()
+    assert appr_data["status"] == "counterparty_approved"
+    assert appr_data["counterparty_approved_by_id"] == str(buyer.id)
+    assert appr_data["counterparty_approved_at"] is not None
+
+    # 4. Verify order is now atomically assigned
     db_session.refresh(order)
     assert order.transporter_id == transporter.id
     assert order.transport_status == "assigned"
-    assert "Pickup confirmed for 8 AM" in order.delivery_notes
+    assert "Bilaterally approved" in order.delivery_notes
 
-    # 4. Verify notifications sent
+    # 5. Verify notifications sent
     notifs = db_session.query(Notification).filter(Notification.user_id == farmer.id).all()
     assert len(notifs) >= 1
-    assert any("accepted" in n.title.lower() for n in notifs)
+    assert any("approved" in n.title.lower() or "accepted" in n.title.lower() for n in notifs)
+
+
+def test_initiator_cannot_approve_own_request_and_rejection_workflow(client, db_session, users_fixture):
+    """Requester and transporter cannot approve assignment; only deal counterparty can reject or approve."""
+    farmer = users_fixture["farmer"]
+    buyer = users_fixture["buyer"]
+    transporter = users_fixture["transporter_v"]
+
+    conv = Conversation(farmer_id=farmer.id, buyer_id=buyer.id)
+    db_session.add(conv)
+    db_session.flush()
+
+    order = Order(
+        order_number="ORD-TEST-777",
+        farmer_id=farmer.id,
+        buyer_id=buyer.id,
+        total_amount=Decimal("80000.00"),
+        status="confirmed",
+        transport_status="none",
+    )
+    db_session.add(order)
+    db_session.commit()
+
+    # 1. Farmer initiates request
+    req_res = client.post(
+        "/api/v1/transporters/connection-requests",
+        json={
+            "transporter_user_id": str(transporter.id),
+            "order_id": str(order.id),
+            "cargo_description": "Apples 2000 kg",
+        },
+        headers=get_auth_headers(farmer),
+    )
+    req_id = req_res.json()["id"]
+
+    # 2. Transporter accepts
+    client.post(
+        f"/api/v1/transporters/connection-requests/{req_id}/accept",
+        json={"response_notes": "Ready to dispatch."},
+        headers=get_auth_headers(transporter),
+    )
+
+    # 3. Farmer (initiator) tries to approve -> 403 Forbidden
+    f_res = client.post(
+        f"/api/v1/transporters/connection-requests/{req_id}/approve",
+        headers=get_auth_headers(farmer),
+    )
+    assert f_res.status_code == 403
+    assert "cannot approve on behalf of the deal counterparty" in f_res.json()["detail"].lower()
+
+    # 4. Transporter tries to approve own assignment -> 403 Forbidden
+    t_res = client.post(
+        f"/api/v1/transporters/connection-requests/{req_id}/approve",
+        headers=get_auth_headers(transporter),
+    )
+    assert t_res.status_code == 403
+    assert "transporter cannot approve" in t_res.json()["detail"].lower()
+
+    # 5. Counterparty (buyer) rejects the assignment
+    rej_res = client.post(
+        f"/api/v1/transporters/connection-requests/{req_id}/reject",
+        json={"counterparty_rejection_reason": "Rate too high; preferred local carrier."},
+        headers=get_auth_headers(buyer),
+    )
+    assert rej_res.status_code == 200
+    rej_data = rej_res.json()
+    assert rej_data["status"] == "counterparty_rejected"
+    assert rej_data["counterparty_rejection_reason"] == "Rate too high; preferred local carrier."
+    assert rej_data["counterparty_rejected_by_id"] == str(buyer.id)
+
+    # Order remains unassigned
+    db_session.refresh(order)
+    assert order.transporter_id is None
+    assert order.transport_status == "none"
+
+
+def test_transporter_profile_and_detail_read_includes_user_id(client, users_fixture):
+    """Verify TransporterProfileRead and TransporterDetailRead contracts include user_id."""
+    transporter = users_fixture["transporter_v"]
+    tp = users_fixture["tp_v"]
+
+    # 1. Search discovery includes user_id
+    disc_res = client.get("/api/v1/transporters/discover")
+    assert disc_res.status_code == 200
+    disc_items = disc_res.json()["items"]
+    assert len(disc_items) >= 1
+    assert disc_items[0]["user_id"] == str(transporter.id)
+
+    # 2. Detail by profile ID includes user_id
+    det_res = client.get(f"/api/v1/transporters/{tp.id}")
+    assert det_res.status_code == 200
+    det_data = det_res.json()
+    assert det_data["user_id"] == str(transporter.id)
+
+    # 3. Profile /me includes user_id
+    me_res = client.get("/api/v1/transporters/me", headers=get_auth_headers(transporter))
+    assert me_res.status_code == 200
+    me_data = me_res.json()
+    assert me_data["user_id"] == str(transporter.id)
+
+
+def test_cargo_description_validation_length(client, users_fixture):
+    """Verify cargo description accepts up to 500 characters and rejects beyond 500 characters."""
+    farmer = users_fixture["farmer"]
+    transporter = users_fixture["transporter_v"]
+
+    # 490 characters succeeds
+    long_desc = "Produce Item: " + ("A" * 450)
+    res_ok = client.post(
+        "/api/v1/transporters/connection-requests",
+        json={
+            "transporter_user_id": str(transporter.id),
+            "cargo_description": long_desc,
+        },
+        headers=get_auth_headers(farmer),
+    )
+    assert res_ok.status_code == 201
+
+    # 501 characters fails 422
+    too_long_desc = "B" * 501
+    res_fail = client.post(
+        "/api/v1/transporters/connection-requests",
+        json={
+            "transporter_user_id": str(transporter.id),
+            "cargo_description": too_long_desc,
+        },
+        headers=get_auth_headers(farmer),
+    )
+    assert res_fail.status_code == 422
 
 
 def test_transporter_declines_connection_request(client, users_fixture):
