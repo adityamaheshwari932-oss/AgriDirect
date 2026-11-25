@@ -253,11 +253,11 @@ class TransporterRepository:
         order_id: Optional[uuid.UUID] = None,
         offer_id: Optional[uuid.UUID] = None,
     ) -> Optional[TransportConnectionRequest]:
-        """Check if an active pending request already exists between requester and transporter for this deal."""
+        """Check if an active pending or awaiting-approval request already exists between requester and transporter for this deal."""
         query = self.db.query(TransportConnectionRequest).filter(
             TransportConnectionRequest.requester_id == requester_id,
             TransportConnectionRequest.transporter_id == transporter_id,
-            TransportConnectionRequest.status == "pending",
+            TransportConnectionRequest.status.in_(["pending", "transporter_accepted", "accepted"]),
         )
         if order_id:
             query = query.filter(TransportConnectionRequest.order_id == order_id)
@@ -295,7 +295,15 @@ class TransporterRepository:
             elif offer_id:
                 query = query.filter(TransportConnectionRequest.offer_id == offer_id)
             else:
-                query = query.filter(TransportConnectionRequest.requester_id == user_id)
+                query = query.outerjoin(TransportConnectionRequest.order).outerjoin(TransportConnectionRequest.offer).filter(
+                    or_(
+                        TransportConnectionRequest.requester_id == user_id,
+                        Order.buyer_id == user_id,
+                        Order.farmer_id == user_id,
+                        Offer.sender_id == user_id,
+                        Offer.recipient_id == user_id,
+                    )
+                )
         elif role != "admin":
             query = query.filter(TransportConnectionRequest.requester_id == user_id)
 

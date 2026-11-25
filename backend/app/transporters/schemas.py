@@ -141,6 +141,7 @@ class TransporterProfileRead(BaseModel):
     """Public read model for transporter profile."""
 
     id: uuid.UUID
+    user_id: uuid.UUID
     business_name: str
     contact_name: str
     phone_number: str
@@ -219,7 +220,16 @@ class TransporterSearchResponse(BaseModel):
     items: List[TransporterSearchResult]
 
 
-VALID_TRANSPORT_REQUEST_STATUSES = ("pending", "accepted", "declined", "cancelled")
+VALID_TRANSPORT_REQUEST_STATUSES = (
+    "pending",
+    "transporter_accepted",
+    "counterparty_approved",
+    "counterparty_rejected",
+    "declined",
+    "cancelled",
+    "accepted",
+    "approved",
+)
 
 
 class TransportConnectionRequestCreate(BaseModel):
@@ -239,7 +249,7 @@ class TransportConnectionRequestCreate(BaseModel):
     delivery_district: Optional[str] = Field(None, max_length=64)
     delivery_address: Optional[str] = Field(None)
 
-    cargo_description: Optional[str] = Field(None, max_length=255)
+    cargo_description: Optional[str] = Field(None, max_length=500)
     weight_kg: Optional[Decimal] = Field(None, gt=0)
     required_delivery_date: Optional[date] = Field(None)
     notes: Optional[str] = Field(None)
@@ -252,6 +262,22 @@ class TransportConnectionRequestResponse(BaseModel):
 
     response_notes: Optional[str] = Field(None, description="Optional transporter response notes")
     rejection_reason: Optional[str] = Field(None, description="Reason if declining the request")
+
+
+class TransportConnectionApprovalResponse(BaseModel):
+    """Optional payload when counterparty approves transporter assignment."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    approval_notes: Optional[str] = Field(None, max_length=1000, description="Optional counterparty approval remarks")
+
+
+class TransportConnectionRejectionPayload(BaseModel):
+    """Payload when counterparty rejects proposed transporter assignment."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    counterparty_rejection_reason: Optional[str] = Field(None, max_length=1000, description="Reason for rejecting the transporter assignment")
 
 
 class TransportConnectionRequestRead(BaseModel):
@@ -287,6 +313,16 @@ class TransportConnectionRequestRead(BaseModel):
     status: str
     rejection_reason: Optional[str] = None
     response_notes: Optional[str] = None
+
+    transporter_accepted_at: Optional[datetime] = None
+    counterparty_approved_by_id: Optional[uuid.UUID] = None
+    counterparty_approved_at: Optional[datetime] = None
+    counterparty_rejected_by_id: Optional[uuid.UUID] = None
+    counterparty_rejected_at: Optional[datetime] = None
+    counterparty_rejection_reason: Optional[str] = None
+    counterparty_name: Optional[str] = None
+    can_current_user_approve: bool = False
+    can_current_user_reject: bool = False
 
     created_at: datetime
     updated_at: datetime

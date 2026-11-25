@@ -8,6 +8,7 @@ Enforces business rules:
 - Off-platform transport coordination only: no vehicle tracking or direct carrier liabilities.
 """
 
+from datetime import datetime, timezone
 from decimal import Decimal
 import uuid
 from typing import List, Optional
@@ -16,7 +17,12 @@ from fastapi import HTTPException, status
 
 from app.models.notification import Notification
 from app.models.order import Order
-from app.models.transporter_connection import TransportConnectionRequest
+from app.models.transporter_connection import (
+    TRANSPORT_REQUEST_STATUS_COUNTERPARTY_APPROVED,
+    TRANSPORT_REQUEST_STATUS_COUNTERPARTY_REJECTED,
+    TRANSPORT_REQUEST_STATUS_TRANSPORTER_ACCEPTED,
+    TransportConnectionRequest,
+)
 from app.models.user import ServiceArea, TransporterProfile, User
 from app.transporters.repository import TransporterRepository
 from app.transporters.schemas import (
@@ -25,6 +31,8 @@ from app.transporters.schemas import (
     ServiceAreaCreate,
     ServiceAreaRead,
     ServiceAreaUpdate,
+    TransportConnectionApprovalResponse,
+    TransportConnectionRejectionPayload,
     TransportConnectionRequestCreate,
     TransportConnectionRequestListResponse,
     TransportConnectionRequestRead,
@@ -63,6 +71,7 @@ class TransporterService:
         profile = self._require_transporter(current_user)
         return TransporterDetailRead(
             id=profile.id,
+            user_id=profile.user_id,
             business_name=profile.business_name,
             contact_name=profile.contact_name,
             phone_number=profile.phone_number,
@@ -73,6 +82,7 @@ class TransporterService:
             experience_years=profile.experience_years,
             operating_states=profile.operating_states,
             bio=profile.bio,
+            verification_status=profile.user.verification_status if profile.user else "verified",
             created_at=profile.created_at,
             updated_at=profile.updated_at,
             service_areas=[ServiceAreaRead.model_validate(sa) for sa in profile.service_areas],
@@ -246,6 +256,7 @@ class TransporterService:
             )
         return TransporterDetailRead(
             id=profile.id,
+            user_id=profile.user_id,
             business_name=profile.business_name,
             contact_name=profile.contact_name,
             phone_number=profile.phone_number,
@@ -372,7 +383,7 @@ class TransporterService:
         self.repository.db.commit()
 
     def _to_connection_request_read(
-        self, req: TransportConnectionRequest
+        self, req: TransportConnectionRequest, current_user: Optional[User] = None
     ) -> TransportConnectionRequestRead:
         """Convert ORM TransportConnectionRequest to validated Pydantic schema."""
         requester_name = "User"
@@ -397,6 +408,53 @@ class TransporterService:
 
         order_number = req.order.order_number if req.order else None
         offer_number = req.offer.offer_number if req.offer else None
+
+        # Determine counterparty details
+        counterparty_name = None
+        if req.order:
+            counterparty_user = (
+                req.order.farmer if req.order.buyer_id == req.requester_id else req.order.buyer
+            )
+            if counterparty_user:
+                if getattr(counterparty_user, "farmer_profile", None):
+                    fp = counterparty_user.farmer_profile
+                    counterparty_name = fp.full_name or fp.farm_name or counterparty_user.email
+                elif getattr(counterparty_user, "buyer_profile", None):
+                    bp = counterparty_user.buyer_profile
+                    counterparty_name = bp.contact_person_name or bp.business_name or counterparty_user.email
+                else:
+                    counterparty_name = counterparty_user.email
+        elif req.offer:
+            counterparty_user = (
+                req.offer.recipient if req.offer.sender_id == req.requester_id else req.offer.sender
+            )
+            if counterparty_user:
+                if getattr(counterparty_user, "farmer_profile", None):
+                    fp = counterparty_user.farmer_profile
+                    counterparty_name = fp.full_name or fp.farm_name or counterparty_user.email
+                elif getattr(counterparty_user, "buyer_profile", None):
+                    bp = counterparty_user.buyer_profile
+                    counterparty_name = bp.contact_person_name or bp.business_name or counterparty_user.email
+                else:
+                    counterparty_name = counterparty_user.email
+
+        # Determine if current authenticated user has approval/rejection authority
+        can_approve = False
+        can_reject = False
+        if current_user and req.status in ("transporter_accepted", "accepted"):
+            if current_user.id != req.requester_id and current_user.id != req.transporter_id:
+                if req.order and (
+                    (req.order.buyer_id == req.requester_id and current_user.id == req.order.farmer_id)
+                    or (req.order.farmer_id == req.requester_id and current_user.id == req.order.buyer_id)
+                ):
+                    can_approve = True
+                    can_reject = True
+                elif req.offer and (
+                    (req.offer.sender_id == req.requester_id and current_user.id == req.offer.recipient_id)
+                    or (req.offer.recipient_id == req.requester_id and current_user.id == req.offer.sender_id)
+                ):
+                    can_approve = True
+                    can_reject = True
 
         return TransportConnectionRequestRead(
             id=req.id,
@@ -424,6 +482,15 @@ class TransporterService:
             status=req.status,
             rejection_reason=req.rejection_reason,
             response_notes=req.response_notes,
+            transporter_accepted_at=getattr(req, "transporter_accepted_at", None),
+            counterparty_approved_by_id=getattr(req, "counterparty_approved_by_id", None),
+            counterparty_approved_at=getattr(req, "counterparty_approved_at", None),
+            counterparty_rejected_by_id=getattr(req, "counterparty_rejected_by_id", None),
+            counterparty_rejected_at=getattr(req, "counterparty_rejected_at", None),
+            counterparty_rejection_reason=getattr(req, "counterparty_rejection_reason", None),
+            counterparty_name=counterparty_name,
+            can_current_user_approve=can_approve,
+            can_current_user_reject=can_reject,
             created_at=req.created_at,
             updated_at=req.updated_at,
         )
@@ -583,9 +650,30 @@ class TransporterService:
             ref_id=saved.id,
         )
 
+        # Also notify counterparty on order or offer if one exists
+        counterparty_id = None
+        if order:
+            counterparty_id = (
+                order.farmer_id if current_user.id == order.buyer_id else order.buyer_id
+            )
+        elif offer:
+            counterparty_id = (
+                offer.recipient_id if current_user.id == offer.sender_id else offer.sender_id
+            )
+
+        if counterparty_id and counterparty_id != current_user.id:
+            self._notify(
+                user_id=counterparty_id,
+                event_type="transport_connection_requested",
+                title="Transportation Requested",
+                body=f"A transport connection was requested for {deal_label}.",
+                ref_type="order" if payload.order_id else ("offer" if payload.offer_id else "transporter"),
+                ref_id=saved.id,
+            )
+
         # Reload with joined relations for complete read model
         loaded = self.repository.get_connection_request_by_id(saved.id)
-        return self._to_connection_request_read(loaded or saved)
+        return self._to_connection_request_read(loaded or saved, current_user=current_user)
 
     def list_connection_requests(
         self,
@@ -607,7 +695,7 @@ class TransporterService:
             limit=page_size,
             offset=offset,
         )
-        items = [self._to_connection_request_read(r) for r in requests]
+        items = [self._to_connection_request_read(r, current_user=current_user) for r in requests]
         return TransportConnectionRequestListResponse(total=total, items=items)
 
     def get_connection_request(
@@ -639,7 +727,7 @@ class TransporterService:
                 detail="You do not have access to this transport connection request",
             )
 
-        return self._to_connection_request_read(req)
+        return self._to_connection_request_read(req, current_user=current_user)
 
     def accept_connection_request(
         self,
@@ -647,7 +735,10 @@ class TransporterService:
         request_id: uuid.UUID,
         payload: TransportConnectionRequestResponse,
     ) -> TransportConnectionRequestRead:
-        """Transporter accepts a pending transportation connection request."""
+        """Transporter accepts a pending transportation connection request.
+        
+        Requires subsequent counterparty approval before the transporter is officially assigned to the order.
+        """
         req = self.repository.get_connection_request_by_id(request_id)
         if not req:
             raise HTTPException(
@@ -665,23 +756,13 @@ class TransporterService:
                 detail=f"Cannot accept request in '{req.status}' state; must be 'pending'",
             )
 
-        req.status = "accepted"
+        req.status = TRANSPORT_REQUEST_STATUS_TRANSPORTER_ACCEPTED
+        req.transporter_accepted_at = datetime.now(timezone.utc)
         req.response_notes = payload.response_notes
         saved = self.repository.save_connection_request(req)
 
-        # If order exists and has no transporter assigned yet, coordinate order assignment
-        if req.order_id and req.order:
-            if req.order.transporter_id is None or req.order.transport_status == "none":
-                req.order.transporter_id = req.transporter_id
-                req.order.transport_status = "assigned"
-                if payload.response_notes:
-                    note = f"[Transporter Accepted]: {payload.response_notes}"
-                    req.order.delivery_notes = (
-                        f"{req.order.delivery_notes}\n{note}"
-                        if req.order.delivery_notes
-                        else note
-                    )
-                self.repository.save_order(req.order)
+        # Bilateral rule: transporter acceptance does NOT assign the order directly.
+        # Order assignment requires explicit approval from the counterparty.
 
         # Notify requester
         deal_label = (
@@ -692,30 +773,260 @@ class TransporterService:
         self._notify(
             user_id=req.requester_id,
             event_type="transport_connection_accepted",
-            title="Transport Request Accepted",
-            body=f"Transportation provider accepted your request for {deal_label}.",
+            title="Transport Request Accepted by Provider",
+            body=f"Transportation provider accepted your request for {deal_label}. Awaiting counterparty approval to confirm assignment.",
             ref_type="order" if req.order_id else ("offer" if req.offer_id else "transporter"),
             ref_id=saved.id,
         )
 
-        # Also notify counterparty on order if requester was buyer/farmer
+        # Notify counterparty that their approval is required
+        counterparty_id = None
         if req.order:
             counterparty_id = (
                 req.order.farmer_id
                 if req.requester_id == req.order.buyer_id
                 else req.order.buyer_id
             )
-            if counterparty_id and counterparty_id != current_user.id:
-                self._notify(
-                    user_id=counterparty_id,
-                    event_type="transport_connection_accepted",
-                    title="Transport Coordinated for Order",
-                    body=f"A verified transporter has been connected and assigned to Order #{req.order.order_number}.",
-                    ref_type="order",
-                    ref_id=req.order.id,
-                )
+        elif req.offer:
+            counterparty_id = (
+                req.offer.recipient_id
+                if req.requester_id == req.offer.sender_id
+                else req.offer.sender_id
+            )
 
-        return self._to_connection_request_read(saved)
+        if counterparty_id and counterparty_id != current_user.id:
+            tp_name = (
+                req.transporter.transporter_profile.business_name
+                if req.transporter and getattr(req.transporter, "transporter_profile", None)
+                else "Transportation provider"
+            )
+            self._notify(
+                user_id=counterparty_id,
+                event_type="transport_counterparty_approval_pending",
+                title="Transportation Assignment Approval Needed",
+                body=f"Transporter '{tp_name}' accepted the request for {deal_label}. Please review and approve or reject the assignment.",
+                ref_type="order" if req.order_id else ("offer" if req.offer_id else "transporter"),
+                ref_id=saved.id,
+            )
+
+        return self._to_connection_request_read(saved, current_user=current_user)
+
+    def approve_assignment(
+        self,
+        current_user: User,
+        request_id: uuid.UUID,
+        payload: Optional[TransportConnectionApprovalResponse] = None,
+    ) -> TransportConnectionRequestRead:
+        """Deal counterparty approves the transporter assignment for an order or proposal."""
+        req = self.repository.get_connection_request_by_id(request_id)
+        if not req:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Transport connection request not found",
+            )
+
+        if req.status not in (TRANSPORT_REQUEST_STATUS_TRANSPORTER_ACCEPTED, "accepted"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Cannot approve request in '{req.status}' state; must be 'transporter_accepted'",
+            )
+
+        # Enforce bilateral approval authorization: only genuine deal counterparty can approve
+        if current_user.id == req.requester_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Initiating requester cannot approve on behalf of the deal counterparty",
+            )
+        if current_user.id == req.transporter_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Transporter cannot approve their own assignment",
+            )
+
+        is_order_counterparty = (
+            req.order
+            and (
+                (req.order.buyer_id == req.requester_id and current_user.id == req.order.farmer_id)
+                or (req.order.farmer_id == req.requester_id and current_user.id == req.order.buyer_id)
+            )
+        )
+        is_offer_counterparty = (
+            req.offer
+            and (
+                (req.offer.sender_id == req.requester_id and current_user.id == req.offer.recipient_id)
+                or (req.offer.recipient_id == req.requester_id and current_user.id == req.offer.sender_id)
+            )
+        )
+
+        if not (is_order_counterparty or is_offer_counterparty):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only the counterparty on this order or deal can approve the transportation assignment",
+            )
+
+        if current_user.verification_status != "verified":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Operation requires a verified account",
+            )
+
+        now_utc = datetime.now(timezone.utc)
+        req.status = TRANSPORT_REQUEST_STATUS_COUNTERPARTY_APPROVED
+        req.counterparty_approved_by_id = current_user.id
+        req.counterparty_approved_at = now_utc
+        if payload and payload.approval_notes:
+            note = f"[Counterparty Approved]: {payload.approval_notes}"
+            req.response_notes = f"{req.response_notes}\n{note}" if req.response_notes else note
+
+        # Assign order atomically within same transaction, preventing overwriting an already assigned transporter
+        if req.order_id and req.order:
+            if req.order.transporter_id and req.order.transporter_id != req.transporter_id:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="This order already has an assigned transportation provider",
+                )
+            req.order.transporter_id = req.transporter_id
+            req.order.transport_status = "assigned"
+            delivery_note = f"[Transporter Assigned]: Bilaterally approved by {current_user.email}."
+            req.order.delivery_notes = (
+                f"{req.order.delivery_notes}\n{delivery_note}"
+                if req.order.delivery_notes
+                else delivery_note
+            )
+            self.repository.save_order(req.order)
+
+        saved = self.repository.save_connection_request(req)
+
+        deal_label = (
+            f"Order #{req.order.order_number}"
+            if req.order
+            else (f"Offer #{req.offer.offer_number}" if req.offer else "the transaction")
+        )
+
+        # Notify requester
+        self._notify(
+            user_id=req.requester_id,
+            event_type="transport_assignment_approved",
+            title="Transportation Assignment Approved",
+            body=f"Counterparty approved transportation provider for {deal_label}. Transporter is now officially assigned.",
+            ref_type="order" if req.order_id else ("offer" if req.offer_id else "transporter"),
+            ref_id=saved.id,
+        )
+
+        # Notify transporter
+        self._notify(
+            user_id=req.transporter_id,
+            event_type="transport_assignment_approved",
+            title="Transportation Assignment Confirmed",
+            body=f"Both parties approved your transportation assignment for {deal_label}.",
+            ref_type="order" if req.order_id else ("offer" if req.offer_id else "transporter"),
+            ref_id=saved.id,
+        )
+
+        # Notify counterparty (confirmation)
+        if current_user.id != req.requester_id and current_user.id != req.transporter_id:
+            self._notify(
+                user_id=current_user.id,
+                event_type="transport_assignment_confirmed",
+                title="Transportation Assignment Confirmed",
+                body=f"You approved the transportation assignment for {deal_label}.",
+                ref_type="order" if req.order_id else ("offer" if req.offer_id else "transporter"),
+                ref_id=saved.id,
+            )
+
+        return self._to_connection_request_read(saved, current_user=current_user)
+
+    def reject_assignment(
+        self,
+        current_user: User,
+        request_id: uuid.UUID,
+        payload: Optional[TransportConnectionRejectionPayload] = None,
+    ) -> TransportConnectionRequestRead:
+        """Deal counterparty rejects the proposed transporter assignment."""
+        req = self.repository.get_connection_request_by_id(request_id)
+        if not req:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Transport connection request not found",
+            )
+
+        if req.status not in (TRANSPORT_REQUEST_STATUS_TRANSPORTER_ACCEPTED, "accepted"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Cannot reject request in '{req.status}' state; must be 'transporter_accepted'",
+            )
+
+        # Enforce authorization: only deal counterparty can reject
+        if current_user.id == req.requester_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Initiating requester cannot reject on behalf of the deal counterparty; use cancel instead",
+            )
+        if current_user.id == req.transporter_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Transporter cannot reject counterparty approval; use decline instead",
+            )
+
+        is_order_counterparty = (
+            req.order
+            and (
+                (req.order.buyer_id == req.requester_id and current_user.id == req.order.farmer_id)
+                or (req.order.farmer_id == req.requester_id and current_user.id == req.order.buyer_id)
+            )
+        )
+        is_offer_counterparty = (
+            req.offer
+            and (
+                (req.offer.sender_id == req.requester_id and current_user.id == req.offer.recipient_id)
+                or (req.offer.recipient_id == req.requester_id and current_user.id == req.offer.sender_id)
+            )
+        )
+
+        if not (is_order_counterparty or is_offer_counterparty):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only the counterparty on this order or deal can reject the transportation assignment",
+            )
+
+        now_utc = datetime.now(timezone.utc)
+        req.status = TRANSPORT_REQUEST_STATUS_COUNTERPARTY_REJECTED
+        req.counterparty_rejected_by_id = current_user.id
+        req.counterparty_rejected_at = now_utc
+        reason = payload.counterparty_rejection_reason if payload else None
+        req.counterparty_rejection_reason = reason
+
+        # Transporter is NOT assigned.
+        saved = self.repository.save_connection_request(req)
+
+        deal_label = (
+            f"Order #{req.order.order_number}"
+            if req.order
+            else (f"Offer #{req.offer.offer_number}" if req.offer else "the transaction")
+        )
+
+        reason_text = f" Reason: {reason}" if reason else ""
+        # Notify requester
+        self._notify(
+            user_id=req.requester_id,
+            event_type="transport_assignment_rejected",
+            title="Transportation Assignment Rejected",
+            body=f"Counterparty rejected the proposed transportation provider for {deal_label}.{reason_text}",
+            ref_type="order" if req.order_id else ("offer" if req.offer_id else "transporter"),
+            ref_id=saved.id,
+        )
+
+        # Notify transporter
+        self._notify(
+            user_id=req.transporter_id,
+            event_type="transport_assignment_rejected",
+            title="Transportation Assignment Not Approved",
+            body=f"Deal counterparty did not approve the assignment for {deal_label}.{reason_text}",
+            ref_type="order" if req.order_id else ("offer" if req.offer_id else "transporter"),
+            ref_id=saved.id,
+        )
+
+        return self._to_connection_request_read(saved, current_user=current_user)
 
     def decline_connection_request(
         self,
@@ -762,7 +1073,7 @@ class TransporterService:
             ref_id=saved.id,
         )
 
-        return self._to_connection_request_read(saved)
+        return self._to_connection_request_read(saved, current_user=current_user)
 
     def cancel_connection_request(
         self, current_user: User, request_id: uuid.UUID
@@ -779,12 +1090,12 @@ class TransporterService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Only the requester can cancel this request",
             )
-        if req.status != "pending":
+        if req.status not in ("pending", "transporter_accepted", "accepted"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Cannot cancel request in '{req.status}' state; must be 'pending'",
+                detail=f"Cannot cancel request in '{req.status}' state",
             )
 
         req.status = "cancelled"
         saved = self.repository.save_connection_request(req)
-        return self._to_connection_request_read(saved)
+        return self._to_connection_request_read(saved, current_user=current_user)

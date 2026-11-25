@@ -33,15 +33,25 @@ if TYPE_CHECKING:
 
 # Canonical connection request statuses
 TRANSPORT_REQUEST_STATUS_PENDING = "pending"
-TRANSPORT_REQUEST_STATUS_ACCEPTED = "accepted"
+TRANSPORT_REQUEST_STATUS_TRANSPORTER_ACCEPTED = "transporter_accepted"
+TRANSPORT_REQUEST_STATUS_COUNTERPARTY_APPROVED = "counterparty_approved"
+TRANSPORT_REQUEST_STATUS_COUNTERPARTY_REJECTED = "counterparty_rejected"
 TRANSPORT_REQUEST_STATUS_DECLINED = "declined"
 TRANSPORT_REQUEST_STATUS_CANCELLED = "cancelled"
 
+# Backward compatibility aliases
+TRANSPORT_REQUEST_STATUS_ACCEPTED = "accepted"
+TRANSPORT_REQUEST_STATUS_APPROVED = "approved"
+
 VALID_TRANSPORT_REQUEST_STATUSES = (
     TRANSPORT_REQUEST_STATUS_PENDING,
-    TRANSPORT_REQUEST_STATUS_ACCEPTED,
+    TRANSPORT_REQUEST_STATUS_TRANSPORTER_ACCEPTED,
+    TRANSPORT_REQUEST_STATUS_COUNTERPARTY_APPROVED,
+    TRANSPORT_REQUEST_STATUS_COUNTERPARTY_REJECTED,
     TRANSPORT_REQUEST_STATUS_DECLINED,
     TRANSPORT_REQUEST_STATUS_CANCELLED,
+    TRANSPORT_REQUEST_STATUS_ACCEPTED,
+    TRANSPORT_REQUEST_STATUS_APPROVED,
 )
 
 
@@ -79,7 +89,7 @@ class TransportConnectionRequest(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     delivery_district: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     delivery_address: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    cargo_description: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    cargo_description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     weight_kg: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2), nullable=True)
     required_delivery_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -92,6 +102,28 @@ class TransportConnectionRequest(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     )
     rejection_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     response_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    transporter_accepted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Bilateral assignment approval tracking
+    counterparty_approved_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    counterparty_approved_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    counterparty_rejected_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    counterparty_rejected_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    counterparty_rejection_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Relationships
     requester: Mapped["User"] = relationship(
@@ -101,6 +133,14 @@ class TransportConnectionRequest(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     transporter: Mapped["User"] = relationship(
         "User",
         foreign_keys=[transporter_id],
+    )
+    counterparty_approved_by: Mapped[Optional["User"]] = relationship(
+        "User",
+        foreign_keys=[counterparty_approved_by_id],
+    )
+    counterparty_rejected_by: Mapped[Optional["User"]] = relationship(
+        "User",
+        foreign_keys=[counterparty_rejected_by_id],
     )
     order: Mapped[Optional["Order"]] = relationship(
         "Order",
