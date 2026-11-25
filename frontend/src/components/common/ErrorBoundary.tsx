@@ -90,7 +90,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </div>
 
             {isDev && this.state.error.message && (
-              <div className="p-3 bg-secondary rounded-md text-left text-xs font-mono text-destructive overflow-x-auto max-h-36">
+              <div className="p-3 bg-secondary rounded-md text-start text-xs font-mono text-destructive overflow-x-auto max-h-36">
                 <span className="font-semibold block mb-1">Error Message (Dev only):</span>
                 {this.state.error.message}
               </div>

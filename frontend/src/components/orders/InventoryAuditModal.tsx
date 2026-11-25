@@ -117,12 +117,12 @@ export const InventoryAuditModal: React.FC<InventoryAuditModalProps> = ({
             </div>
           ) : (
             <div className="rounded-xl border border-border overflow-hidden">
-              <table className="w-full text-left text-xs">
+              <table className="w-full text-start text-xs">
                 <thead className="bg-secondary/60 text-muted-foreground border-b border-border font-bold">
                   <tr>
                     <th className="px-4 py-2.5">{t("orders:audit.col_recorded_at", "Recorded At (UTC)")}</th>
                     <th className="px-4 py-2.5">{t("orders:audit.col_change_type", "Change Type")}</th>
-                    <th className="px-4 py-2.5 text-right">{t("orders:audit.col_delta", "Delta")}</th>
+                    <th className="px-4 py-2.5 text-end">{t("orders:audit.col_delta", "Delta")}</th>
                     <th className="px-4 py-2.5">{t("orders:audit.col_notes", "Audit Notes")}</th>
                   </tr>
                 </thead>
@@ -140,7 +140,7 @@ export const InventoryAuditModal: React.FC<InventoryAuditModalProps> = ({
                             {adj.change_type.replace(/_/g, " ")}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono font-bold whitespace-nowrap">
+                        <td className="px-4 py-3 text-end font-mono font-bold whitespace-nowrap">
                           <span
                             className={`inline-flex items-center gap-0.5 ${
                               isPositive ? "text-emerald-700" : "text-amber-700"
