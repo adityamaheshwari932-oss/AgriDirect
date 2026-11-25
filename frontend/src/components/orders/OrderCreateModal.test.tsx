@@ -5,18 +5,20 @@ import { ordersApi } from "../../api/orders";
 import type { ProduceListingDetail } from "../../types/listings";
 import type { OrderDetail } from "../../types/orders";
 
+const mockUser = {
+  id: "buyer-uuid-1",
+  email: "buyer@test.com",
+  role: "buyer",
+  verification_status: "verified",
+  buyer_profile: {
+    business_name: "Buyer Co",
+    delivery_receiving_address: "123 Market St, Pune",
+  },
+};
+
 vi.mock("../../store/authStore", () => ({
   useAuth: () => ({
-    user: {
-      id: "buyer-uuid-1",
-      email: "buyer@test.com",
-      role: "buyer",
-      verification_status: "verified",
-      buyer_profile: {
-        business_name: "Buyer Co",
-        delivery_receiving_address: "123 Market St, Pune",
-      },
-    },
+    user: mockUser,
   }),
 }));
 
@@ -35,8 +37,8 @@ const mockListing: ProduceListingDetail = {
   status: "active",
   is_deleted: false,
   images: [],
-  available_from: "2026-11-24",
-  expires_at: "2026-12-24T00:00:00Z",
+  available_from: "2099-11-24",
+  expires_at: "2099-12-24T00:00:00Z",
   created_at: "2026-11-24T00:00:00Z",
   updated_at: "2026-11-24T00:00:00Z",
 };
