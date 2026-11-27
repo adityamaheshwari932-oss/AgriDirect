@@ -13,7 +13,6 @@
 import io
 import uuid
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -26,7 +25,7 @@ from app.db.base import Base
 from app.db.session import get_db
 from app.dependencies import create_access_token
 from app.main import app
-from app.models.admin import ACTION_VERIFY_APPROVE, ACTION_VERIFY_REJECT, AdminAuditLog
+from app.models.admin import ACTION_VERIFY_APPROVE, AdminAuditLog
 from app.models.chat import Conversation
 from app.models.notification import Notification
 from app.models.offer import Offer
@@ -37,8 +36,6 @@ from app.models.user import (
     TransporterProfile,
     User,
 )
-from app.models.verification import VerificationDocument, VerificationSubmission
-
 
 # ===========================================================================
 # Fixtures
@@ -572,13 +569,29 @@ def test_cannot_assign_unverified_transporter_to_order(
     db_session.commit()
     db_session.refresh(order)
 
-    # Farmer tries to assign unverified transporter
+    # Farmer tries to directly assign transporter via legacy endpoint (blocked)
     headers_f = auth_headers(verified_farmer)
     payload = {"transporter_user_id": str(unverified_transporter.id)}
 
     res = client.post(f"/api/v1/orders/{order.id}/transport-coordination", json=payload, headers=headers_f)
     assert res.status_code == 400
-    assert "Cannot assign unverified transportation provider" in res.json()["detail"]
+    assert "bilateral" in res.json()["detail"].lower()
+
+    # Farmer tries to initiate connection request to an unverified transporter (also blocked)
+    req_res = client.post(
+        "/api/v1/transporters/connection-requests",
+        json={
+            "transporter_user_id": str(unverified_transporter.id),
+            "order_id": str(order.id),
+            "cargo_description": "Onions 2000 kg",
+        },
+        headers=headers_f,
+    )
+    assert req_res.status_code == 400
+    assert "unverified provider" in req_res.json()["detail"].lower()
+
+    db_session.refresh(order)
+    assert order.transporter_id is None
 
 
 def test_verified_transporter_can_coordinate_order_transport(

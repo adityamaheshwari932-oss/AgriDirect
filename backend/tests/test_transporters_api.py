@@ -8,13 +8,14 @@ Tests:
 5. Order Transport Coordination Workflow
 """
 
-from decimal import Decimal
-from typing import Generator
 import uuid
+from collections.abc import Generator
+from decimal import Decimal
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.core.security import hash_password
@@ -23,9 +24,9 @@ from app.db.session import get_db
 from app.dependencies import create_access_token
 from app.main import app
 from app.models.chat import Conversation
-from app.models.offer import Offer, OfferItem
-from app.models.order import Order, OrderItem
-from app.models.user import FarmerProfile, BuyerProfile, ServiceArea, TransporterProfile, User
+from app.models.offer import Offer
+from app.models.order import Order
+from app.models.user import ServiceArea, TransporterProfile, User
 
 
 @pytest.fixture
@@ -367,10 +368,20 @@ def test_transporter_discovery(client, db_session):
 def test_order_transport_coordination(client, db_session):
     """Test order transport coordination by farmer/buyer and status updates by transporter."""
     # Farmer
-    farmer = User(email="f_ord@example.com", password_hash=hash_password("Pass1"), role="farmer")
+    farmer = User(
+        email="f_ord@example.com",
+        password_hash=hash_password("Pass1"),
+        role="farmer",
+        verification_status="verified",
+    )
     db_session.add(farmer)
     # Buyer
-    buyer = User(email="b_ord@example.com", password_hash=hash_password("Pass2"), role="buyer")
+    buyer = User(
+        email="b_ord@example.com",
+        password_hash=hash_password("Pass2"),
+        role="buyer",
+        verification_status="verified",
+    )
     db_session.add(buyer)
     # Transporter
     transporter = User(
@@ -425,23 +436,61 @@ def test_order_transport_coordination(client, db_session):
     db_session.add(order)
     db_session.commit()
 
-    # 1. Buyer assigns transporter
-    resp_assign = client.post(
+    # 1. Legacy direct transporter assignment via transport-coordination is disabled
+    resp_bypass = client.post(
         f"/api/v1/orders/{order.id}/transport-coordination",
         json={
             "transporter_user_id": str(transporter.id),
             "transport_status": "assigned",
-            "delivery_notes": "Pickup at farm warehouse Gate 2 tomorrow 8 AM",
+            "delivery_notes": "Attempted bypass assignment",
         },
         headers=make_headers(buyer),
     )
-    assert resp_assign.status_code == 200
-    res_data = resp_assign.json()
-    assert res_data["transporter_id"] == str(transporter.id)
-    assert res_data["transporter_business_name"] == "Fast Transit"
-    assert res_data["transport_status"] == "assigned"
+    assert resp_bypass.status_code == 400
+    assert "bilateral" in resp_bypass.json()["detail"].lower()
+    db_session.refresh(order)
+    assert order.transporter_id is None
+    assert order.transport_status == "none"
 
-    # 2. Transporter updates status to in_transit
+    # 2. Cannot mark in_transit before bilateral transporter assignment
+    resp_early_transit = client.post(
+        f"/api/v1/orders/{order.id}/transport-coordination",
+        json={"transport_status": "in_transit"},
+        headers=make_headers(buyer),
+    )
+    assert resp_early_transit.status_code == 400
+
+    # 3. Assign transporter properly through bilateral workflow (request -> accept -> approve)
+    req_resp = client.post(
+        "/api/v1/transporters/connection-requests",
+        json={
+            "transporter_user_id": str(transporter.id),
+            "order_id": str(order.id),
+            "cargo_description": "Pickup at farm warehouse Gate 2",
+        },
+        headers=make_headers(buyer),
+    )
+    assert req_resp.status_code == 201
+    req_id = req_resp.json()["id"]
+
+    accept_resp = client.post(
+        f"/api/v1/transporters/connection-requests/{req_id}/accept",
+        json={"response_notes": "Confirmed pickup schedule"},
+        headers=make_headers(transporter),
+    )
+    assert accept_resp.status_code == 200
+
+    approve_resp = client.post(
+        f"/api/v1/transporters/connection-requests/{req_id}/approve",
+        json={"approval_notes": "Approved by farmer"},
+        headers=make_headers(farmer),
+    )
+    assert approve_resp.status_code == 200
+    db_session.refresh(order)
+    assert order.transporter_id == transporter.id
+    assert order.transport_status == "assigned"
+
+    # 4. Transporter updates status to in_transit via transport-coordination
     resp_transit = client.post(
         f"/api/v1/orders/{order.id}/transport-coordination",
         json={"transport_status": "in_transit", "delivery_notes": "Departed from farm"},
@@ -449,8 +498,9 @@ def test_order_transport_coordination(client, db_session):
     )
     assert resp_transit.status_code == 200
     assert resp_transit.json()["transport_status"] == "in_transit"
+    assert resp_transit.json()["transporter_business_name"] == "Fast Transit"
 
-    # 3. Transporter marks delivered
+    # 5. Transporter marks delivered
     resp_deliv = client.post(
         f"/api/v1/orders/{order.id}/transport-coordination",
         json={"transport_status": "delivered", "delivery_notes": "Delivered to buyer dock"},
@@ -459,7 +509,7 @@ def test_order_transport_coordination(client, db_session):
     assert resp_deliv.status_code == 200
     assert resp_deliv.json()["transport_status"] == "delivered"
 
-    # 4. Unauthorized third party receives 403
+    # 6. Unauthorized third party receives 403
     random_user = User(email="rando@example.com", password_hash=hash_password("PassX"), role="farmer")
     db_session.add(random_user)
     db_session.commit()
