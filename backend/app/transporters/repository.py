@@ -4,13 +4,13 @@ Executes parameterized SQLAlchemy queries scoped to TransporterProfile,
 ServiceArea, and Order transport coordination.
 """
 
-from decimal import Decimal
 import uuid
-from typing import List, Optional, Tuple
+from decimal import Decimal
 
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.orm import Session, joinedload
 
+from app.models.notification import Notification
 from app.models.offer import Offer
 from app.models.order import Order
 from app.models.transporter_connection import TransportConnectionRequest
@@ -23,7 +23,7 @@ class TransporterRepository:
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    def get_profile_by_user_id(self, user_id: uuid.UUID) -> Optional[TransporterProfile]:
+    def get_profile_by_user_id(self, user_id: uuid.UUID) -> TransporterProfile | None:
         """Fetch transporter profile by user ID with eager loaded service areas."""
         return (
             self.db.query(TransporterProfile)
@@ -32,7 +32,7 @@ class TransporterRepository:
             .first()
         )
 
-    def get_profile_by_id(self, profile_id: uuid.UUID) -> Optional[TransporterProfile]:
+    def get_profile_by_id(self, profile_id: uuid.UUID) -> TransporterProfile | None:
         """Fetch transporter profile by profile primary key."""
         return (
             self.db.query(TransporterProfile)
@@ -55,7 +55,7 @@ class TransporterRepository:
         self.db.refresh(profile)
         return profile
 
-    def get_service_areas(self, profile_id: uuid.UUID) -> List[ServiceArea]:
+    def get_service_areas(self, profile_id: uuid.UUID) -> list[ServiceArea]:
         """List all service areas for a given transporter profile."""
         return (
             self.db.query(ServiceArea)
@@ -64,7 +64,7 @@ class TransporterRepository:
             .all()
         )
 
-    def get_service_area_by_id(self, service_area_id: uuid.UUID) -> Optional[ServiceArea]:
+    def get_service_area_by_id(self, service_area_id: uuid.UUID) -> ServiceArea | None:
         """Fetch single service area by primary key."""
         return (
             self.db.query(ServiceArea)
@@ -78,8 +78,8 @@ class TransporterRepository:
         state: str,
         district: str,
         coverage_type: str,
-        exclude_id: Optional[uuid.UUID] = None,
-    ) -> Optional[ServiceArea]:
+        exclude_id: uuid.UUID | None = None,
+    ) -> ServiceArea | None:
         """Check for existing duplicate service area."""
         query = self.db.query(ServiceArea).filter(
             ServiceArea.transporter_profile_id == profile_id,
@@ -116,16 +116,16 @@ class TransporterRepository:
 
     def search_transporters(
         self,
-        pickup_state: Optional[str] = None,
-        pickup_district: Optional[str] = None,
-        delivery_state: Optional[str] = None,
-        delivery_district: Optional[str] = None,
-        transport_type: Optional[str] = None,
-        min_capacity_kg: Optional[Decimal] = None,
+        pickup_state: str | None = None,
+        pickup_district: str | None = None,
+        delivery_state: str | None = None,
+        delivery_district: str | None = None,
+        transport_type: str | None = None,
+        min_capacity_kg: Decimal | None = None,
         only_available: bool = True,
         limit: int = 50,
         offset: int = 0,
-    ) -> Tuple[int, List[TransporterProfile]]:
+    ) -> tuple[int, list[TransporterProfile]]:
         """Search available transporters based on location coverage and vehicle specs.
 
         Matches transporters where:
@@ -147,7 +147,7 @@ class TransporterRepository:
         )
 
         if only_available:
-            query = query.filter(TransporterProfile.is_available == True)  # noqa: E712
+            query = query.filter(TransporterProfile.is_available.is_(True))
 
         if transport_type:
             query = query.filter(
@@ -159,7 +159,7 @@ class TransporterRepository:
 
         # Apply pickup coverage filter if specified
         if pickup_state:
-            pickup_filter = ServiceArea.is_active == True  # noqa: E712
+            pickup_filter = ServiceArea.is_active.is_(True)
             pickup_filter = pickup_filter & (func.lower(ServiceArea.state) == pickup_state.strip().lower())
             if pickup_district:
                 pickup_filter = pickup_filter & (func.lower(ServiceArea.district) == pickup_district.strip().lower())
@@ -174,7 +174,7 @@ class TransporterRepository:
 
         # Apply delivery coverage filter if specified
         if delivery_state:
-            delivery_filter = ServiceArea.is_active == True  # noqa: E712
+            delivery_filter = ServiceArea.is_active.is_(True)
             delivery_filter = delivery_filter & (func.lower(ServiceArea.state) == delivery_state.strip().lower())
             if delivery_district:
                 delivery_filter = delivery_filter & (func.lower(ServiceArea.district) == delivery_district.strip().lower())
@@ -197,7 +197,7 @@ class TransporterRepository:
         )
         return total, results
 
-    def get_order_by_id(self, order_id: uuid.UUID) -> Optional[Order]:
+    def get_order_by_id(self, order_id: uuid.UUID) -> Order | None:
         """Fetch order by ID for transport coordination."""
         return (
             self.db.query(Order)
@@ -206,13 +206,33 @@ class TransporterRepository:
             .first()
         )
 
+    def lock_order(self, order_id: uuid.UUID) -> Order | None:
+        """Acquire a PostgreSQL FOR UPDATE row lock on Order (without outer joins)."""
+        stmt = (
+            select(Order)
+            .where(Order.id == order_id)
+            .with_for_update(of=Order)
+            .execution_options(populate_existing=True)
+        )
+        return self.db.execute(stmt).scalar_one_or_none()
+
+    def lock_offer(self, offer_id: uuid.UUID) -> Offer | None:
+        """Acquire a PostgreSQL FOR UPDATE row lock on Offer."""
+        stmt = (
+            select(Offer)
+            .where(Offer.id == offer_id)
+            .with_for_update(of=Offer)
+            .execution_options(populate_existing=True)
+        )
+        return self.db.execute(stmt).scalar_one_or_none()
+
     def save_order(self, order: Order) -> Order:
         """Persist order modifications."""
         self.db.commit()
         self.db.refresh(order)
         return order
 
-    def get_offer_by_id(self, offer_id: uuid.UUID) -> Optional[Offer]:
+    def get_offer_by_id(self, offer_id: uuid.UUID) -> Offer | None:
         """Fetch offer by ID for transport connection verification."""
         return (
             self.db.query(Offer)
@@ -230,9 +250,88 @@ class TransporterRepository:
         self.db.refresh(request)
         return request
 
+    def add_connection_request(
+        self, request: TransportConnectionRequest
+    ) -> TransportConnectionRequest:
+        """Stage and flush a new transport connection request within the active transaction."""
+        self.db.add(request)
+        self.db.flush()
+        return request
+
+    def lock_connection_request(
+        self, request_id: uuid.UUID
+    ) -> TransportConnectionRequest | None:
+        """Acquire a PostgreSQL FOR UPDATE row lock on TransportConnectionRequest (no outer joins)."""
+        stmt = (
+            select(TransportConnectionRequest)
+            .where(TransportConnectionRequest.id == request_id)
+            .with_for_update(of=TransportConnectionRequest)
+            .execution_options(populate_existing=True)
+        )
+        return self.db.execute(stmt).scalar_one_or_none()
+
+    def claim_connection_request_transition(
+        self,
+        request_id: uuid.UUID,
+        allowed_statuses: tuple[str, ...],
+        values: dict,
+    ) -> bool:
+        """Atomically transition a connection request only if its DB status matches allowed_statuses."""
+        stmt = (
+            update(TransportConnectionRequest)
+            .where(
+                TransportConnectionRequest.id == request_id,
+                TransportConnectionRequest.status.in_(allowed_statuses),
+            )
+            .values(**values)
+            .execution_options(synchronize_session=False)
+        )
+        res = self.db.execute(stmt)
+        return (res.rowcount or 0) == 1
+
+    def claim_order_transporter_assignment(
+        self,
+        order_id: uuid.UUID,
+        transporter_id: uuid.UUID,
+        delivery_notes: str | None,
+    ) -> bool:
+        """Atomically assign transporter_id on an active order only when transporter_id IS NULL."""
+        stmt = (
+            update(Order)
+            .where(
+                Order.id == order_id,
+                Order.transporter_id.is_(None),
+                Order.status != "cancelled",
+            )
+            .values(
+                transporter_id=transporter_id,
+                transport_status="assigned",
+                delivery_notes=delivery_notes,
+            )
+            .execution_options(synchronize_session=False)
+        )
+        res = self.db.execute(stmt)
+        return (res.rowcount or 0) == 1
+
+    def add_notification(self, notification: Notification) -> None:
+        """Stage a notification in the active transaction without committing."""
+        self.db.add(notification)
+
+    def commit(self) -> None:
+        """Commit the active database transaction."""
+        self.db.commit()
+
+    def expire_all(self) -> None:
+        """Expire session-cached ORM instances so subsequent reads see latest DB columns."""
+        self.db.expire_all()
+
+    def rollback(self) -> None:
+        """Roll back the active database transaction."""
+        self.db.rollback()
+
     def get_connection_request_by_id(
         self, request_id: uuid.UUID
-    ) -> Optional[TransportConnectionRequest]:
+    ) -> TransportConnectionRequest | None:
         """Fetch transport connection request by ID with relations."""
         return (
             self.db.query(TransportConnectionRequest)
@@ -250,9 +349,9 @@ class TransporterRepository:
         self,
         requester_id: uuid.UUID,
         transporter_id: uuid.UUID,
-        order_id: Optional[uuid.UUID] = None,
-        offer_id: Optional[uuid.UUID] = None,
-    ) -> Optional[TransportConnectionRequest]:
+        order_id: uuid.UUID | None = None,
+        offer_id: uuid.UUID | None = None,
+    ) -> TransportConnectionRequest | None:
         """Check if an active pending or awaiting-approval request already exists between requester and transporter for this deal."""
         query = self.db.query(TransportConnectionRequest).filter(
             TransportConnectionRequest.requester_id == requester_id,
@@ -269,12 +368,12 @@ class TransporterRepository:
         self,
         user_id: uuid.UUID,
         role: str,
-        status: Optional[str] = None,
-        order_id: Optional[uuid.UUID] = None,
-        offer_id: Optional[uuid.UUID] = None,
+        status: str | None = None,
+        order_id: uuid.UUID | None = None,
+        offer_id: uuid.UUID | None = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> Tuple[int, List[TransportConnectionRequest]]:
+    ) -> tuple[int, list[TransportConnectionRequest]]:
         """List connection requests relevant to the user (transporter or requester/deal participant)."""
         query = (
             self.db.query(TransportConnectionRequest)
