@@ -24,8 +24,8 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.db.session import get_db
 from app.dependencies import create_access_token
 from app.main import app
-from app.models.admin import AdminAuditLog, TARGET_ENTITY_REPORT
-from app.models.listing import ProduceCategory, ProduceListing, STATUS_ACTIVE
+from app.models.admin import TARGET_ENTITY_REPORT, AdminAuditLog
+from app.models.listing import STATUS_ACTIVE, ProduceCategory, ProduceListing
 from app.models.report import (
     REPORT_CATEGORY_FRAUD,
     REPORT_CATEGORY_QUALITY_ISSUE,
@@ -39,6 +39,7 @@ from app.models.user import BuyerProfile, FarmerProfile, User
 from app.reports.repository import ReportRepository
 from app.reports.schemas import ReportModerateRequest
 from app.reports.service import ReportService
+from tests.pg_test_utils import cleanup_pg_test_tables, ensure_pg_test_schema_at_head
 
 TEST_PG_DB_URL = "postgresql+psycopg://agridirect_app:agridirect@localhost:5432/agridirect_module3_test"
 
@@ -96,10 +97,11 @@ def _cleanup_database() -> None:
 
 @pytest.fixture(autouse=True)
 def clean_db():
-    """Ensure database is clean before and after each test."""
-    _cleanup_database()
+    """Ensure isolated PG DB is migrated to head and clean before and after each test."""
+    ensure_pg_test_schema_at_head()
+    cleanup_pg_test_tables(_SessionLocal)
     yield
-    _cleanup_database()
+    cleanup_pg_test_tables(_SessionLocal)
 
 
 @pytest.fixture

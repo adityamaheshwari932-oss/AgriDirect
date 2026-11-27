@@ -20,6 +20,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
+from tests.pg_test_utils import (
+    assert_pg_migration_state,
+    cleanup_pg_test_tables,
+    ensure_pg_test_schema_at_head,
+)
+
 from app.core.config import get_settings
 from app.db.session import close_db, get_db, init_db
 from app.dependencies import create_access_token
@@ -110,21 +116,18 @@ def _cleanup_database() -> None:
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_pg_environment():
-    """Verify database identity and prepare test database once per session."""
-    with _SessionLocal() as db:
-        db_name = db.execute(text("SELECT current_database()")).scalar()
-        if db_name != "agridirect_module3_test":
-            raise RuntimeError(f"Refusing to execute tests on database: {db_name}")
-    _cleanup_database()
+    """Verify database identity, migrate isolated PG test DB to head, and clean once per session."""
+    ensure_pg_test_schema_at_head()
+    cleanup_pg_test_tables(_SessionLocal)
     yield
-    _cleanup_database()
+    cleanup_pg_test_tables(_SessionLocal)
 
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
     """Clean up after each test to ensure complete test isolation."""
     yield
-    _cleanup_database()
+    cleanup_pg_test_tables(_SessionLocal)
 
 
 @pytest.fixture
@@ -305,8 +308,7 @@ def test_01_verify_postgres_environment_and_revision(db_session: Session):
     db_name = db_session.execute(text("SELECT current_database()")).scalar()
     assert db_name == "agridirect_module3_test"
 
-    alembic_rev = db_session.execute(text("SELECT version_num FROM alembic_version")).scalar()
-    assert alembic_rev in ("f6a1b2c3d4e5", "a1b2c3d4e5f6", "b2c3d4e5f6a1"), f"Expected revision f6a1b2c3d4e5, a1b2c3d4e5f6, or b2c3d4e5f6a1, got {alembic_rev}"
+    assert_pg_migration_state(db_session, minimum_revision="f6a1b2c3d4e5")
 
     # Verify contact_share_requests table exists
     table_exists = db_session.execute(

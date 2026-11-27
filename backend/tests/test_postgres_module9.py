@@ -25,8 +25,8 @@ from app.db.session import get_db, init_db
 from app.dependencies import create_access_token
 from app.main import app
 from app.models.chat import Conversation
-from app.models.listing import ProduceCategory, ProduceListing, STATUS_ACTIVE
-from app.models.offer import Offer, OfferItem, OFFER_STATUS_ACCEPTED
+from app.models.listing import STATUS_ACTIVE, ProduceCategory, ProduceListing
+from app.models.offer import OFFER_STATUS_ACCEPTED, Offer, OfferItem
 from app.models.order import (
     DELIVERY_STATUS_COMPLETED,
     ORDER_STATUS_CANCELLED,
@@ -46,11 +46,11 @@ from app.models.payment import (
     PaymentRecord,
 )
 from app.models.requirement import (
-    BuyerRequirement,
     PRICE_CONDITION_EXACT,
     PRICE_CONDITION_NEGOTIABLE,
     REQUIREMENT_STATUS_ACTIVE,
     REQUIREMENT_STATUS_CLOSED,
+    BuyerRequirement,
 )
 from app.models.requirement_approval import (
     APPROVAL_STATUS_APPROVED,
@@ -58,6 +58,7 @@ from app.models.requirement_approval import (
 )
 from app.models.review import RatingReview
 from app.models.user import BuyerProfile, FarmerProfile, User
+from tests.pg_test_utils import cleanup_pg_test_tables, ensure_pg_test_schema_at_head
 
 TEST_PG_DB_URL = "postgresql+psycopg://agridirect_app:agridirect@localhost:5432/agridirect_module3_test"
 
@@ -115,10 +116,11 @@ def _cleanup_database() -> None:
 
 @pytest.fixture(autouse=True)
 def clean_db():
-    """Ensure database is clean before and after each test."""
-    _cleanup_database()
+    """Ensure isolated PG DB is migrated to head and clean before and after each test."""
+    ensure_pg_test_schema_at_head()
+    cleanup_pg_test_tables(_SessionLocal)
     yield
-    _cleanup_database()
+    cleanup_pg_test_tables(_SessionLocal)
 
 
 @pytest.fixture

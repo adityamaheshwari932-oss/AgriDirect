@@ -21,6 +21,12 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
+from tests.pg_test_utils import (
+    assert_pg_migration_state,
+    cleanup_pg_test_tables,
+    ensure_pg_test_schema_at_head,
+)
+
 from app.db.session import get_db
 from app.dependencies import create_access_token
 from app.main import app
@@ -97,10 +103,11 @@ def _cleanup_database() -> None:
 
 @pytest.fixture(autouse=True)
 def clean_db():
-    """Ensure database is clean before and after each test."""
-    _cleanup_database()
+    """Ensure isolated PG DB is migrated to head and clean before and after each test."""
+    ensure_pg_test_schema_at_head()
+    cleanup_pg_test_tables(_SessionLocal)
     yield
-    _cleanup_database()
+    cleanup_pg_test_tables(_SessionLocal)
 
 
 @pytest.fixture
@@ -280,8 +287,7 @@ def test_pg_schema_and_migration_revisions(pg_session: Session) -> None:
     db_name = pg_session.execute(text("SELECT current_database()")).scalar()
     assert db_name == "agridirect_module3_test"
 
-    rev = pg_session.execute(text("SELECT version_num FROM alembic_version")).scalar()
-    assert rev in ("a1b2c3d4e5f6", "f6a1b2c3d4e5", "e5f6a1b2c3d4", "fcf5c991d506", "b2c3d4e5f6a1")
+    assert_pg_migration_state(pg_session, minimum_revision="a1b2c3d4e5f6")
 
 
 def test_pg_self_review_constraint_enforcement(pg_session: Session) -> None:
