@@ -18,7 +18,7 @@ import {
 import { useAuth } from "../store/authStore";
 import { usersApi } from "../api/users";
 import { ApiError } from "../api/errors";
-import { ToastContext } from "../components/ui/toast/ToastContext";
+import { ToastContext } from "../components/ui/toast/toastContextDef";
 import {
   ACCOUNT_STATUS_CONFIG,
   BUYER_TYPE_LABELS,

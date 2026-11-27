@@ -264,7 +264,7 @@ describe("OrderDetailModal — Bilateral Delivery Acknowledgement", () => {
       authStore.setUser(farmerUser);
       vi.mocked(ordersApi.getOrderDetail).mockResolvedValue({
         ...baseOrder,
-        delivery_status: "not_arranged" as any,
+        delivery_status: "not_arranged",
       });
 
       render(
@@ -285,7 +285,7 @@ describe("OrderDetailModal — Bilateral Delivery Acknowledgement", () => {
       authStore.setUser(farmerUser);
       vi.mocked(ordersApi.getOrderDetail).mockResolvedValue({
         ...baseOrder,
-        delivery_status: null as any,
+        delivery_status: null as unknown as OrderDetail["delivery_status"],
       });
 
       render(
@@ -304,9 +304,11 @@ describe("OrderDetailModal — Bilateral Delivery Acknowledgement", () => {
 
     it("renders safely without crashing when delivery_status is undefined", async () => {
       authStore.setUser(farmerUser);
-      const orderWithoutDeliveryStatus = { ...baseOrder };
-      delete (orderWithoutDeliveryStatus as any).delivery_status;
-      vi.mocked(ordersApi.getOrderDetail).mockResolvedValue(orderWithoutDeliveryStatus);
+      const { delivery_status: _omittedDeliveryStatus, ...orderWithoutDeliveryStatus } =
+        baseOrder;
+      vi.mocked(ordersApi.getOrderDetail).mockResolvedValue(
+        orderWithoutDeliveryStatus as unknown as OrderDetail
+      );
 
       render(
         <MemoryRouter>
@@ -326,7 +328,7 @@ describe("OrderDetailModal — Bilateral Delivery Acknowledgement", () => {
       authStore.setUser(farmerUser);
       vi.mocked(ordersApi.getOrderDetail).mockResolvedValue({
         ...baseOrder,
-        delivery_status: 12345 as any,
+        delivery_status: 12345 as unknown as OrderDetail["delivery_status"],
       });
 
       render(

@@ -72,7 +72,10 @@ describe("ChatConversationView — D-5 Polling & Remount Regression Tests", () =
 
     vi.mocked(chatApi.getConversation).mockResolvedValue(mockConversation);
     vi.mocked(chatApi.listMessages).mockResolvedValue(initialMessages);
-    vi.mocked(chatApi.markConversationRead).mockResolvedValue({ success: true } as any);
+    vi.mocked(chatApi.markConversationRead).mockResolvedValue({
+      conversation_id: "conv-100",
+      marked_read_count: 1,
+    });
   });
 
   afterEach(() => {
@@ -80,8 +83,8 @@ describe("ChatConversationView — D-5 Polling & Remount Regression Tests", () =
   });
 
   it("does not re-trigger loadConversationData when onConversationUpdated changes reference", async () => {
-    let updateFn1 = vi.fn();
-    let updateFn2 = vi.fn();
+    const updateFn1 = vi.fn();
+    const updateFn2 = vi.fn();
 
     const { rerender } = render(
       <MemoryRouter>

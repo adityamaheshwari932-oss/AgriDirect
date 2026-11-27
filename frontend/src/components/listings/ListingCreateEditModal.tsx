@@ -95,6 +95,8 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isSubmittingRef = React.useRef(false);
   const createdListingRef = React.useRef<ProduceListingDetail | null>(null);
+  const previewUrlsRef = useRef<string[]>([]);
+  previewUrlsRef.current = previewUrls;
 
   // Revoke object URLs on cleanup
   useEffect(() => {
@@ -105,7 +107,7 @@ export const ListingCreateEditModal: React.FC<ListingCreateEditModalProps> = ({
 
   useEffect(() => {
     // Revoke previous URLs
-    previewUrls.forEach((url) => URL.revokeObjectURL(url));
+    previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     setSelectedFiles([]);
     setPreviewUrls([]);
     setNewPrimaryIndex(0);

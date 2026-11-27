@@ -9,6 +9,8 @@ import { NegotiationHistoryTimeline } from "../components/offers/NegotiationHist
 import { ForbiddenState } from "../components/ui/states/ForbiddenState";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { ToastContainer } from "../components/ui/toast/ToastContainer";
+import type { Message } from "../types/chat";
+import type { OfferDetail } from "../types/offers";
 
 describe("Stage 4: Complete Right-to-Left (RTL) Layout & Direction Support", () => {
   beforeEach(async () => {
@@ -136,19 +138,21 @@ describe("Stage 4: Complete Right-to-Left (RTL) Layout & Direction Support", () 
     });
 
     it("renders MessageBubble with dir='auto' and logical corner classes", () => {
-      const message = {
+      const nowIso = new Date().toISOString();
+      const message: Message = {
         id: "msg-123",
         conversation_id: "conv-1",
         sender_id: "user-1",
-        recipient_id: "user-2",
         message_type: "text",
+        delivery_status: "sent",
         content: "سلام، میں 50 ٹن گندم خریدنا چاہتا ہوں",
-        created_at: new Date().toISOString(),
+        created_at: nowIso,
         is_read: false,
+        attachments: [],
       };
 
       const { container } = render(
-        <MessageBubble message={message as any} isCurrentUser={false} />
+        <MessageBubble message={message} isCurrentUser={false} />
       );
 
       const content = container.querySelector('[dir="auto"]');
@@ -161,21 +165,37 @@ describe("Stage 4: Complete Right-to-Left (RTL) Layout & Direction Support", () 
     });
 
     it("renders NegotiationHistoryTimeline with logical start coordinates and rotated arrow", () => {
-      const history = [
+      const nowIso = new Date().toISOString();
+      const history: OfferDetail[] = [
         {
           id: "off-1",
           offer_number: "OFF-101",
+          conversation_id: "conv-1",
+          sender_id: "user-1",
+          recipient_id: "user-2",
+          total_amount: 2500,
           status: "countered",
-          sender: { name: "John Buyer", role: "buyer" },
-          quantity: 100,
-          unit_price: 25,
-          unit: "kg",
-          created_at: new Date().toISOString(),
+          sender: { id: "user-1", name: "John Buyer", role: "buyer" },
+          items: [
+            {
+              id: "item-1",
+              offer_id: "off-1",
+              product_name: "Wheat",
+              quantity: 100,
+              unit_price: 25,
+              subtotal: 2500,
+              unit: "kg",
+              status: "proposed",
+              created_at: nowIso,
+            },
+          ],
+          created_at: nowIso,
+          updated_at: nowIso,
         },
       ];
 
       const { container } = render(
-        <NegotiationHistoryTimeline history={history as any} currentOfferId="off-1" />
+        <NegotiationHistoryTimeline history={history} currentOfferId="off-1" />
       );
 
       // Verify logical start coordinates on timeline line

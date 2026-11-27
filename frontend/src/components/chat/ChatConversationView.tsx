@@ -51,6 +51,7 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
   const onConversationUpdatedRef = useRef(onConversationUpdated);
   const isPollingRef = useRef(false);
   const lastMsgIdRef = useRef<string | undefined>(undefined);
+  const hasInitialScrolledRef = useRef(false);
 
   useEffect(() => {
     onConversationUpdatedRef.current = onConversationUpdated;
@@ -68,6 +69,7 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
 
   // Load conversation detail & initial message history
   const loadConversationData = useCallback(async () => {
+    hasInitialScrolledRef.current = false;
     setIsLoading(true);
     setError(null);
     try {
@@ -98,10 +100,11 @@ export const ChatConversationView: React.FC<ChatConversationViewProps> = ({
 
   // Scroll to bottom on initial load
   useEffect(() => {
-    if (!isLoading && messages.length > 0) {
+    if (!isLoading && messages.length > 0 && !hasInitialScrolledRef.current) {
+      hasInitialScrolledRef.current = true;
       scrollToBottom(false);
     }
-  }, [isLoading]);
+  }, [isLoading, messages.length]);
 
   // REST polling for new incoming messages
   useEffect(() => {
