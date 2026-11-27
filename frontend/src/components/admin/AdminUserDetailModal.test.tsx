@@ -115,7 +115,7 @@ describe("AdminUserDetailModal — D-3 Safe Audit Logs Regression Tests", () => 
   it("renders empty-state safely without runtime crash when recent_audit_logs is null", async () => {
     vi.mocked(adminApi.getUserDetail).mockResolvedValue({
       ...baseDetail,
-      recent_audit_logs: null as any,
+      recent_audit_logs: null as unknown as AdminUserDetail["recent_audit_logs"],
     });
 
     render(
@@ -135,10 +135,11 @@ describe("AdminUserDetailModal — D-3 Safe Audit Logs Regression Tests", () => 
   });
 
   it("renders empty-state safely without runtime crash when recent_audit_logs is undefined/omitted", async () => {
-    const detailWithoutLogs = { ...baseDetail };
-    delete (detailWithoutLogs as any).recent_audit_logs;
+    const { recent_audit_logs: _omittedAuditLogs, ...detailWithoutLogs } = baseDetail;
 
-    vi.mocked(adminApi.getUserDetail).mockResolvedValue(detailWithoutLogs);
+    vi.mocked(adminApi.getUserDetail).mockResolvedValue(
+      detailWithoutLogs as unknown as AdminUserDetail
+    );
 
     render(
       <AdminUserDetailModal
@@ -159,7 +160,7 @@ describe("AdminUserDetailModal — D-3 Safe Audit Logs Regression Tests", () => 
   it("renders empty-state safely without runtime crash when recent_audit_logs is an unexpected non-array", async () => {
     vi.mocked(adminApi.getUserDetail).mockResolvedValue({
       ...baseDetail,
-      recent_audit_logs: "invalid-string" as any,
+      recent_audit_logs: "invalid-string" as unknown as AdminUserDetail["recent_audit_logs"],
     });
 
     render(

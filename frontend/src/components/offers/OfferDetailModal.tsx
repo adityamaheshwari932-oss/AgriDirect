@@ -18,7 +18,7 @@ import { useAuth } from "../../store/authStore";
 import { offersApi } from "../../api/offers";
 import { chatApi } from "../../api/chat";
 import { ApiError } from "../../api/errors";
-import { ToastContext } from "../ui/toast/ToastContext";
+import { ToastContext } from "../ui/toast/toastContextDef";
 import { NegotiationHistoryTimeline } from "./NegotiationHistoryTimeline";
 import { CounterOfferModal } from "./CounterOfferModal";
 import { OfferAcceptModal } from "./OfferAcceptModal";

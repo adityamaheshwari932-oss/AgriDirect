@@ -29,6 +29,14 @@ import type {
   ProduceListingPublicSummary,
 } from "../types";
 
+type ProduceSortBy = "created_at" | "price_per_unit" | "available_quantity" | "product_name";
+type RequirementSortBy =
+  | "created_at"
+  | "required_by_date"
+  | "required_quantity"
+  | "target_price_per_unit"
+  | "product_name";
+
 export const MarketplacePage: React.FC = () => {
   const { t } = useTranslation(["marketplace", "common"]);
   const [activeTab, setActiveTab] = useState<"produce" | "buyers">("produce");
@@ -50,12 +58,8 @@ export const MarketplacePage: React.FC = () => {
   const [maxQuantity, setMaxQuantity] = useState("");
 
   // Sorting
-  const [sortByProduce, setSortByProduce] = useState<
-    "created_at" | "price_per_unit" | "available_quantity" | "product_name"
-  >("created_at");
-  const [sortByRequirements, setSortByRequirements] = useState<
-    "created_at" | "required_by_date" | "required_quantity" | "target_price_per_unit" | "product_name"
-  >("created_at");
+  const [sortByProduce, setSortByProduce] = useState<ProduceSortBy>("created_at");
+  const [sortByRequirements, setSortByRequirements] = useState<RequirementSortBy>("created_at");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
 
   // View density mode
@@ -481,7 +485,7 @@ export const MarketplacePage: React.FC = () => {
                 <select
                   value={sortByProduce}
                   onChange={(e) => {
-                    setSortByProduce(e.target.value as any);
+                    setSortByProduce(e.target.value as ProduceSortBy);
                     setPage(1);
                   }}
                   className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
@@ -496,7 +500,7 @@ export const MarketplacePage: React.FC = () => {
                 <select
                   value={sortByRequirements}
                   onChange={(e) => {
-                    setSortByRequirements(e.target.value as any);
+                    setSortByRequirements(e.target.value as RequirementSortBy);
                     setPage(1);
                   }}
                   className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"

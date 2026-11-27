@@ -23,7 +23,7 @@ import {
 import { useAuth } from "../store/authStore";
 import { verificationApi } from "../api/verification";
 import { ApiError } from "../api/errors";
-import { ToastContext } from "../components/ui/toast/ToastContext";
+import { ToastContext } from "../components/ui/toast/toastContextDef";
 import {
   SUBMISSION_STATUS_CONFIG,
   VERIFICATION_STATUS_CONFIG,

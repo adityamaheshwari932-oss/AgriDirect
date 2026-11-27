@@ -105,8 +105,9 @@ export const OfferCreateModal: React.FC<OfferCreateModalProps> = ({
           setMyListings(items);
           if (items.length > 0) {
             setSelectedListingId(items[0].id);
-            if (!unitPrice && items[0].price_per_unit) {
-              setUnitPrice(Number(items[0].price_per_unit));
+            const fallbackPrice = items[0].price_per_unit;
+            if (fallbackPrice) {
+              setUnitPrice((prev) => (prev === "" ? Number(fallbackPrice) : prev));
             }
           }
         })

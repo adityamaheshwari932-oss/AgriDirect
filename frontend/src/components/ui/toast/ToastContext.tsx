@@ -1,5 +1,4 @@
 import React, {
-  createContext,
   useCallback,
   useEffect,
   useRef,
@@ -8,27 +7,11 @@ import React, {
 } from "react";
 import type { Toast, ToastVariant } from "./ToastItem";
 import { ToastContainer } from "./ToastContainer";
-
-export interface ToastOptions {
-  id?: string;
-  title?: string;
-  message: string;
-  variant?: ToastVariant;
-  duration?: number;
-}
-
-export interface ToastContextValue {
-  toasts: Toast[];
-  showToast: (options: ToastOptions) => string;
-  success: (message: string, title?: string, duration?: number) => string;
-  error: (message: string, title?: string, duration?: number) => string;
-  warning: (message: string, title?: string, duration?: number) => string;
-  info: (message: string, title?: string, duration?: number) => string;
-  dismissToast: (id: string) => void;
-  clearToasts: () => void;
-}
-
-export const ToastContext = createContext<ToastContextValue | null>(null);
+import {
+  ToastContext,
+  type ToastContextValue,
+  type ToastOptions,
+} from "./toastContextDef";
 
 const DEFAULT_DURATION = 5000;
 const MAX_TOASTS = 5;
