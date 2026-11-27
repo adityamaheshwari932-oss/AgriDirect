@@ -5,28 +5,29 @@ Revises: c3d4e5f6a1b2
 Create Date: 2026-11-24 13:40:00.000000
 
 """
-from typing import Sequence, Union
+from collections.abc import Sequence
+
+import sqlalchemy as sa
 
 from alembic import op
-import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
-
 
 # revision identifiers, used by Alembic.
 revision: str = 'd4e5f6a1b2c5'
-down_revision: Union[str, Sequence[str], None] = 'c3d4e5f6a1b2'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = 'c3d4e5f6a1b2'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    # 1. Alter orders.source_offer_id to nullable
-    op.alter_column('orders', 'source_offer_id',
-               existing_type=sa.UUID(),
-               nullable=True)
+    # 1. Alter orders.source_offer_id to nullable and add idempotency_key (batch-safe for SQLite + PG)
+    with op.batch_alter_table('orders') as batch_op:
+        batch_op.alter_column(
+            'source_offer_id',
+            existing_type=sa.UUID(),
+            nullable=True,
+        )
+        batch_op.add_column(sa.Column('idempotency_key', sa.String(length=128), nullable=True))
 
-    # 2. Add idempotency_key to orders
-    op.add_column('orders', sa.Column('idempotency_key', sa.String(length=128), nullable=True))
     op.create_index('idx_orders_idempotency_key', 'orders', ['idempotency_key'], unique=True)
 
     # 3. Create order_images table
@@ -53,7 +54,10 @@ def downgrade() -> None:
     op.drop_index('idx_order_images_order_id', table_name='order_images')
     op.drop_table('order_images')
     op.drop_index('idx_orders_idempotency_key', table_name='orders')
-    op.drop_column('orders', 'idempotency_key')
-    op.alter_column('orders', 'source_offer_id',
-               existing_type=sa.UUID(),
-               nullable=False)
+    with op.batch_alter_table('orders') as batch_op:
+        batch_op.drop_column('idempotency_key')
+        batch_op.alter_column(
+            'source_offer_id',
+            existing_type=sa.UUID(),
+            nullable=False,
+        )
