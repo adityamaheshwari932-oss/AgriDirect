@@ -1,0 +1,3 @@
+# AgriDirect backend — Development & linting dependencies (not required in production containers)
+-r requirements.txt
+ruff>=0.8.0
