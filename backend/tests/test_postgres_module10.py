@@ -22,6 +22,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
+from tests.pg_test_utils import cleanup_pg_test_tables, ensure_pg_test_schema_at_head
+
 from app.admin.schemas import (
     AdminListingModerateRequest,
     AdminUserStatusUpdateRequest,
@@ -96,10 +98,11 @@ def _cleanup_database() -> None:
 
 @pytest.fixture(autouse=True)
 def clean_db():
-    """Ensure database is clean before and after each test."""
-    _cleanup_database()
+    """Ensure isolated PG DB is migrated to head and clean before and after each test."""
+    ensure_pg_test_schema_at_head()
+    cleanup_pg_test_tables(_SessionLocal)
     yield
-    _cleanup_database()
+    cleanup_pg_test_tables(_SessionLocal)
 
 
 @pytest.fixture

@@ -21,6 +21,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
+from tests.pg_test_utils import cleanup_pg_test_tables, ensure_pg_test_schema_at_head
+
 from app.core.config import get_settings
 from app.db.session import close_db, get_db, init_db
 from app.dependencies import create_access_token
@@ -141,21 +143,18 @@ def _cleanup_database():
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_pg_environment():
-    """Verify database identity and prepare test database once per session."""
-    with _SessionLocal() as db:
-        db_name = db.execute(text("SELECT current_database()")).scalar()
-        if db_name != "agridirect_module3_test":
-            raise RuntimeError(f"Refusing to execute tests on database: {db_name}")
-    _cleanup_database()
+    """Verify database identity, migrate isolated PG test DB to head, and clean once per session."""
+    ensure_pg_test_schema_at_head()
+    cleanup_pg_test_tables(_SessionLocal)
     yield
-    _cleanup_database()
+    cleanup_pg_test_tables(_SessionLocal)
 
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
     """Clean up after each test to ensure complete isolation."""
     yield
-    _cleanup_database()
+    cleanup_pg_test_tables(_SessionLocal)
 
 
 @pytest.fixture
